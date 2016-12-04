@@ -1,0 +1,2 @@
+PostgreSQL backend for EqDB
+===========================
