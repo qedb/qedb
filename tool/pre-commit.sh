@@ -5,4 +5,3 @@
 # that can be found in the LICENSE file.
 
 unifmt -c 'Herman Bergwerf' -l 'AGPL-3.0'
-make check
