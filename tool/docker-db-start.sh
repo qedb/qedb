@@ -33,15 +33,12 @@ export EQPG_DB_PORT="5432"
 export EQPG_DB_NAME="eqdb"
 export EQPG_DB_USER="postgres"
 
-# Print details.
-echo "Host: ${EQPG_DB_HOST}"
-echo "Port: ${EQPG_DB_PORT}"
-echo "Db:   ${EQPG_DB_NAME}"
-echo "User: ${EQPG_DB_USER}"
-echo "Pass: ${EQPG_DB_PASS}"
-
-# Run API server.
-dart bin/server.dart
-
-# Collect database dump.
-#docker exec -t eqpg-database pg_dumpall -c -U postgres > dev-dump.sql
+# Write config file.
+rm -f dev-config.yaml
+touch dev-config.yaml
+echo "DB_HOST: '${EQPG_DB_HOST}'" >> dev-config.yaml
+echo "DB_PORT: ${EQPG_DB_PORT}" >> dev-config.yaml
+echo "DB_NAME: ${EQPG_DB_NAME}" >> dev-config.yaml
+echo "DB_USER: ${EQPG_DB_USER}" >> dev-config.yaml
+echo "DB_PASS: ${EQPG_DB_PASS}" >> dev-config.yaml
+cat dev-config.yaml

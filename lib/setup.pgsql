@@ -9,7 +9,7 @@ CREATE SEQUENCE expression_sequence;
 -- Category
 CREATE TABLE category (
   id      serial  PRIMARY KEY,
-  parent  int     REFERENCES category(id) NOT NULL
+  parent  int     REFERENCES category(id)
 );
 
 -- Global expression set
@@ -42,10 +42,10 @@ CREATE TABLE function (
 
 -- Defenition
 CREATE TABLE definition (
-  id           serial           PRIMARY KEY,
-  category_id  int              NOT NULL REFERENCES category(id),
-  left_id      expression_link  NOT NULL,
-  right_id     expression_link  NOT NULL
+  id          serial           PRIMARY KEY,
+  category    int              NOT NULL REFERENCES category(id),
+  left_expr   expression_link  NOT NULL,
+  right_expr  expression_link  NOT NULL
 );
 
 -- Numeric data

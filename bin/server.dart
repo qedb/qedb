@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:eqpg/eqpg.dart';
+import 'package:yaml/yaml.dart';
 import 'package:rpc/rpc.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_handlers/server_logging_handlers.dart';
@@ -15,21 +16,37 @@ import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_route/shelf_route.dart' as shelf_route;
 
-String env(String label, [String dflt = '']) =>
-    Platform.environment.containsKey(label)
-        ? Platform.environment[label]
-        : dflt;
+// Server parameter names.
+const keyServerLog = 'SERVER_LOG';
+const keyApiPort = 'API_PORT';
+const keyDbHost = 'DB_HOST';
+const keyDbPort = 'DB_PORT';
+const keyDbName = 'DB_NAME';
+const keyDbUser = 'DB_USER';
+const keyDbPass = 'DB_PASS';
+const keyMaxConn = 'MAX_CONNECTIONS';
+
+// Environment variable prefix.
+const envPrefix = 'EQPG_';
 
 Future main() async {
+  // Read YAML file.
+  final yamlConfigPath = env('EQPG_CONFIG_PATH', 'dev-config.yaml');
+  final yamlFile = new File(yamlConfigPath);
+  Map<String, dynamic> yamlData = {};
+  if (await yamlFile.exists()) {
+    yamlData = loadYaml(yamlFile.readAsStringSync());
+  }
+
   // Read some configuration values.
-  final logFile = env('EQPG_SERVER_LOG');
-  final srvPort = int.parse(env('EQPG_API_PORT', '8080'));
-  final dbHost = env('EQPG_DB_HOST', '0.0.0.0');
-  final dbPort = int.parse(env('EQPG_DB_PORT', '5432'));
-  final dbName = env('EQPG_DB_NAME', 'eqdb');
-  final dbUser = env('EQPG_DB_NAME', 'eqdb');
-  final dbPass = env('EQPG_DB_NAME', 'eqdb');
-  final maxConnections = int.parse(env('EQPG_MAX_CONNECTIONS', '100'));
+  final logFile = getParam(yamlData, keyServerLog);
+  final srvPort = getParamInt(yamlData, keyApiPort, 8080);
+  final dbHost = getParam(yamlData, keyDbHost, '0.0.0.0');
+  final dbPort = getParamInt(yamlData, keyDbPort, 5432);
+  final dbName = getParam(yamlData, keyDbName, 'eqdb');
+  final dbUser = getParam(yamlData, keyDbUser, 'eqdb');
+  final dbPass = getParam(yamlData, keyDbPass, 'eqdb');
+  final maxConnections = getParamInt(yamlData, keyMaxConn, 100);
 
   // Create connection object.
   final connection = new DbConnection(dbHost, dbPort, dbName, dbUser, dbPass);
@@ -63,3 +80,21 @@ Future main() async {
   var server = await shelf_io.serve(handler, '0.0.0.0', srvPort);
   Logger.root.info('Listening at port ${server.port}.');
 }
+
+/// Read environment variable.
+String env(String label, [String dflt = '']) =>
+    Platform.environment.containsKey('$envPrefix$label')
+        ? Platform.environment[label]
+        : dflt;
+
+/// Read string parameter from yaml data > environment variable > default
+String getParam(Map<String, dynamic> yaml, String label, [String dflt = '']) =>
+    yaml.containsKey(label) ? yaml[label] : env(label, dflt);
+
+/// Same as [getParam] but for integers.
+int getParamInt(Map<String, dynamic> yaml, String label, [int dflt = 0]) =>
+    yaml.containsKey(label)
+        ? yaml[label]
+        : Platform.environment.containsKey('$envPrefix$label')
+            ? int.parse(Platform.environment[label])
+            : dflt;

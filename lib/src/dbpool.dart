@@ -11,35 +11,49 @@ class DbConnection {
   DbConnection(
       this._dbHost, this._dbPort, this._dbName, this._dbUser, this._dbPass);
 
-  PostgreSQLConnection create() =>
-      new PostgreSQLConnection(_dbHost, _dbPort, _dbName,
-          username: _dbUser, password: _dbPass);
+  Future<PostgreSQLConnection> create() async {
+    final connection = new PostgreSQLConnection(_dbHost, _dbPort, _dbName,
+        username: _dbUser, password: _dbPass);
+    await connection.open();
+    return connection;
+  }
 }
 
 class DbPool {
   final DbConnection _connection;
-  final int maxConnections;
+  int connectionSpace;
   final available = new List<PostgreSQLConnection>();
-  final occupied = new List<PostgreSQLConnection>();
 
-  DbPool(this._connection, this.maxConnections);
+  DbPool(this._connection, this.connectionSpace);
 
   Future<List<List>> query(String fmtString,
-      {Map<String, dynamic> substitutionValues: null}) async {
+      [Map<String, dynamic> substitutionValues = null]) async {
     // If maxConnections are occupied, throw an error.
-    if (occupied.length == maxConnections) {
+    if (connectionSpace == 0 && available.isEmpty) {
       throw new RpcError(503, 'database_busy', 'database is busy');
     } else {
-      final connection =
-          available.isNotEmpty ? available.removeLast() : _connection.create();
+      PostgreSQLConnection connection;
+      if (available.isNotEmpty) {
+        connection = available.removeLast();
+      } else {
+        connectionSpace--;
+        connection = await _connection.create();
+      }
+
       try {
-        final data = await connection.query(fmtString);
+        final data = await connection.query(fmtString,
+            substitutionValues: substitutionValues);
         available.add(connection);
         return data;
       } catch (e) {
         // Close connection, just in case.
-        connection.close();
-        throw new RpcError(500, 'query_error', 'failed to execute query');
+        if (connection != null) {
+          connection.close();
+        }
+
+        connectionSpace++;
+        throw new RpcError(500, 'query_error', 'failed to execute query')
+          ..errors.add(new RpcErrorDetail(message: e.toString()));
       }
     }
   }

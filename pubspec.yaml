@@ -8,6 +8,7 @@ environment:
 dependencies:
   postgres:     ^0.9.4+1
   rpc:          ^0.5.7
+  yaml:         ^2.1.12
   shelf:        ^0.6.7+2
   shelf_rpc:    ^0.0.3+2
   shelf_route:  ^0.14.3
