@@ -30,14 +30,14 @@ class DbPool {
   DbPool(this._connection, this.connectionSpace);
 
   Future<List<List>> query(String fmtString,
-      [Map<String, dynamic> substitutionValues = null]) {
-    final ret = new Completer<List<List>>();
-    _getConnection((connection) async {
-      final result = await connection.query(fmtString,
+      [Map<String, dynamic> substitutionValues = null]) async {
+    List<List> result;
+    await _getConnection((connection) async {
+      result = await connection.query(fmtString,
           substitutionValues: substitutionValues);
-      ret.complete(result);
     });
-    return ret.future;
+    assert(result != null);
+    return result;
   }
 
   Future transaction(TransactionHandler handler) async {

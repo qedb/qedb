@@ -8,8 +8,14 @@ class Category {
   final int id;
   final List<int> path;
   Category(this.id, this.path);
-  factory Category.from(List<List> r) =>
-      new Category(r[0][0], new List<int>.generate(r.length, (i) => r[i][1]));
+  factory Category.from(List r) {
+    String path = r[1];
+    final splittedPath = path.isEmpty ? [] : path.split(',');
+    return new Category(
+        r[0],
+        new List<int>.generate(
+            splittedPath.length, (i) => int.parse(splittedPath[i])));
+  }
 }
 
 class Func {

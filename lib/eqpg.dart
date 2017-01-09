@@ -26,11 +26,11 @@ class EqDB {
   EqDB(DbConnection connection, int maxConnections)
       : pool = new DbPool(connection, maxConnections);
 
-  @ApiMethod(name: 'createCategory', method: 'POST')
+  @ApiMethod(path: 'createCategory', method: 'POST')
   Future<table.Category> createCategory(CreateCategory input) =>
       _createCategory(pool, input);
 
-  @ApiMethod(name: 'createDefinition', method: 'POST')
+  @ApiMethod(path: 'createDefinition', method: 'POST')
   Future<table.Definition> createDefinition(CreateDefinition input) =>
       _createDefinition(pool, input);
 }

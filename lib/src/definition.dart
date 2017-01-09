@@ -55,7 +55,6 @@ Future<table.Definition> _createDefinition(
 }
 
 class CreateDefinition {
-  final int id, categoryId;
-  final String left, right;
-  CreateDefinition(this.id, this.categoryId, this.left, this.right);
+  int id, categoryId;
+  String left, right;
 }

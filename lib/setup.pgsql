@@ -100,7 +100,7 @@ CREATE TABLE lineage_expression (
   weightsum      integer  NOT NULL,
   rule_id        integer           REFERENCES rule(id),
 
-  UNIQUE (lineage, sequence)
+  UNIQUE (lineage_id, lineage_index)
 );
 
 -- Rule translocation
@@ -160,3 +160,4 @@ REVOKE ALL ON ALL TABLES IN SCHEMA public FROM public;
 CREATE USER eqpg WITH ENCRYPTED PASSWORD '$password';
 GRANT CONNECT ON DATABASE eqdb TO eqpg;
 GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA public TO eqpg;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public to eqpg;

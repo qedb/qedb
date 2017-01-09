@@ -1,0 +1,23 @@
+baseUrl: http://localhost:8080/eqdb/v0/
+methods:
+- name: createCategory
+  method: POST
+  tests:
+  - data: {}
+    response:
+      id: 1
+      path: []
+  - data: {}
+    response:
+      id: 2
+      path: []
+  - data:
+      parentId: 1
+    response:
+      id: 3
+      path: [1]
+  - data:
+      parentId: 3
+    response:
+      id: 4
+      path: [1, 3]

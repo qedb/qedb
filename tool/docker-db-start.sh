@@ -29,7 +29,7 @@ docker cp ./tmp.pgsql eqpg-database:/docker-entrypoint-initdb.d/setup.pgsql
 rm -f tmp.pgsql
 
 # Run setup SQL.
-docker exec -u postgres eqpg-database psql eqdb postgres -f docker-entrypoint-initdb.d/setup.pgsql
+docker exec -it eqpg-database psql -U postgres -w eqdb -f docker-entrypoint-initdb.d/setup.pgsql
 
 # Get database host address and store in environment variable.
 export EQPG_DB_HOST=`docker inspect eqpg-database | grep '"IPAddress"' | awk '{print $2}' | awk -F '"' '{print $2}' | head -n1`
