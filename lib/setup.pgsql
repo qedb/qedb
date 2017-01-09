@@ -1,106 +1,126 @@
+--------------------------------------------------------------------------------
+-- Naming conventions:
+-- + Do not use reserved keywords (SQL standard)
+-- + Foreign key field names have a '_id' suffix
+-- + Do not use abbreviations unless very common or required
+--------------------------------------------------------------------------------
+
 CREATE EXTENSION pgcrypto;
 
-CREATE TYPE expression_ref AS ENUM ('function', 'integer');
-CREATE TYPE expression_link AS (
-  id   integer,
-  ref  expression_ref
-);
-
-CREATE TYPE eval_param_type as ENUM ('empirical', 'computed');
-CREATE TYPE eval_param AS (
-  ref       integer,
-  ref_type  eval_param_type
-);
-
-CREATE SEQUENCE expression_sequence;
+--------------------------------------------------------------------------------
+-- Categories and expression storage
+--------------------------------------------------------------------------------
 
 -- Category
 CREATE TABLE category (
-  id      serial   PRIMARY KEY,
-  parent  integer  REFERENCES category(id)
-);
-
--- Global expression set
-CREATE TABLE global_set (
-  id  serial  PRIMARY KEY
-);
-
--- Category expression set
-CREATE TABLE category_set (
-  id        serial   PRIMARY KEY,
-  category  integer  REFERENCES category(id) NOT NULL,
-  parent    integer  REFERENCES global_set(id) NOT NULL
-);
-
--- Category set link (merge sets when they collide)
-CREATE TABLE category_set_link (
-  id   serial   PRIMARY KEY,
-  src  integer  REFERENCES category_set(id) NOT NULL,
-  dst  integer  REFERENCES category_set(id) NOT NULL
+  id    serial     PRIMARY KEY,
+  path  integer[]  NOT NULL
 );
 
 -- Function
-CREATE TABLE fn (
-  id         serial   PRIMARY KEY,
-  category   integer  REFERENCES category(id) NOT NULL,
-  generic    boolean  NOT NULL,
-  latex      text     NOT NULL
+CREATE TABLE func (
+  id           serial   PRIMARY KEY,
+  category_id  integer  REFERENCES category(id) NOT NULL,
+  generic      boolean  NOT NULL,
+  latex        text     NOT NULL
 );
 
--- Defenition
-CREATE TABLE definition (
-  id          serial           PRIMARY KEY,
-  category    integer          NOT NULL REFERENCES category(id),
-  left_expr   expression_link  NOT NULL,
-  right_expr  expression_link  NOT NULL,
-
-  UNIQUE (left_expr, right_expr)
+CREATE TYPE expression_reference_type AS ENUM ('function', 'integer');
+CREATE TYPE expression_reference AS (
+  id              integer,
+  reference_type  expression_reference_type
 );
 
 -- Expression node
---
--- In theory, the id is equal to the expression id in the referenced table. When
--- a new fn_ref or int_ref is created, a new expression node should also be
--- created. Special measures need to be taken to prevent disalignment.
 CREATE TABLE expression (
-  id    serial           PRIMARY KEY,
-  ref   expression_ref   NOT NULL,
-  data  bytea            NOT NULL UNIQUE,
-  hash  bytea            NOT NULL UNIQUE,
-  cset  integer          REFERENCES category_set(id)
+  id         serial                PRIMARY KEY,
+  reference  expression_reference  NOT NULL,
+  data       bytea                 NOT NULL UNIQUE,
+  hash       bytea                 NOT NULL UNIQUE
 );
 
 -- Function expression
-CREATE TABLE fn_ref (
-  id    integer            NOT NULL DEFAULT nextval('expression_sequence'),
-  fn    integer            NOT NULL REFERENCES fn(id),
-  args  expression_link[]  NOT NULL
+CREATE TABLE func_reference (
+  id         serial                  PRIMARY KEY,
+  func_id    integer                 NOT NULL REFERENCES func(id),
+  arguments  expression_reference[]  NOT NULL
 );
 
 -- Integer expression
-CREATE TABLE int_ref (
-  id   integer  NOT NULL DEFAULT nextval('expression_sequence'),
-  num  integer  NOT NULL
+CREATE TABLE int_reference (
+  id   serial   PRIMARY KEY,
+  val  integer  NOT NULL
 );
 
--- Expression transformation
-CREATE TABLE transform (
-	id      serial           PRIMARY KEY,
-	src     expression_link  NOT NULL,
-	dst     expression_link  NOT NULL,
-	input   expression_link  NOT NULL,
-	output  expression_link  NOT NULL,
+--------------------------------------------------------------------------------
+-- Lineages
+--------------------------------------------------------------------------------
 
-  UNIQUE (src, dst)
+-- Lineage tree
+CREATE TABLE lineage_tree (
+  id  serial PRIMARY KEY
 );
 
--- Empirical values
-CREATE TABLE emperical_value (
-  id    serial   PRIMARY KEY,
-  val   number   NOT NULL UNIQUE,
-  expr  integer  REFERENCES expression(id),
-  rnf   integer  REFERENCES empirical_reference(id)
+-- Lineage
+CREATE TABLE lineage (
+  id                   serial   PRIMARY KEY,
+  tree_id              integer  NOT NULL REFERENCES lineage_tree(id),
+  parent_id            integer           REFERENCES lineage(id),
+  branch_index         integer  NOT NULL DEFAULT 0,
+  initial_category_id  integer  NOT NULL REFERENCES category(id)
 );
+
+-- Lineage category transition
+CREATE TABLE lineage_transition (
+  id           serial   PRIMARY KEY,
+  lineage_id   integer  NOT NULL REFERENCES lineage(id),
+  category_id  integer  NOT NULL REFERENCES lineage(id),
+  start_index  integer  NOT NULL
+);
+
+-- Rule (equation of two expression)
+CREATE TABLE rule (
+  id                serial     PRIMARY KEY,
+  left_lineage_id   integer    NOT NULL REFERENCES lineage(id),
+  left_index        integer    NOT NULL,
+  right_lineage_id  integer    NOT NULL REFERENCES lineage(id),
+  right_index       integer    NOT NULL,
+  weight            integer    NOT NULL,
+  path              integer[]  NOT NULL UNIQUE,
+
+  UNIQUE (left_lineage_id, left_index, right_lineage_id, right_index)
+);
+
+-- Lineage expression
+CREATE TABLE lineage_expression (
+  id             serial   PRIMARY KEY,
+  expression_id  integer  NOT NULL REFERENCES expression(id),
+  lineage_id     integer  NOT NULL REFERENCES lineage(id),
+  lineage_index  integer  NOT NULL,
+  weightsum      integer  NOT NULL,
+  rule_id        integer           REFERENCES rule(id),
+
+  UNIQUE (lineage, sequence)
+);
+
+-- Rule translocation
+CREATE TABLE translocate (
+  id                 serial   PRIMARY KEY,
+  rule_id            integer  NOT NULL REFERENCES rule(id),
+  in_expression_id   integer  NOT NULL REFERENCES expression(id),
+  out_expression_id  integer  NOT NULL REFERENCES expression(id),
+  tree_id            integer  NOT NULL REFERENCES lineage_tree(id)
+);
+
+-- Lineage root definition
+CREATE TABLE definition (
+  id       serial   PRIMARY KEY,
+  tree_id  integer  NOT NULL UNIQUE REFERENCES lineage_tree(id)
+);
+
+--------------------------------------------------------------------------------
+-- Emperical values and expression evaluation
+--------------------------------------------------------------------------------
 
 -- Empirical value reference source
 CREATE TABLE empirical_reference (
@@ -108,32 +128,35 @@ CREATE TABLE empirical_reference (
   doi  text    NOT NULL UNIQUE
 );
 
+-- Empirical values
+CREATE TABLE emperical_value (
+  id             serial   PRIMARY KEY,
+  val            numeric  NOT NULL UNIQUE,
+  expression_id  integer  REFERENCES expression(id),
+  reference_id   integer  REFERENCES empirical_reference(id)
+);
+
+CREATE TYPE evaluation_parameter_type as ENUM ('empirical', 'computed');
+CREATE TYPE evaluation_parameter AS (
+  ref       integer,
+  ref_type  evaluation_parameter_type
+);
+
 -- Expression evaluation
 CREATE TABLE evaluation (
-  id      serial            PRIMARY KEY,
-  expr    integer           NOT NULL REFERENCES expression(id),
-  params  eval_param[]      NOT NULL,
-  result  double precision  NOT NULL,
+  id             serial                  PRIMARY KEY,
+  expression_id  integer                 NOT NULL REFERENCES expression(id),
+  params         evaluation_parameter[]  NOT NULL,
+  result         double precision        NOT NULL
 );
 
--- Expression pair (must be in the same global set) that is linked to a page.
-CREATE TABLE expr_pair (
-  id          serial   PRIMARY KEY,
-  left_expr   integer  NOT NULL REFERENCES expression(id),
-  right_expr  integer  NOT NULL REFERENCES expression(id)
-);
+--------------------------------------------------------------------------------
+-- Create user and restrict access.
+--------------------------------------------------------------------------------
 
--- Expression pair page
-CREATE TABLE expr_page (
-  id    serial   PRIMARY KEY,
-  pair  integer  NOT NULL REFERENCES expr_pair(id)
-);
+REVOKE CONNECT ON DATABASE eqdb FROM public;
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM public;
 
--- Expression pair page row
-CREATE TABLE expr_page_row (
-  id    serial   PRIMARY KEY,
-  page  integer  NOT NULL REFERENCES expr_page(id),
-  seq   integer  NOT NULL,
-
-  UNIQUE (page, seq)
-);
+CREATE USER eqpg WITH ENCRYPTED PASSWORD '$password';
+GRANT CONNECT ON DATABASE eqdb TO eqpg;
+GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA public TO eqpg;

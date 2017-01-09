@@ -5,25 +5,32 @@
 library eqpg;
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:rpc/rpc.dart';
+import 'package:eqlib/eqlib.dart';
 import 'package:postgres/postgres.dart';
+import 'package:eqpg/tables.dart' as table;
 
 part 'src/dbpool.dart';
+part 'src/lineage.dart';
 part 'src/category.dart';
+part 'src/expression.dart';
+part 'src/definition.dart';
 
 @ApiClass(name: 'eqdb', version: 'v0', description: 'EqDB read/write API')
 class EqDB {
   final DbPool pool;
 
-  @ApiResource(name: 'category')
-  final CategoryResource category;
+  EqDB(DbConnection connection, int maxConnections)
+      : pool = new DbPool(connection, maxConnections);
 
-  factory EqDB(DbConnection connection, int maxConnections) {
-    final pool = new DbPool(connection, maxConnections);
-    final category = new CategoryResource(pool);
-    return new EqDB._(pool, category);
-  }
+  @ApiMethod(name: 'createCategory', method: 'POST')
+  Future<table.Category> createCategory(CreateCategory input) =>
+      _createCategory(pool, input);
 
-  EqDB._(this.pool, this.category);
+  @ApiMethod(name: 'createDefinition', method: 'POST')
+  Future<table.Definition> createDefinition(CreateDefinition input) =>
+      _createDefinition(pool, input);
 }

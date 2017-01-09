@@ -21,8 +21,12 @@ done
 # Create new database.
 docker exec -u postgres eqpg-database createdb eqdb
 
+# Replace '$password' in SQL with random password.
+sed "s/\$password/${EQPG_DB_PASS}/" < lib/setup.pgsql > tmp.pgsql
+
 # Copy setup SQL.
-docker cp ./lib/setup.pgsql eqpg-database:/docker-entrypoint-initdb.d/setup.pgsql
+docker cp ./tmp.pgsql eqpg-database:/docker-entrypoint-initdb.d/setup.pgsql
+rm -f tmp.pgsql
 
 # Run setup SQL.
 docker exec -u postgres eqpg-database psql eqdb postgres -f docker-entrypoint-initdb.d/setup.pgsql
@@ -31,7 +35,7 @@ docker exec -u postgres eqpg-database psql eqdb postgres -f docker-entrypoint-in
 export EQPG_DB_HOST=`docker inspect eqpg-database | grep '"IPAddress"' | awk '{print $2}' | awk -F '"' '{print $2}' | head -n1`
 export EQPG_DB_PORT="5432"
 export EQPG_DB_NAME="eqdb"
-export EQPG_DB_USER="postgres"
+export EQPG_DB_USER="eqpg"
 
 # Write config file.
 rm -f dev-config.yaml

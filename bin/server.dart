@@ -2,8 +2,8 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-import 'dart:async';
 import 'dart:io';
+import 'dart:async';
 
 import 'package:eqpg/eqpg.dart';
 import 'package:yaml/yaml.dart';

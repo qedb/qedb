@@ -19,6 +19,9 @@ class DbConnection {
   }
 }
 
+typedef Future _ConnectionHandler(PostgreSQLConnection connection);
+typedef Future TransactionHandler(PostgreSQLExecutionContext connection);
+
 class DbPool {
   final DbConnection _connection;
   int connectionSpace;
@@ -27,7 +30,24 @@ class DbPool {
   DbPool(this._connection, this.connectionSpace);
 
   Future<List<List>> query(String fmtString,
-      [Map<String, dynamic> substitutionValues = null]) async {
+      [Map<String, dynamic> substitutionValues = null]) {
+    final ret = new Completer<List<List>>();
+    _getConnection((connection) async {
+      final result = await connection.query(fmtString,
+          substitutionValues: substitutionValues);
+      ret.complete(result);
+    });
+    return ret.future;
+  }
+
+  Future transaction(TransactionHandler handler) async {
+    await _getConnection((connection) async {
+      // Note: the library automatically rolls back when an exception occurs.
+      connection.transaction(handler);
+    });
+  }
+
+  Future _getConnection(_ConnectionHandler handler) async {
     // If maxConnections are occupied, throw an error.
     if (connectionSpace == 0 && available.isEmpty) {
       throw new RpcError(503, 'database_busy', 'database is busy');
@@ -41,10 +61,8 @@ class DbPool {
       }
 
       try {
-        final data = await connection.query(fmtString,
-            substitutionValues: substitutionValues);
+        await handler(connection);
         available.add(connection);
-        return data;
       } catch (e) {
         // Close connection, just in case.
         if (connection != null) {

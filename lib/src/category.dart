@@ -4,28 +4,18 @@
 
 part of eqpg;
 
-const sqlInsertCategory =
-    'INSERT INTO category (id, parent) VALUES (DEFAULT, @parent:int4) RETURNING id, parent';
+const sqlInsertCategory = '''
+WITH path AS (SELECT path FROM category WHERE id = @parentId:int4)
+INSERT INTO category VALUES (DEFAULT, path || @parentId:int4)
+RETURNING id, unnest(path);''';
 
-class CategoryResource {
-  final DbPool pool;
-
-  CategoryResource(this.pool);
-
-  @ApiMethod(path: 'createCategory', method: 'POST')
-  Future<CreatedCategory> create(CreateCategory data) async {
-    final result = await pool.query(sqlInsertCategory, {'parent': data.parent});
-    return new CreatedCategory.from(result.first);
-  }
-}
-
-class CreatedCategory {
-  final int id, parent;
-  CreatedCategory(this.id, this.parent);
-  factory CreatedCategory.from(List data) =>
-      new CreatedCategory(data[0], data[1]);
+Future<table.Category> _createCategory(DbPool db, CreateCategory input) async {
+  final result =
+      await db.query(sqlInsertCategory, {'parentId': input.parentId});
+  return new table.Category.from(result);
 }
 
 class CreateCategory {
-  int parent;
+  final int parentId;
+  CreateCategory(this.parentId);
 }
