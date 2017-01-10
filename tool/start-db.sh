@@ -5,10 +5,16 @@
 # that can be found in the LICENSE file.
 
 # Generate password.
-export EQPG_DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-32}; echo;`
+export EQPG_DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-64}; echo;`
 
-# Setup Postgres database using Docker.
-docker run --name eqpg-database -e POSTGRES_PASSWORD="${EQPG_DB_PASS}" -d postgres:alpine
+# Replace password in setup SQL.
+sed "s/\$password/${EQPG_DB_PASS}/" < ./lib/setup.pgsql > ./tool/docker/setup.sql
+
+# Build container.
+docker build -t eqpg-database ./tool/docker/
+
+# Run container.
+docker run --name eqpg-database -e POSTGRES_DB="eqdb" -d eqpg-database
 
 # Give container some time to setup.
 IS_READY=`docker exec -u postgres eqpg-database pg_isready`
@@ -18,20 +24,7 @@ while [ "${IS_READY}" != "/tmp:5432 - accepting connections" ]; do
   echo $IS_READY
 done
 
-# Create new database.
-docker exec -u postgres eqpg-database createdb eqdb
-
-# Replace '$password' in SQL with random password.
-sed "s/\$password/${EQPG_DB_PASS}/" < lib/setup.pgsql > tmp.pgsql
-
-# Copy setup SQL.
-docker cp ./tmp.pgsql eqpg-database:/docker-entrypoint-initdb.d/setup.pgsql
-rm -f tmp.pgsql
-
-# Run setup SQL.
-docker exec -it eqpg-database psql -U postgres -w eqdb -f docker-entrypoint-initdb.d/setup.pgsql
-
-# Get database host address and store in environment variable.
+# Export access parameters.
 export EQPG_DB_HOST=`docker inspect eqpg-database | grep '"IPAddress"' | awk '{print $2}' | awk -F '"' '{print $2}' | head -n1`
 export EQPG_DB_PORT="5432"
 export EQPG_DB_NAME="eqdb"

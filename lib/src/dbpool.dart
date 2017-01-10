@@ -31,13 +31,12 @@ class DbPool {
 
   Future<List<List>> query(String fmtString,
       [Map<String, dynamic> substitutionValues = null]) async {
-    List<List> result;
-    await _getConnection((connection) async {
-      result = await connection.query(fmtString,
-          substitutionValues: substitutionValues);
-    });
-    assert(result != null);
-    return result;
+    final completer = new Completer<List<List>>();
+    _getConnection((connection) async {
+      completer.complete(await connection.query(fmtString,
+          substitutionValues: substitutionValues));
+    }).catchError(completer.completeError);
+    return completer.future;
   }
 
   Future transaction(TransactionHandler handler) async {

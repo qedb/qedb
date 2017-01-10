@@ -4,5 +4,8 @@
 # Use of this source code is governed by an AGPL-3.0-style license
 # that can be found in the LICENSE file.
 
-unifmt -c 'Herman Bergwerf' -l 'AGPL-3.0'
-make check
+SERVER_PID=`sudo netstat -nltp | grep "dart" | awk '{print $7}' | awk -F / '{print $1}'`
+if [ -n "${SERVER_PID}" ]
+then
+  kill $SERVER_PID
+fi

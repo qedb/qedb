@@ -151,13 +151,40 @@ CREATE TABLE evaluation (
 );
 
 --------------------------------------------------------------------------------
+-- Localization
+--------------------------------------------------------------------------------
+
+-- Tag
+CREATE TABLE tag (
+  id   serial  PRIMARY KEY,
+  tag  text    NOT NULL CHECK (tag ~* '^[0-9a-z]+$')
+);
+
+-- Function tag
+CREATE TABLE func_tag (
+  id       serial   PRIMARY KEY,
+  func_id  integer  NOT NULL REFERENCES func(id),
+  tag_id   integer  NOT NULL REFERENCES tag(id),
+
+  UNIQUE (func_id, tag_id)
+);
+
+-- Category names in various languages
+CREATE TABLE category_name (
+  id           serial   PRIMARY KEY,
+  category_id  integer  NOT NULL REFERENCES category(id),
+  name         text     NOT NULL CHECK (name ~* '^[0-9a-zA-z-\s]+$'),
+  locale       text     NOT NULL CHECK (locale ~* '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$')
+);
+
+--------------------------------------------------------------------------------
 -- Create user and restrict access.
 --------------------------------------------------------------------------------
 
 REVOKE CONNECT ON DATABASE eqdb FROM public;
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM public;
 
-CREATE USER eqpg WITH ENCRYPTED PASSWORD '$password';
+CREATE USER eqpg WITH ENCRYPTED PASSWORD '$password' CONNECTION LIMIT 100;
 GRANT CONNECT ON DATABASE eqdb TO eqpg;
 GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA public TO eqpg;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public to eqpg;

@@ -44,8 +44,8 @@ Future main() async {
   final dbHost = getParam(yamlData, keyDbHost, '0.0.0.0');
   final dbPort = getParamInt(yamlData, keyDbPort, 5432);
   final dbName = getParam(yamlData, keyDbName, 'eqdb');
-  final dbUser = getParam(yamlData, keyDbUser, 'eqdb');
-  final dbPass = getParam(yamlData, keyDbPass, 'eqdb');
+  final dbUser = getParam(yamlData, keyDbUser, 'eqpg');
+  final dbPass = getParam(yamlData, keyDbPass, 'unconfigured');
   final maxConnections = getParamInt(yamlData, keyMaxConn, 100);
 
   // Create connection object.

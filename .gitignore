@@ -1,5 +1,6 @@
 .vscode
 dev-config.yaml
+tool/docker/setup.sql
 
 #################
 # Linux.gitignore

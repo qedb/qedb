@@ -2,9 +2,17 @@ init:
 	# Create symlink for pre-commit hook.
 	ln -sf ../../tool/pre-commit.sh .git/hooks/pre-commit
 
-docker-start:
-	./tool/docker-db-start.sh
+start-database:
+	./tool/start-db.sh
 
-docker-teardown:
-	docker stop eqpg-database
-	docker rm eqpg-database
+stop-database:
+	./tool/stop-db.sh
+
+restart-database: stop-database start-database
+
+check: restart-database
+	./tool/kill-server.sh
+	dart bin/server.dart > /dev/null &
+	sleep 2
+	dart test/run.dart
+	./tool/kill-server.sh
