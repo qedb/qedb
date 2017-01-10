@@ -5,8 +5,12 @@
 # that can be found in the LICENSE file.
 
 CONTAINER=`docker ps | grep "eqpg-database" | awk '{print $1}'`
+IMAGE=`docker images | grep "eqpg-database" | awk '{print $3}'`
 if [ -n "${CONTAINER}" ]
 then
   docker stop --time=1 eqpg-database
+fi
+if [ -n "${IMAGE}" ]
+then
   docker rm eqpg-database
 fi
