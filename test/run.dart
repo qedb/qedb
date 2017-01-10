@@ -22,16 +22,35 @@ Future main() async {
     // Run all tests for this method.
     test(method['name'], () async {
       for (var j = 0; j < method['tests'].length; j++) {
-        var test = method['tests'][j];
+        Map<String, dynamic> testData = method['tests'][j];
 
         // Execute request.
         if (httpMethod == 'POST') {
-          final response = await http.post(path,
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.encode(test['data']));
+          if (testData.containsKey('data')) {
+            // data/response testing
+            final response = await http.post(path,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.encode(testData['data']));
 
-          // Compare expected and actual value.
-          expect(JSON.decode(response.body), equals(test['response']));
+            // Compare expected and actual value.
+            final expectedResponse = new Map<String, dynamic>.from(
+                testData.containsKey('response')
+                    ? testData['response']
+                    : testData['data']);
+
+            if (testData.containsKey('responseAdd')) {
+              expectedResponse.addAll(
+                  new Map<String, dynamic>.from(testData['responseAdd']));
+            }
+            if (testData.containsKey('responseRemove')) {
+              final toRemove =
+                  new List<String>.from(testData['responseRemove']);
+              toRemove.forEach((key) => expectedResponse.remove(key));
+            }
+
+            // Compare.
+            expect(JSON.decode(response.body), equals(expectedResponse));
+          }
         }
       }
     });

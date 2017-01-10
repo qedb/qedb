@@ -1,5 +1,6 @@
 baseUrl: http://localhost:8080/eqdb/v0/
 methods:
+
 - name: createCategory
   method: POST
   tests:
@@ -21,3 +22,59 @@ methods:
     response:
       id: 4
       path: [1, 3]
+
+- name: createFunction
+  method: POST
+  tests:
+  # Addition operator
+  - data:
+      categoryId:       1
+      generic:          false
+      latexTemplate:    $(a)+$(b)
+      useParentheses:   true
+      precedenceLevel:  1
+      evaluationType:   afirst
+      labels:           ['add']
+      tags:             ['operator']
+    responseAdd:
+      id:               1
+    responseRemove:     ['labels', 'tags']
+  # Subtraction operator
+  - recordData:
+      categoryId:       1
+      generic:          false
+      latexTemplate:    $(a)-$(b)
+      useParentheses:   true
+      precedenceLevel:  1
+      evaluationType:   afirst
+      labels:           ['sub']
+      tags:             ['operator']
+    responseAdd:
+      id:               2
+    responseRemove:     ['labels', 'tags']
+  # Multiplication operator
+  - recordData:
+      categoryId:       1
+      generic:          false
+      latexTemplate:    $(a)\cdot$(b)
+      useParentheses:   true
+      precedenceLevel:  2
+      evaluationType:   afirst
+      labels:           ['mul']
+      tags:             ['operator']
+    responseAdd:
+      id:               3
+    responseRemove:     ['labels', 'tags']
+  # Division operator
+  - recordData:
+      categoryId:       1
+      generic:          false
+      latexTemplate:    \frac{$a}{$b}
+      useParentheses:   false
+      precedenceLevel:  2
+      evaluationType:   isolated
+      labels:           ['div']
+      tags:             ['operator']
+    responseAdd:
+      id:               4
+    responseRemove:     ['labels', 'tags']

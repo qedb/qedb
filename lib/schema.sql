@@ -17,12 +17,17 @@ CREATE TABLE category (
   path  integer[]  NOT NULL
 );
 
+CREATE TYPE read_evaluation_type AS ENUM ('isolated', 'afirst', 'bfirst');
+
 -- Function
-CREATE TABLE func (
-  id           serial   PRIMARY KEY,
-  category_id  integer  REFERENCES category(id) NOT NULL,
-  generic      boolean  NOT NULL,
-  latex        text     NOT NULL
+CREATE TABLE function (
+  id                serial                PRIMARY KEY,
+  category_id       integer               REFERENCES category(id) NOT NULL,
+  generic           boolean               NOT NULL,
+  latex_template    text                  NOT NULL,
+  use_parentheses   boolean               NOT NULL,
+  precedence_level  smallint              NOT NULL CHECK (precedence_level > 0),
+  evaluation_type   read_evaluation_type  NOT NULL
 );
 
 CREATE TYPE expression_reference_type AS ENUM ('function', 'integer');
@@ -39,15 +44,15 @@ CREATE TABLE expression (
   hash       bytea                 NOT NULL UNIQUE
 );
 
--- Function expression
-CREATE TABLE func_reference (
-  id         serial                  PRIMARY KEY,
-  func_id    integer                 NOT NULL REFERENCES func(id),
-  arguments  expression_reference[]  NOT NULL
+-- Function expression reference
+CREATE TABLE function_reference (
+  id           serial                  PRIMARY KEY,
+  function_id  integer                 NOT NULL REFERENCES function(id),
+  arguments    expression_reference[]  NOT NULL
 );
 
--- Integer expression
-CREATE TABLE int_reference (
+-- Integer expression reference
+CREATE TABLE integer_reference (
   id   serial   PRIMARY KEY,
   val  integer  NOT NULL
 );
@@ -151,30 +156,59 @@ CREATE TABLE evaluation (
 );
 
 --------------------------------------------------------------------------------
--- Localization
+-- Naming and labelling
 --------------------------------------------------------------------------------
 
--- Tag
+-- Tag (exclusively in English by design)
 CREATE TABLE tag (
   id   serial  PRIMARY KEY,
-  tag  text    NOT NULL CHECK (tag ~* '^[0-9a-z]+$')
+  tag  text    NOT NULL CHECK (tag ~ '^[0-9a-z]+$')
+);
+
+-- Label (exclusively in English by design)
+CREATE TABLE label (
+  id     serial  PRIMARY KEY,
+  label  text    NOT NULL CHECK (label ~ '^[0-9a-z]+$')
 );
 
 -- Function tag
-CREATE TABLE func_tag (
-  id       serial   PRIMARY KEY,
-  func_id  integer  NOT NULL REFERENCES func(id),
-  tag_id   integer  NOT NULL REFERENCES tag(id),
+CREATE TABLE function_tag (
+  id           serial   PRIMARY KEY,
+  function_id  integer  NOT NULL REFERENCES function(id),
+  tag_id       integer  NOT NULL REFERENCES tag(id),
 
-  UNIQUE (func_id, tag_id)
+  UNIQUE (function_id, tag_id)
+);
+
+-- Function label
+CREATE TABLE function_label (
+  id           serial   PRIMARY KEY,
+  function_id  integer  NOT NULL REFERENCES function(id),
+  label_id     integer  NOT NULL REFERENCES label(id),
+
+  UNIQUE (function_id, label_id)
+);
+
+-- Locale
+CREATE TABLE locale (
+  id    serial  PRIMARY KEY,
+  code  text    NOT NULL UNIQUE CHECK (code ~ '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$')
 );
 
 -- Category names in various languages
 CREATE TABLE category_name (
   id           serial   PRIMARY KEY,
   category_id  integer  NOT NULL REFERENCES category(id),
-  name         text     NOT NULL CHECK (name ~* '^[0-9a-zA-z-\s]+$'),
-  locale       text     NOT NULL CHECK (locale ~* '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$')
+  locale_id    integer  NOT NULL REFERENCES locale(id),
+  name         text     NOT NULL CHECK (name ~ E'^[0-9A-Z][0-9a-zA-Z-\'\\s]+$')
+);
+
+-- Function names in various languages
+CREATE TABLE function_name (
+  id           serial   PRIMARY KEY,
+  function_id  integer  NOT NULL REFERENCES function(id),
+  locale_id    integer  NOT NULL REFERENCES locale(id),
+  name         text     NOT NULL CHECK (name ~ E'^[0-9A-Z][0-9a-zA-Z-\'\\s]+$')
 );
 
 --------------------------------------------------------------------------------

@@ -17,6 +17,21 @@ RETURNING id, reference.id, reference.type,
   encode(data, 'base64'), encode(hash, 'base64')
 ''';
 
+const sqlInsertSymbolFunctionRef = '''
+INSERT INTO function_reference
+VALUES (DEFAULT, @functionId:int4, ARRAY[])
+RETURNING *''';
+
+String sqlInsertFunctionRef(int argCount) {
+  final args = new List<String>.generate(
+      argCount, (i) => 'ROW(@referenceId$i:int4, @referenceType$i:text)');
+  return '''
+INSERT INTO function_reference
+VALUES (DEFAULT, @functionId:int4, ARRAY[${args.join(', ')}])
+RETURNING id, fn, args;
+''';
+}
+
 /// Shortcut for decoding base64 codec headers.
 ExprCodecData _decodeCodecHeader(String base64Data) =>
     new ExprCodecData.decodeHeader(
@@ -55,36 +70,35 @@ Future<table.Expression> _createExpression(
   return new table.Expression.from(insertResult);
 }
 
-/// Create expression reference for number expression in int_reference table.
+/// Create expression reference for number expression in integer_reference.
 Future<table.ExpressionReference> _createNumberReference(
     PostgreSQLExecutionContext db, NumberExpr expr) async {
   // Insert record.
   final result = await db.query(
-      'INSERT INTO int_ref VALUES (DEFAULT, @val:int4) RETURNING *',
+      'INSERT INTO integer_reference VALUES (DEFAULT, @val:int4) RETURNING *',
       substitutionValues: {'val': expr.value.toInt()});
 
   // Get linking data.
-  final intRef = new table.IntReference.from(result.first);
+  final intRef = new table.IntegerReference.from(result.first);
   return new table.ExpressionReference(intRef.id, 'integer');
 }
 
-/// Create expression reference for symbol expression in func_reference table.
+/// Create expression reference for symbol expression in function_reference.
 Future<table.ExpressionReference> _createSymbolReference(
     PostgreSQLExecutionContext db, SymbolExpr expr) async {
-  final result = await db.query(
-      'INSERT INTO func_ref VALUES (DEFAULT, @funcId:int4, ARRAY[]) RETURNING *',
-      substitutionValues: {'funcId': expr.id});
+  final result = await db.query(sqlInsertSymbolFunctionRef,
+      substitutionValues: {'functionId': expr.id});
 
   // Get linking data.
-  final funcRef = new table.FuncReference.from(result);
-  return new table.ExpressionReference(funcRef.id, 'function');
+  final functionRef = new table.FunctionReference.from(result);
+  return new table.ExpressionReference(functionRef.id, 'function');
 }
 
-/// Create expression reference for function expression in func_reference table.
+/// Create expression reference for function expression in function_reference.
 Future<table.ExpressionReference> _createFunctionReference(
     PostgreSQLExecutionContext db, FunctionExpr expr) async {
   // Create map of query data.
-  Map<String, dynamic> data = {'funcId': expr.id};
+  Map<String, dynamic> data = {'functionId': expr.id};
   for (var i = 0; i < expr.args.length; i++) {
     final arg = expr.args[i];
     final argExpr = await _createExpression(db, arg);
@@ -97,16 +111,6 @@ Future<table.ExpressionReference> _createFunctionReference(
       substitutionValues: data);
 
   // Get linking data.
-  final funcRef = new table.FuncReference.from(result);
+  final funcRef = new table.FunctionReference.from(result);
   return new table.ExpressionReference(funcRef.id, 'function');
-}
-
-String sqlInsertFunctionRef(int argCount) {
-  final args = new List<String>.generate(
-      argCount, (i) => 'ROW(@referenceId$i:int4, @referenceType$i:text)');
-  return '''
-INSERT INTO func_ref
-VALUES (DEFAULT, @funcId:int4, ARRAY[${args.join(', ')}])
-RETURNING id, fn, args;
-''';
 }

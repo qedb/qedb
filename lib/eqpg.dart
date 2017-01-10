@@ -16,6 +16,7 @@ import 'package:eqpg/tables.dart' as table;
 part 'src/dbpool.dart';
 part 'src/lineage.dart';
 part 'src/category.dart';
+part 'src/function.dart';
 part 'src/expression.dart';
 part 'src/definition.dart';
 
@@ -29,6 +30,10 @@ class EqDB {
   @ApiMethod(path: 'createCategory', method: 'POST')
   Future<table.Category> createCategory(CreateCategory input) =>
       _createCategory(pool, input);
+
+  @ApiMethod(path: 'createFunction', method: 'POST')
+  Future<table.Function> createFunction(CreateFunction input) =>
+      _createFunction(pool, input);
 
   @ApiMethod(path: 'createDefinition', method: 'POST')
   Future<table.Definition> createDefinition(CreateDefinition input) =>

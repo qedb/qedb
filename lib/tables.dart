@@ -18,12 +18,17 @@ class Category {
   }
 }
 
-class Func {
+class Function {
   final int id, categoryId;
   final bool generic;
-  final String latex;
-  Func(this.id, this.categoryId, this.generic, this.latex);
-  factory Func.from(List r) => new Func(r[0], r[1], r[2], r[3]);
+  final String latexTemplate;
+  final bool useParentheses;
+  final int precedenceLevel;
+  final String evaluationType;
+  Function(this.id, this.categoryId, this.generic, this.latexTemplate,
+      this.useParentheses, this.precedenceLevel, this.evaluationType);
+  factory Function.from(List r) =>
+      new Function(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
 }
 
 class ExpressionReference {
@@ -41,21 +46,21 @@ class Expression {
       new Expression(r[0], new ExpressionReference(r[1], r[2]), r[3], r[4]);
 }
 
-class FuncReference {
-  final int id, funcId;
+class FunctionReference {
+  final int id, functionId;
   final List<ExpressionReference> arguments;
-  FuncReference(this.id, this.funcId, this.arguments);
-  factory FuncReference.from(List<List> r) => new FuncReference(
+  FunctionReference(this.id, this.functionId, this.arguments);
+  factory FunctionReference.from(List<List> r) => new FunctionReference(
       r[0][0],
       r[0][1],
       new List<ExpressionReference>.generate(
           r.length, (i) => new ExpressionReference(r[i][2], r[i][3])));
 }
 
-class IntReference {
+class IntegerReference {
   final int id, val;
-  IntReference(this.id, this.val);
-  factory IntReference.from(List r) => new IntReference(r[0], r[1]);
+  IntegerReference(this.id, this.val);
+  factory IntegerReference.from(List r) => new IntegerReference(r[0], r[1]);
 }
 
 class LineageTree {

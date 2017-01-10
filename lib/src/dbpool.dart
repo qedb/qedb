@@ -62,15 +62,18 @@ class DbPool {
       try {
         await handler(connection);
         available.add(connection);
-      } catch (e) {
+      } catch (e, stackTrace) {
         // Close connection, just in case.
         if (connection != null) {
           connection.close();
         }
 
         connectionSpace++;
+
+        // TODO: do not add error details in release mode.
         throw new RpcError(500, 'query_error', 'failed to execute query')
-          ..errors.add(new RpcErrorDetail(message: e.toString()));
+          ..errors.add(new RpcErrorDetail(message: e.toString()))
+          ..errors.add(new RpcErrorDetail(message: stackTrace.toString()));
       }
     }
   }

@@ -4,11 +4,11 @@
 
 part of eqpg;
 
-String sqlInsersectFunctions(List<int> funcIds) => '''
-SELECT id FROM func WHERE category_id IN (
+String sqlInsersectFunctions(List<int> functionIds) => '''
+SELECT id FROM function WHERE category_id IN (
   SELECT array_append(path, id) FROM category WHERE id = @categoryId:int4)
 UNION
-SELECT id FROM func WHERE id IN (${funcIds.join(',')})''';
+SELECT id FROM function WHERE id IN (${functionIds.join(',')})''';
 
 Future<table.Definition> _createDefinition(
     DbPool db, CreateDefinition input) async {
