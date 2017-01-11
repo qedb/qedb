@@ -24,7 +24,8 @@ RETURNING *''';
 
 String sqlInsertFunctionRef(int argCount) {
   final args = new List<String>.generate(
-      argCount, (i) => 'ROW(@referenceId$i:int4, @referenceType$i:text)');
+      argCount, (i) => 'ROW(@referenceId$i:int4, @referenceType$i:text)',
+      growable: false);
   return '''
 INSERT INTO function_reference
 VALUES (DEFAULT, @functionId:int4, ARRAY[${args.join(', ')}])

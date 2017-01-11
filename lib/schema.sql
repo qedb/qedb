@@ -32,8 +32,8 @@ CREATE TABLE function (
 
 CREATE TYPE expression_reference_type AS ENUM ('function', 'integer');
 CREATE TYPE expression_reference AS (
-  id              integer,
-  reference_type  expression_reference_type
+  id    integer,
+  type  expression_reference_type
 );
 
 -- Expression node
@@ -143,8 +143,8 @@ CREATE TABLE emperical_value (
 
 CREATE TYPE evaluation_parameter_type as ENUM ('empirical', 'computed');
 CREATE TYPE evaluation_parameter AS (
-  ref       integer,
-  ref_type  evaluation_parameter_type
+  ref   integer,
+  type  evaluation_parameter_type
 );
 
 -- Expression evaluation
@@ -159,34 +159,29 @@ CREATE TABLE evaluation (
 -- Naming and labelling
 --------------------------------------------------------------------------------
 
--- Tag (exclusively in English by design)
-CREATE TABLE tag (
-  id   serial  PRIMARY KEY,
-  tag  text    NOT NULL CHECK (tag ~ '^[0-9a-z]+$')
+-- Descriptor type
+-- 
+-- Notes:
+-- + descriptors are exclusively English keywords or universal technial terms.
+-- + labels are a form of how function could be represented in plain ASCII.
+-- + tags identify a function as part of a certain group (e.g. vector,
+--   vector magnitude, unit vector, physical constant, etc.)
+CREATE TYPE descriptor_type AS ENUM ('tag', 'label');
+
+-- Descriptor
+CREATE TABLE descriptor (
+  id    serial  PRIMARY KEY,
+  name  text    NOT NULL CHECK (name ~ '^[0-9a-z]+$'),
+  type  descriptor_type 
 );
 
--- Label (exclusively in English by design)
-CREATE TABLE label (
-  id     serial  PRIMARY KEY,
-  label  text    NOT NULL CHECK (label ~ '^[0-9a-z]+$')
-);
+-- Function descriptor
+CREATE TABLE function_descriptor (
+  id             serial   PRIMARY KEY,
+  function_id    integer  NOT NULL REFERENCES function(id),
+  descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
 
--- Function tag
-CREATE TABLE function_tag (
-  id           serial   PRIMARY KEY,
-  function_id  integer  NOT NULL REFERENCES function(id),
-  tag_id       integer  NOT NULL REFERENCES tag(id),
-
-  UNIQUE (function_id, tag_id)
-);
-
--- Function label
-CREATE TABLE function_label (
-  id           serial   PRIMARY KEY,
-  function_id  integer  NOT NULL REFERENCES function(id),
-  label_id     integer  NOT NULL REFERENCES label(id),
-
-  UNIQUE (function_id, label_id)
+  UNIQUE (function_id, descriptor_id)
 );
 
 -- Locale

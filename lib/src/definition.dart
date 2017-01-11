@@ -49,7 +49,7 @@ Future<table.Definition> _createDefinition(
         'INSERT INTO definition VALUES (DEFAULT, @treeId:int4) RETURNING *',
         substitutionValues: {'treeId': tree.id});
     completer.complete(new table.Definition.from(insertResult));
-  });
+  }).catchError(completer.completeError);
 
   return completer.future;
 }

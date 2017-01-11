@@ -39,11 +39,14 @@ class DbPool {
     return completer.future;
   }
 
-  Future transaction(TransactionHandler handler) async {
-    await _getConnection((connection) async {
+  Future<Null> transaction(TransactionHandler handler) async {
+    final completer = new Completer<Null>();
+    _getConnection((connection) async {
       // Note: the library automatically rolls back when an exception occurs.
-      connection.transaction(handler);
-    });
+      await connection.transaction(handler);
+      completer.complete(null);
+    }).catchError(completer.completeError);
+    return completer.future;
   }
 
   Future _getConnection(_ConnectionHandler handler) async {
@@ -63,6 +66,8 @@ class DbPool {
         await handler(connection);
         available.add(connection);
       } catch (e, stackTrace) {
+        print(e);
+
         // Close connection, just in case.
         if (connection != null) {
           connection.close();
