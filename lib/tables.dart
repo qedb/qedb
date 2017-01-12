@@ -27,12 +27,9 @@ class Function {
   final bool generic;
   final String latexTemplate;
   final bool useParentheses;
-  final int precedenceLevel;
-  final String evaluationType;
   Function(this.id, this.categoryId, this.generic, this.latexTemplate,
-      this.useParentheses, this.precedenceLevel, this.evaluationType);
-  factory Function.from(List r) =>
-      new Function(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
+      this.useParentheses);
+  factory Function.from(List r) => new Function(r[0], r[1], r[2], r[3], r[4]);
 }
 
 class ExpressionReference {

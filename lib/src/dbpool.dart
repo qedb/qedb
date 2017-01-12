@@ -76,6 +76,7 @@ class DbPool {
         connectionSpace++;
 
         // TODO: do not add error details in release mode.
+        // Best solution: log stack traces and show a hash ID here.
         throw new RpcError(500, 'query_error', 'failed to execute query')
           ..errors.add(new RpcErrorDetail(message: e.toString()))
           ..errors.add(new RpcErrorDetail(message: stackTrace.toString()));

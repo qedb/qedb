@@ -28,53 +28,57 @@ methods:
   tests:
   # Addition operator
   - data:
-      categoryId:       1
-      generic:          false
-      latexTemplate:    $(a)+$(b)
-      useParentheses:   true
-      precedenceLevel:  1
-      evaluationType:   afirst
-      labels:           ['add']
-      tags:             ['operator']
+      categoryId:         1
+      generic:            false
+      latexTemplate:      $(a)+$(b)
+      useParentheses:     true
+      asOperator:
+        precedenceLevel:  1
+        evaluationType:   afirst
+      labels:             ['add']
+      tags:               ['operator']
     responseAdd:
-      id:               1
-    responseRemove:     ['labels', 'tags']
+      id:                 1
+    responseRemove:       ['labels', 'tags', 'asOperator']
   # Subtraction operator
   - recordData:
-      categoryId:       1
-      generic:          false
-      latexTemplate:    $(a)-$(b)
-      useParentheses:   true
-      precedenceLevel:  1
-      evaluationType:   afirst
-      labels:           ['sub']
-      tags:             ['operator']
+      categoryId:         1
+      generic:            false
+      latexTemplate:      $(a)-$(b)
+      useParentheses:     true
+      asOperator:
+        precedenceLevel:  1
+        evaluationType:   afirst
+      labels:             ['subtract']
+      tags:               ['operator']
     responseAdd:
-      id:               2
-    responseRemove:     ['labels', 'tags']
+      id:                 2
+    responseRemove:       ['labels', 'tags', 'asOperator']
   # Multiplication operator
   - recordData:
-      categoryId:       1
-      generic:          false
-      latexTemplate:    $(a)\cdot$(b)
-      useParentheses:   true
-      precedenceLevel:  2
-      evaluationType:   afirst
-      labels:           ['mul']
-      tags:             ['operator']
+      categoryId:         1
+      generic:            false
+      latexTemplate:      $(a)\cdot$(b)
+      useParentheses:     true
+      asOperator:
+        precedenceLevel:  2
+        evaluationType:   afirst
+      labels:             ['multiply']
+      tags:               ['operator']
     responseAdd:
-      id:               3
-    responseRemove:     ['labels', 'tags']
+      id:                 3
+    responseRemove:       ['labels', 'tags', 'asOperator']
   # Division operator
   - recordData:
-      categoryId:       1
-      generic:          false
-      latexTemplate:    \frac{$a}{$b}
-      useParentheses:   false
-      precedenceLevel:  2
-      evaluationType:   isolated
-      labels:           ['div']
-      tags:             ['operator']
+      categoryId:         1
+      generic:            false
+      latexTemplate:      \frac{$a}{$b}
+      useParentheses:     false
+      asOperator:
+        precedenceLevel:  2
+        evaluationType:   isolated
+      labels:             ['divide']
+      tags:               ['operator']
     responseAdd:
-      id:               4
-    responseRemove:     ['labels', 'tags']
+      id:                 4
+    responseRemove:       ['labels', 'tags', 'asOperator']

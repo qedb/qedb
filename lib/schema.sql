@@ -22,10 +22,16 @@ CREATE TYPE read_evaluation_type AS ENUM ('isolated', 'afirst', 'bfirst');
 -- Function
 CREATE TABLE function (
   id                serial                PRIMARY KEY,
-  category_id       integer               REFERENCES category(id) NOT NULL,
+  category_id       integer               NOT NULL REFERENCES category(id),
   generic           boolean               NOT NULL,
   latex_template    text                  NOT NULL,
-  use_parentheses   boolean               NOT NULL,
+  use_parentheses   boolean               NOT NULL
+);
+
+-- Operator configuration
+CREATE TABLE operator_configuration (
+  id                serial                PRIMARY KEY,
+  function_id       integer               NOT NULL UNIQUE REFERENCES function(id),
   precedence_level  smallint              NOT NULL CHECK (precedence_level > 0),
   evaluation_type   read_evaluation_type  NOT NULL
 );
@@ -83,7 +89,12 @@ CREATE TABLE lineage_transition (
   start_index  integer  NOT NULL
 );
 
+-- TODO: lineage joints. Joints coud be used in both proof searching and to
+-- join connecting lineages so that further derivations can be started from a
+-- commpon point (a joint could automatically transform into a new lineage?).
+
 -- Rule (equation of two expression)
+-- Note: manually or automatically keep track of alternative proofs?
 CREATE TABLE rule (
   id                serial     PRIMARY KEY,
   left_lineage_id   integer    NOT NULL REFERENCES lineage(id),
@@ -91,7 +102,7 @@ CREATE TABLE rule (
   right_lineage_id  integer    NOT NULL REFERENCES lineage(id),
   right_index       integer    NOT NULL,
   weight            integer    NOT NULL,
-  path              integer[]  NOT NULL UNIQUE,
+  proof             integer[]  NOT NULL UNIQUE,
 
   UNIQUE (left_lineage_id, left_index, right_lineage_id, right_index)
 );
@@ -173,6 +184,15 @@ CREATE TABLE descriptor (
   id    serial  PRIMARY KEY,
   name  text    NOT NULL CHECK (name ~ '^[0-9a-z]+$'),
   type  descriptor_type 
+);
+
+-- Descriptor alias
+-- To prevent redundancy and inconsistent duplication, descriptors can be
+-- aliassed (mostly for abbreviations and acronyms).
+CREATE TABLE descriptor_alias (
+  id             serial   PRIMARY KEY,
+  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id),
+  alias          text     NOT NULL UNIQUE CHECK (alias ~ '^[0-9a-z]+$')
 );
 
 -- Function descriptor

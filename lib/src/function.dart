@@ -6,8 +6,14 @@ part of eqpg;
 
 const sqlInsertFunction = '''
 INSERT INTO function
-VALUES (DEFAULT, @categoryId:int4, @generic:bool, @latexTemplate:text,
-  @useParentheses:bool, @precedenceLevel:int2, @evaluationType)
+VALUES (DEFAULT, @categoryId:int4, @generic:bool,
+  @latexTemplate:text, @useParentheses:bool)
+RETURNING *
+''';
+
+const sqlInsertOperatorConfig = '''
+INSERT INTO operator_configuration
+VALUES (DEFAULT, @functionId:int4, @precedenceLevel:int2, @evaluationType)
 RETURNING *
 ''';
 
@@ -20,11 +26,19 @@ Future<table.Function> _createFunction(DbPool db, CreateFunction input) async {
       'categoryId': input.categoryId,
       'generic': input.generic,
       'latexTemplate': input.latexTemplate,
-      'useParentheses': input.useParentheses,
-      'precedenceLevel': input.precedenceLevel,
-      'evaluationType': input.evaluationType
+      'useParentheses': input.useParentheses
     });
     final function = new table.Function.from(result.first);
+
+    // If this is an operator, insert the operator configuration.
+    if (input.asOperator != null) {
+      // If the query fails this should throw an error.
+      await db.query(sqlInsertOperatorConfig, substitutionValues: {
+        'functionId': function.id,
+        'precedenceLevel': input.asOperator.precedenceLevel,
+        'evaluationType': input.asOperator.evaluationType
+      });
+    }
 
     // Insert labels and tags.
     await _addFunctionDescriptor(db, function.id, 'label', input.labels);
@@ -82,8 +96,12 @@ class CreateFunction {
   bool generic;
   String latexTemplate;
   bool useParentheses;
-  int precedenceLevel;
-  String evaluationType;
+  OperatorConfiguration asOperator;
   List<String> labels;
   List<String> tags;
+}
+
+class OperatorConfiguration {
+  int precedenceLevel;
+  String evaluationType;
 }

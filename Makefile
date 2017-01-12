@@ -13,6 +13,6 @@ restart-database: stop-database start-database
 check: restart-database
 	./tool/kill-server.sh
 	dart bin/server.dart > /dev/null &
-	sleep 2
+	sleep 4
 	dart test/run.dart
 	./tool/kill-server.sh
