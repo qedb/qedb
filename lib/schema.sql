@@ -8,24 +8,86 @@
 CREATE EXTENSION pgcrypto;
 
 --------------------------------------------------------------------------------
+-- Descriptors
+--------------------------------------------------------------------------------
+
+-- Descriptor type
+-- 
+-- Notes:
+-- + descriptors are exclusively English keywords or universal technial terms.
+-- + labels are a form of how function could be represented in plain ASCII.
+-- + group identify a function as part of a certain group (e.g. vector,
+--   vector magnitude, unit vector, physical constant, etc.)
+-- + areas are a special kind of tag and they mark a function as part of a
+--   certain mathematical area
+CREATE TYPE descriptor_type AS ENUM ('label', 'group', 'area');
+
+-- Descriptor
+CREATE TABLE descriptor (
+  id    serial           PRIMARY KEY,
+  name  text             NOT NULL UNIQUE CHECK (name ~ '^[0-9a-z]+$'),
+  type  descriptor_type  NOT NULL
+);
+
+-- Descriptor alias
+-- To prevent redundancy and inconsistent duplication, descriptors have aliases.
+CREATE TABLE descriptor_alias (
+  id             serial   PRIMARY KEY,
+  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id),
+  alias_id       integer  NOT NULL UNIQUE REFERENCES descriptor(id)
+);
+
+-- Locale
+CREATE TABLE locale (
+  id    serial  PRIMARY KEY,
+  code  text    NOT NULL UNIQUE CHECK (code ~ '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$')
+);
+
+-- Translation record
+-- Note: the regex is very rudimentary.
+CREATE TABLE translation (
+  id             serial   PRIMARY KEY,
+  descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
+  locale_id      integer  NOT NULL REFERENCES locale(id),
+  content        text     NOT NULL CHECK (content ~ E'^(?:[^\\s]+ )*[^\\s]+$')
+);
+
+--------------------------------------------------------------------------------
 -- Categories and expression storage
 --------------------------------------------------------------------------------
 
 -- Category
 CREATE TABLE category (
-  id    serial     PRIMARY KEY,
-  path  integer[]  NOT NULL
+  id             serial     PRIMARY KEY,
+  parents        integer[]  NOT NULL
+
+  -- Area descriptor
+  --descriptor_id  integer    NOT NULL UNIQUE REFERENCES descriptor(id)
 );
 
 CREATE TYPE read_evaluation_type AS ENUM ('isolated', 'afirst', 'bfirst');
 
 -- Function
 CREATE TABLE function (
-  id                serial                PRIMARY KEY,
-  category_id       integer               NOT NULL REFERENCES category(id),
-  generic           boolean               NOT NULL,
-  latex_template    text                  NOT NULL,
-  use_parentheses   boolean               NOT NULL
+  id                serial   PRIMARY KEY,
+  category_id       integer  NOT NULL REFERENCES category(id),
+  generic           boolean  NOT NULL,
+  latex_template    text     NOT NULL,
+  use_parentheses   boolean  NOT NULL
+
+  -- Label descriptor
+  --descriptor_id     integer  NOT NULL UNIQUE REFERENCES descriptor(id)
+);
+
+-- Function descriptor
+CREATE TABLE function_descriptor (
+  id             serial   PRIMARY KEY,
+  function_id    integer  NOT NULL REFERENCES function(id),
+
+  -- Area or group descriptor (not an area used by any category)
+  descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
+
+  UNIQUE (function_id, descriptor_id)
 );
 
 -- Operator configuration
@@ -93,16 +155,22 @@ CREATE TABLE lineage_transition (
 -- join connecting lineages so that further derivations can be started from a
 -- commpon point (a joint could automatically transform into a new lineage?).
 
+CREATE TYPE rule_proof_node_direction AS ENUM ('ascend', 'descend');
+CREATE TYPE rule_proof_node AS (
+  lineage_id   integer,
+  direction    rule_proof_node_direction
+);
+
 -- Rule (equation of two expression)
 -- Note: manually or automatically keep track of alternative proofs?
 CREATE TABLE rule (
-  id                serial     PRIMARY KEY,
-  left_lineage_id   integer    NOT NULL REFERENCES lineage(id),
-  left_index        integer    NOT NULL,
-  right_lineage_id  integer    NOT NULL REFERENCES lineage(id),
-  right_index       integer    NOT NULL,
-  weight            integer    NOT NULL,
-  proof             integer[]  NOT NULL UNIQUE,
+  id                serial             PRIMARY KEY,
+  left_lineage_id   integer            NOT NULL REFERENCES lineage(id),
+  left_index        integer            NOT NULL,
+  right_lineage_id  integer            NOT NULL REFERENCES lineage(id),
+  right_index       integer            NOT NULL,
+  weight            integer            NOT NULL,
+  proof             rule_proof_node[]  NOT NULL UNIQUE,
 
   UNIQUE (left_lineage_id, left_index, right_lineage_id, right_index)
 );
@@ -164,66 +232,6 @@ CREATE TABLE evaluation (
   expression_id  integer                 NOT NULL REFERENCES expression(id),
   params         evaluation_parameter[]  NOT NULL,
   result         double precision        NOT NULL
-);
-
---------------------------------------------------------------------------------
--- Naming and labelling
---------------------------------------------------------------------------------
-
--- Descriptor type
--- 
--- Notes:
--- + descriptors are exclusively English keywords or universal technial terms.
--- + labels are a form of how function could be represented in plain ASCII.
--- + tags identify a function as part of a certain group (e.g. vector,
---   vector magnitude, unit vector, physical constant, etc.)
-CREATE TYPE descriptor_type AS ENUM ('tag', 'label');
-
--- Descriptor
-CREATE TABLE descriptor (
-  id    serial  PRIMARY KEY,
-  name  text    NOT NULL CHECK (name ~ '^[0-9a-z]+$'),
-  type  descriptor_type 
-);
-
--- Descriptor alias
--- To prevent redundancy and inconsistent duplication, descriptors can be
--- aliassed (mostly for abbreviations and acronyms).
-CREATE TABLE descriptor_alias (
-  id             serial   PRIMARY KEY,
-  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id),
-  alias          text     NOT NULL UNIQUE CHECK (alias ~ '^[0-9a-z]+$')
-);
-
--- Function descriptor
-CREATE TABLE function_descriptor (
-  id             serial   PRIMARY KEY,
-  function_id    integer  NOT NULL REFERENCES function(id),
-  descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
-
-  UNIQUE (function_id, descriptor_id)
-);
-
--- Locale
-CREATE TABLE locale (
-  id    serial  PRIMARY KEY,
-  code  text    NOT NULL UNIQUE CHECK (code ~ '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$')
-);
-
--- Category names in various languages
-CREATE TABLE category_name (
-  id           serial   PRIMARY KEY,
-  category_id  integer  NOT NULL REFERENCES category(id),
-  locale_id    integer  NOT NULL REFERENCES locale(id),
-  name         text     NOT NULL CHECK (name ~ E'^[0-9A-Z][0-9a-zA-Z-\'\\s]+$')
-);
-
--- Function names in various languages
-CREATE TABLE function_name (
-  id           serial   PRIMARY KEY,
-  function_id  integer  NOT NULL REFERENCES function(id),
-  locale_id    integer  NOT NULL REFERENCES locale(id),
-  name         text     NOT NULL CHECK (name ~ E'^[0-9A-Z][0-9a-zA-Z-\'\\s]+$')
 );
 
 --------------------------------------------------------------------------------

@@ -10,8 +10,9 @@ import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 import 'package:http/http.dart' as http;
 
+/// TODO: load file path from CLI args.
 Future main() async {
-  var doc = loadYaml(await new File('./test/tests.yaml').readAsString());
+  var doc = loadYaml(await new File('./test/match/tests.yaml').readAsString());
   var baseUrl = doc['baseUrl'];
 
   for (var i = 0; i < doc['methods'].length; i++) {

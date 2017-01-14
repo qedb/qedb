@@ -36,10 +36,10 @@ methods:
         precedenceLevel:  1
         evaluationType:   afirst
       labels:             ['add']
-      tags:               ['operator']
+      groups:             ['operator']
     responseAdd:
       id:                 1
-    responseRemove:       ['labels', 'tags', 'asOperator']
+    responseRemove:       ['labels', 'groups', 'asOperator']
   # Subtraction operator
   - recordData:
       categoryId:         1
@@ -50,10 +50,10 @@ methods:
         precedenceLevel:  1
         evaluationType:   afirst
       labels:             ['subtract']
-      tags:               ['operator']
+      groups:             ['operator']
     responseAdd:
       id:                 2
-    responseRemove:       ['labels', 'tags', 'asOperator']
+    responseRemove:       ['labels', 'groups', 'asOperator']
   # Multiplication operator
   - recordData:
       categoryId:         1
@@ -64,10 +64,10 @@ methods:
         precedenceLevel:  2
         evaluationType:   afirst
       labels:             ['multiply']
-      tags:               ['operator']
+      groups:             ['operator']
     responseAdd:
       id:                 3
-    responseRemove:       ['labels', 'tags', 'asOperator']
+    responseRemove:       ['labels', 'groups', 'asOperator']
   # Division operator
   - recordData:
       categoryId:         1
@@ -78,7 +78,7 @@ methods:
         precedenceLevel:  2
         evaluationType:   isolated
       labels:             ['divide']
-      tags:               ['operator']
+      groups:             ['operator']
     responseAdd:
       id:                 4
-    responseRemove:       ['labels', 'tags', 'asOperator']
+    responseRemove:       ['labels', 'groups', 'asOperator']

@@ -17,6 +17,7 @@ VALUES (DEFAULT, @functionId:int4, @precedenceLevel:int2, @evaluationType)
 RETURNING *
 ''';
 
+/// TODO: implement label descriptor.
 Future<table.Function> _createFunction(DbPool db, CreateFunction input) async {
   final completer = new Completer<table.Function>();
 
@@ -42,7 +43,7 @@ Future<table.Function> _createFunction(DbPool db, CreateFunction input) async {
 
     // Insert labels and tags.
     await _addFunctionDescriptor(db, function.id, 'label', input.labels);
-    await _addFunctionDescriptor(db, function.id, 'tag', input.tags);
+    await _addFunctionDescriptor(db, function.id, 'group', input.groups);
 
     completer.complete(function);
   }).catchError(completer.completeError);
@@ -98,7 +99,7 @@ class CreateFunction {
   bool useParentheses;
   OperatorConfiguration asOperator;
   List<String> labels;
-  List<String> tags;
+  List<String> groups;
 }
 
 class OperatorConfiguration {

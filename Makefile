@@ -14,5 +14,5 @@ check: restart-database
 	./tool/kill-server.sh
 	dart bin/server.dart > /dev/null &
 	sleep 4
-	dart test/run.dart
+	dart test/match/run.dart
 	./tool/kill-server.sh

@@ -1,0 +1,43 @@
+tests:
+
+- run:
+  - name:            createDescriptor
+    method:          POST
+    request:
+      type:          column:Type
+      keyword:       column:Keyword
+      aliases:       column:Aliases
+    response:
+      id:            column:ID
+      type:          column:type
+
+  - name:            addDescriptorTranslation
+    method:          POST
+    request:
+      descriptorId:  column:ID
+      locale:        en_US
+      translation:   column:en_US
+    response:
+      id:            column:ID1
+      locale:        en_US
+      translation:   column:en_US
+
+  - name:            addDescriptorTranslation
+    method:          POST
+    request:
+      descriptorId:  column:ID
+      locale:        nl_NL
+      translation:   column:nl_NL
+    response:
+      id:            column:ID2
+      locale:        nl_NL
+      translation:   column:nl_NL
+
+- run:
+  - name:            createCategory
+    method:          POST
+    request:
+      parentId:      Parent ID
+    response:
+      id:            Category ID
+      path:          column:Parents

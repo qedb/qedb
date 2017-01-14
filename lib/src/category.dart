@@ -4,16 +4,17 @@
 
 part of eqpg;
 
-const sqlInsertCategoryWithPath = '''
+const sqlInsertCategoryWithParents = '''
 INSERT INTO category VALUES (DEFAULT, array_append(
-  (SELECT path FROM category WHERE id = @parentId:int4),
+  (SELECT parents FROM category WHERE id = @parentId:int4),
   @parentId:int4)::integer[])
-RETURNING id, array_to_string(path, ',')''';
+RETURNING id, array_to_string(parents, ',')''';
 
 const sqlInsertCategory = '''
 INSERT INTO category VALUES (DEFAULT, ARRAY[]::integer[])
-RETURNING id, array_to_string(path, ',')''';
+RETURNING id, array_to_string(parents, ',')''';
 
+/// TODO: implement area descriptor.
 Future<table.Category> _createCategory(DbPool db, CreateCategory input) async {
   if (input.parentId != null) {
     // First check if parent exists.
@@ -22,7 +23,7 @@ Future<table.Category> _createCategory(DbPool db, CreateCategory input) async {
         {'parentId': input.parentId});
     if (result.length == 1) {
       final result = await db
-          .query(sqlInsertCategoryWithPath, {'parentId': input.parentId});
+          .query(sqlInsertCategoryWithParents, {'parentId': input.parentId});
       return new table.Category.from(result.first);
     } else {
       throw new ArgumentError('parentId does not exist');
