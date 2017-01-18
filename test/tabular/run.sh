@@ -4,6 +4,12 @@
 
 set -e
 
-ssconvert -S ./test/tabular/data.gnumeric ./test/tabular/data.csv
-dart ./test/tabular/run.dart ./test/tabular/model.yaml ./test/tabular/data.csv.*
-rm ./test/tabular/data.csv.*
+# Only reconvert if ssconvert is installed. Installing ssconvert on Travis-CI is
+# painful and I could not find a suitable alternative program.
+if [ -n `command -v ssconvert` ];
+then
+  mkdir -p ./test/tabular/data/data
+  ssconvert -S ./test/tabular/data.gnumeric ./test/tabular/data/data.csv
+fi
+
+dart ./test/tabular/run.dart ./test/tabular/model.yaml ./test/tabular/data/data.csv.*
