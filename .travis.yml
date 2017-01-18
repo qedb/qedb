@@ -1,0 +1,7 @@
+language: dart
+dart:
+- stable
+- dev
+script:
+- pub global activate coverage
+- ./tool/ci.sh

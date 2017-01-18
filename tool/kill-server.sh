@@ -7,5 +7,6 @@
 SERVER_PID=`sudo netstat -nltp | grep "dart" | awk '{print $7}' | awk -F / '{print $1}'`
 if [ -n "${SERVER_PID}" ]
 then
-  kill $SERVER_PID
+  # Note that the server can handle SIGINT signals.
+  kill -s SIGINT $SERVER_PID
 fi

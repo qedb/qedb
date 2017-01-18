@@ -11,5 +11,4 @@ stop-database:
 restart-database: stop-database start-database
 
 check:
-	./tool/run-test.sh 'dart ./test/match/run.dart ./test/match/tests.yaml'
-	./tool/run-test.sh ./test/tabular/run.sh
+	./tool/ci.sh

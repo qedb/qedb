@@ -79,6 +79,13 @@ Future main() async {
 
   var server = await shelf_io.serve(handler, '0.0.0.0', srvPort);
   Logger.root.info('Listening at port ${server.port}.');
+
+  // Gracefully handle SIGKILL signals.
+  ProcessSignal.SIGINT.watch().listen((signal) async {
+    Logger.root.info('Received SIGINT signal, terminating...');
+    await server.close();
+    exit(0);
+  });
 }
 
 /// Read environment variable.
