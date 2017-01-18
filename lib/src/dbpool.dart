@@ -26,6 +26,7 @@ class DbPool {
   final DbConnection _connection;
   int connectionSpace;
   final available = new List<PostgreSQLConnection>();
+  final log = new Logger('DbPool');
 
   DbPool(this._connection, this.connectionSpace);
 
@@ -75,11 +76,13 @@ class DbPool {
 
         connectionSpace++;
 
-        // TODO: do not add error details in release mode.
-        // Best solution: log stack traces and show a hash ID here.
-        throw new RpcError(500, 'query_error', 'failed to execute query')
-          ..errors.add(new RpcErrorDetail(message: e.toString()))
-          ..errors.add(new RpcErrorDetail(message: stackTrace.toString()));
+        // Simple method to generate a hash code for this error.
+        final hash = '${new DateTime.now()}: $e'.hashCode;
+
+        // Log stack traces and throw a hashed ID.
+        log.severe('failed to execute query, error hash: $hash', e, stackTrace);
+        throw new RpcError(
+            500, 'query_error', 'failed to execute query, error hash: $hash');
       }
     }
   }

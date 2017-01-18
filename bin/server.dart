@@ -84,7 +84,7 @@ Future main() async {
 /// Read environment variable.
 String env(String label, [String dflt = '']) =>
     Platform.environment.containsKey('$envPrefix$label')
-        ? Platform.environment[label]
+        ? Platform.environment['$envPrefix$label']
         : dflt;
 
 /// Read string parameter from yaml data > environment variable > default

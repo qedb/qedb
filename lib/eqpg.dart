@@ -10,6 +10,7 @@ import 'dart:typed_data';
 
 import 'package:rpc/rpc.dart';
 import 'package:eqlib/eqlib.dart';
+import 'package:logging/logging.dart';
 import 'package:postgres/postgres.dart';
 import 'package:eqpg/tables.dart' as table;
 

@@ -11,45 +11,27 @@ CREATE EXTENSION pgcrypto;
 -- Descriptors
 --------------------------------------------------------------------------------
 
--- Descriptor type
--- 
--- Notes:
--- + descriptors are exclusively English keywords or universal technial terms.
--- + labels are a form of how function could be represented in plain ASCII.
--- + group identify a function as part of a certain group (e.g. vector,
---   vector magnitude, unit vector, physical constant, etc.)
--- + areas are a special kind of tag and they mark a function as part of a
---   certain mathematical area
-CREATE TYPE descriptor_type AS ENUM ('label', 'group', 'area');
-
 -- Descriptor
+--
+-- Should NOT contain separate records for abbreviations or acronyms.
 CREATE TABLE descriptor (
-  id    serial           PRIMARY KEY,
-  name  text             NOT NULL UNIQUE CHECK (name ~ '^[0-9a-z]+$'),
-  type  descriptor_type  NOT NULL
-);
-
--- Descriptor alias
--- To prevent redundancy and inconsistent duplication, descriptors have aliases.
-CREATE TABLE descriptor_alias (
-  id             serial   PRIMARY KEY,
-  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id),
-  alias_id       integer  NOT NULL UNIQUE REFERENCES descriptor(id)
+  id  serial  PRIMARY KEY
 );
 
 -- Locale
 CREATE TABLE locale (
   id    serial  PRIMARY KEY,
-  code  text    NOT NULL UNIQUE CHECK (code ~ '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$')
+  code  text    NOT NULL UNIQUE
+    CHECK (code ~ '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$') -- Match validate ISO locale code format.
 );
 
--- Translation record
--- Note: the regex is very rudimentary.
+-- Translation of a descriptor
 CREATE TABLE translation (
   id             serial   PRIMARY KEY,
-  descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
+  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id),
   locale_id      integer  NOT NULL REFERENCES locale(id),
-  content        text     NOT NULL CHECK (content ~ E'^(?:[^\\s]+ )*[^\\s]+$')
+  content        text     NOT NULL
+    CHECK (content ~ E'^(?:[^\\s]+ )*[^\\s]+$') -- Check for repeated spaces in the regex.
 );
 
 --------------------------------------------------------------------------------
@@ -60,35 +42,26 @@ CREATE TABLE translation (
 CREATE TABLE category (
   id             serial     PRIMARY KEY,
   parents        integer[]  NOT NULL
-
-  -- Area descriptor
-  --descriptor_id  integer    NOT NULL UNIQUE REFERENCES descriptor(id)
 );
 
-CREATE TYPE read_evaluation_type AS ENUM ('isolated', 'afirst', 'bfirst');
+-- Category name: reference decriptor
 
 -- Function
 CREATE TABLE function (
-  id                serial   PRIMARY KEY,
-  category_id       integer  NOT NULL REFERENCES category(id),
-  generic           boolean  NOT NULL,
-  latex_template    text     NOT NULL,
-  use_parentheses   boolean  NOT NULL
-
-  -- Label descriptor
-  --descriptor_id     integer  NOT NULL UNIQUE REFERENCES descriptor(id)
+  id              serial    PRIMARY KEY,
+  category_id     integer   NOT NULL REFERENCES category(id),
+  argument_count  smallint  NOT NULL CHECK (argument_count >= 0),
+  latex_template  text      NOT NULL,
+  generic         boolean   NOT NULL
 );
 
--- Function descriptor
-CREATE TABLE function_descriptor (
-  id             serial   PRIMARY KEY,
-  function_id    integer  NOT NULL REFERENCES function(id),
+-- Function subfield: reference descriptor
+-- Function name: reference descriptor
+-- Function tags: reference descriptor
+-- Function keywords: reference keyword
 
-  -- Area or group descriptor (not an area used by any category)
-  descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
-
-  UNIQUE (function_id, descriptor_id)
-);
+-- Operator evaluation (relevant for printing parentheses)
+CREATE TYPE read_evaluation_type AS ENUM ('isolated', 'afirst', 'bfirst');
 
 -- Operator configuration
 CREATE TABLE operator_configuration (
@@ -98,6 +71,7 @@ CREATE TABLE operator_configuration (
   evaluation_type   read_evaluation_type  NOT NULL
 );
 
+-- Inline reference to another expression reference.
 CREATE TYPE expression_reference_type AS ENUM ('function', 'integer');
 CREATE TYPE expression_reference AS (
   id    integer,
@@ -177,12 +151,13 @@ CREATE TABLE rule (
 
 -- Lineage expression
 CREATE TABLE lineage_expression (
-  id             serial   PRIMARY KEY,
-  expression_id  integer  NOT NULL REFERENCES expression(id),
-  lineage_id     integer  NOT NULL REFERENCES lineage(id),
-  lineage_index  integer  NOT NULL,
-  weightsum      integer  NOT NULL,
-  rule_id        integer           REFERENCES rule(id),
+  id                     serial    PRIMARY KEY,
+  expression_id          integer   NOT NULL REFERENCES expression(id),
+  lineage_id             integer   NOT NULL REFERENCES lineage(id),
+  lineage_index          integer   NOT NULL,
+  weightsum              integer   NOT NULL,
+  rule_id                integer            REFERENCES rule(id),
+  substitution_position  smallint  NOT NULL CHECK (substitution_position >= 0),
 
   UNIQUE (lineage_id, lineage_index)
 );

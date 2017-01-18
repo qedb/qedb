@@ -14,7 +14,6 @@ const sqlInsertCategory = '''
 INSERT INTO category VALUES (DEFAULT, ARRAY[]::integer[])
 RETURNING id, array_to_string(parents, ',')''';
 
-/// TODO: implement area descriptor.
 Future<table.Category> _createCategory(DbPool db, CreateCategory input) async {
   if (input.parentId != null) {
     // First check if parent exists.

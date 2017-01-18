@@ -24,11 +24,11 @@ class Category {
 
 class Function {
   final int id, categoryId;
-  final bool generic;
+  final int argumentCount;
   final String latexTemplate;
-  final bool useParentheses;
-  Function(this.id, this.categoryId, this.generic, this.latexTemplate,
-      this.useParentheses);
+  final bool generic;
+  Function(this.id, this.categoryId, this.argumentCount, this.latexTemplate,
+      this.generic);
   factory Function.from(List r) => new Function(r[0], r[1], r[2], r[3], r[4]);
 }
 

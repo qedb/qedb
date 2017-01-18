@@ -1,6 +1,7 @@
 .vscode
 dev-config.yaml
 tool/docker/setup.sql
+testlog.txt
 
 #################
 # Linux.gitignore

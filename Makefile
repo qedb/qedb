@@ -10,9 +10,6 @@ stop-database:
 
 restart-database: stop-database start-database
 
-check: restart-database
-	./tool/kill-server.sh
-	dart bin/server.dart > /dev/null &
-	sleep 4
-	dart test/match/run.dart
-	./tool/kill-server.sh
+check:
+	./tool/run-test.sh 'dart ./test/match/run.dart ./test/match/tests.yaml'
+	./tool/run-test.sh ./test/tabular/run.sh

@@ -1,43 +1,31 @@
-tests:
+baseUrl: http://localhost:8080/eqdb/v0/
+sheets:
+- run: []
 
 - run:
-  - name:            createDescriptor
-    method:          POST
+  - apiMethod:   createCategory
+    httpMethod:  POST
     request:
-      type:          column:Type
-      keyword:       column:Keyword
-      aliases:       column:Aliases
+      if:hasParent:parentId:  column:Parent ID
     response:
-      id:            column:ID
-      type:          column:type
-
-  - name:            addDescriptorTranslation
-    method:          POST
-    request:
-      descriptorId:  column:ID
-      locale:        en_US
-      translation:   column:en_US
-    response:
-      id:            column:ID1
-      locale:        en_US
-      translation:   column:en_US
-
-  - name:            addDescriptorTranslation
-    method:          POST
-    request:
-      descriptorId:  column:ID
-      locale:        nl_NL
-      translation:   column:nl_NL
-    response:
-      id:            column:ID2
-      locale:        nl_NL
-      translation:   column:nl_NL
+      id:        column:ID
+      path:      column:[]Parents
 
 - run:
-  - name:            createCategory
-    method:          POST
+  - apiMethod:            createFunction
+    httpMethod:           POST
     request:
-      parentId:      Parent ID
+      categoryId:         column:CID
+      argumentCount:      column:Arguments
+      latexTemplate:      column:LaTeX template
+      generic:            column:Generic
+      if:Op:asOperator:
+        precedenceLevel:  column:Precedence level
+        evaluationType:   column:Evaluation type
     response:
-      id:            Category ID
-      path:          column:Parents
+      id:                 column:ID
+      categoryId:         column:CID
+      argumentCount:      column:Arguments
+      latexTemplate:      column:LaTeX template
+      generic:            column:Generic
+    
