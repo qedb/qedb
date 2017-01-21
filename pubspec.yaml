@@ -6,7 +6,7 @@ homepage:     https://github.com/eqdb/eqpg
 environment:
   sdk:        '>=1.8.0 <2.0.0'
 dependencies:
-  eqlib:        ^0.3.0
+  eqlib:        ^0.3.1+1
   postgres:     ^0.9.4+1
   rpc:          ^0.5.7
   yaml:         ^2.1.12

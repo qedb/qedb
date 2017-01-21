@@ -29,6 +29,8 @@ const keyMaxConn = 'MAX_CONNECTIONS';
 // Environment variable prefix.
 const envPrefix = 'EQPG_';
 
+final log = new Logger('server');
+
 Future main() async {
   // Read YAML file.
   final yamlConfigPath = env('EQPG_CONFIG_PATH', 'dev-config.yaml');
@@ -78,11 +80,11 @@ Future main() async {
       .addHandler(apiRouter.handler);
 
   var server = await shelf_io.serve(handler, '0.0.0.0', srvPort);
-  Logger.root.info('Listening at port ${server.port}.');
+  log.info('Listening at port ${server.port}.');
 
   // Gracefully handle SIGKILL signals.
   ProcessSignal.SIGINT.watch().listen((signal) async {
-    Logger.root.info('Received SIGINT signal, terminating...');
+    log.info('Received SIGINT signal, terminating...');
     await server.close();
     exit(0);
   });

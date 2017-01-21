@@ -10,31 +10,3 @@ WITH tree_id AS (
 ) INSERT INTO lineage (tree, initial_category)
 SELECT id, @category:int4 FROM tree_id
 RETURNING *''';
-
-const sqlInsertDefinedLineageExpressions = '''
-INSERT INTO lineage_expression
-VALUES (DEFAULT, @leftExpressionId:int4, @lineageId:int4, 0, 0);
-INSERT INTO lineage_expression
-VALUES (DEFAULT, @rightExpressionId:int4, @lineageId:int4, 1, 1);
-''';
-
-Future<table.LineageTree> _createLineageTree(
-    PostgreSQLExecutionContext db, Eq initialEq, int category) async {
-  // Create new tree.
-  final result = await db
-      .query(sqlInsertLineageTree, substitutionValues: {'category': category});
-  final lineage = new table.Lineage.from(result.first);
-
-  // Create two expressions.
-  final leftExpr = await _createExpression(db, initialEq.left);
-  final rightExpr = await _createExpression(db, initialEq.right);
-
-  // Add expression to the lineage.
-  await db.query(sqlInsertDefinedLineageExpressions, substitutionValues: {
-    'lineageId': lineage.id,
-    'leftExpressionId': leftExpr.id,
-    'rightExpressionId': rightExpr.id
-  });
-
-  return new table.LineageTree(lineage.treeId);
-}

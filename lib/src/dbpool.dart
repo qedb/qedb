@@ -30,6 +30,8 @@ class DbPool {
 
   DbPool(this._connection, this.connectionSpace);
 
+  /// TODO: close all connections in SIGINT signal.
+
   Future<List<List>> query(String fmtString,
       [Map<String, dynamic> substitutionValues = null]) async {
     final completer = new Completer<List<List>>();
@@ -67,7 +69,10 @@ class DbPool {
         await handler(connection);
         available.add(connection);
       } catch (e, stackTrace) {
-        print(e);
+        // Do not intercept RpcError.
+        if (e is RpcError) {
+          throw e;
+        }
 
         // Close connection, just in case.
         if (connection != null) {
@@ -80,9 +85,9 @@ class DbPool {
         final hash = '${new DateTime.now()}: $e'.hashCode;
 
         // Log stack traces and throw a hashed ID.
-        log.severe('failed to execute query, error hash: $hash', e, stackTrace);
+        log.severe('handler throwed, error hash: $hash', e, stackTrace);
         throw new RpcError(
-            500, 'query_error', 'failed to execute query, error hash: $hash');
+            500, 'internal_error', 'internal error (ref: $hash)');
       }
     }
   }

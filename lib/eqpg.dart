@@ -19,7 +19,10 @@ part 'src/lineage.dart';
 part 'src/category.dart';
 part 'src/function.dart';
 part 'src/expression.dart';
+part 'src/rule.dart';
 part 'src/definition.dart';
+
+final log = new Logger('eqpg');
 
 @ApiClass(name: 'eqdb', version: 'v0', description: 'EqDB read/write API')
 class EqDB {

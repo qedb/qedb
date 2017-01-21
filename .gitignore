@@ -2,6 +2,7 @@
 dev-config.yaml
 tool/docker/setup.sql
 testlog.txt
+./*.json
 
 #################
 # Linux.gitignore

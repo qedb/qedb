@@ -34,8 +34,8 @@ class Function {
 
 class ExpressionReference {
   final int id;
-  final String referenceType;
-  ExpressionReference(this.id, this.referenceType);
+  final String type;
+  ExpressionReference(this.id, this.type);
 }
 
 class Expression {
@@ -51,11 +51,22 @@ class FunctionReference {
   final int id, functionId;
   final List<ExpressionReference> arguments;
   FunctionReference(this.id, this.functionId, this.arguments);
-  factory FunctionReference.from(List<List> r) => new FunctionReference(
-      r[0][0],
-      r[0][1],
-      new List<ExpressionReference>.generate(
-          r.length, (i) => new ExpressionReference(r[i][2], r[i][3])));
+  factory FunctionReference.from(List r) {
+    // For the time being, this is implemented by ad-hock parsing of the
+    // PostgreSQL string representation of expression_reference[].
+    final String argsString = r[2];
+    if (argsString.isNotEmpty) {
+      final args = argsString.substring(1, argsString.length - 2).split(')(');
+      final arguments =
+          new List<ExpressionReference>.generate(args.length, (i) {
+        final parts = args[i].split(',');
+        return new ExpressionReference(int.parse(parts[0]), parts[1]);
+      });
+      return new FunctionReference(r[0], r[1], arguments);
+    } else {
+      return new FunctionReference(r[0], r[1], []);
+    }
+  }
 }
 
 class IntegerReference {
@@ -81,19 +92,14 @@ class Lineage {
   factory Lineage.from(List r) => new Lineage(r[0], r[1], r[2], r[3], r[4]);
 }
 
+class Rule {
+  final int id, leftExpressionId, rightExpressionId;
+  Rule(this.id, this.leftExpressionId, this.rightExpressionId);
+  factory Rule.from(List r) => new Rule(r[0], r[1], r[2]);
+}
+
 class Definition {
   final int id, treeId;
   Definition(this.id, this.treeId);
   factory Definition.from(List r) => new Definition(r[0], r[1]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Naming and labelling
-////////////////////////////////////////////////////////////////////////////////
-
-class Descriptor {
-  final int id;
-  final String name;
-  Descriptor(this.id, this.name);
-  factory Descriptor.from(List r) => new Descriptor(r[0], r[1]);
 }

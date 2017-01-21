@@ -127,39 +127,55 @@ CREATE TABLE lineage_transition (
 
 -- TODO: lineage joints. Joints coud be used in both proof searching and to
 -- join connecting lineages so that further derivations can be started from a
--- commpon point (a joint could automatically transform into a new lineage?).
+-- commpon point (a joint could initiate a new lineage?).
 
+-- Rule (equation of two expression)
+CREATE TABLE rule (
+  id                   serial   PRIMARY KEY,
+  left_expression_id   integer  NOT NULL REFERENCES expression(id),
+  right_expression_id  integer  NOT NULL REFERENCES expression(id),
+
+  UNIQUE (left_expression_id, right_expression_id)
+);
+
+-- A rule definition.
+CREATE TABLE definition (
+  id       serial   PRIMARY KEY,
+  rule_id  integer  NOT NULL UNIQUE REFERENCES rule(id)
+);
+
+-- Lineage expression
+CREATE TABLE lineage_expression (
+  id                     serial    PRIMARY KEY,
+  lineage_id             integer   NOT NULL REFERENCES lineage(id),
+  lineage_index          integer   NOT NULL,
+  rule_id                integer            REFERENCES rule(id),
+  expression_id          integer   NOT NULL REFERENCES expression(id),
+  substitution_position  smallint  NOT NULL CHECK (substitution_position >= 0),
+
+  -- Including a summed weight is controversial because it is not final. If a
+  -- shorter rule proof is proposed later all weights have to be updated.
+  --weightsum              integer   NOT NULL,
+
+  UNIQUE (lineage_id, lineage_index)
+);
+
+-- Node in a rule proof path node
 CREATE TYPE rule_proof_node_direction AS ENUM ('ascend', 'descend');
 CREATE TYPE rule_proof_node AS (
   lineage_id   integer,
   direction    rule_proof_node_direction
 );
 
--- Rule (equation of two expression)
--- Note: manually or automatically keep track of alternative proofs?
-CREATE TABLE rule (
-  id                serial             PRIMARY KEY,
-  left_lineage_id   integer            NOT NULL REFERENCES lineage(id),
-  left_index        integer            NOT NULL,
-  right_lineage_id  integer            NOT NULL REFERENCES lineage(id),
-  right_index       integer            NOT NULL,
-  weight            integer            NOT NULL,
-  proof             rule_proof_node[]  NOT NULL UNIQUE,
+-- A rule proof by path searching.
+CREATE TABLE rule_proof (
+  id          serial             PRIMARY KEY,
+  rule_id     integer            NOT NULL REFERENCES rule(id),
+  left_id     integer            NOT NULL REFERENCES lineage_expression(id),
+  right_id    integer            NOT NULL REFERENCES lineage_expression(id),
+  proof_path  rule_proof_node[]  NOT NULL UNIQUE,
 
-  UNIQUE (left_lineage_id, left_index, right_lineage_id, right_index)
-);
-
--- Lineage expression
-CREATE TABLE lineage_expression (
-  id                     serial    PRIMARY KEY,
-  expression_id          integer   NOT NULL REFERENCES expression(id),
-  lineage_id             integer   NOT NULL REFERENCES lineage(id),
-  lineage_index          integer   NOT NULL,
-  weightsum              integer   NOT NULL,
-  rule_id                integer            REFERENCES rule(id),
-  substitution_position  smallint  NOT NULL CHECK (substitution_position >= 0),
-
-  UNIQUE (lineage_id, lineage_index)
+  UNIQUE (left_id, right_id, proof_path)
 );
 
 -- Rule translocation
@@ -169,12 +185,6 @@ CREATE TABLE translocate (
   in_expression_id   integer  NOT NULL REFERENCES expression(id),
   out_expression_id  integer  NOT NULL REFERENCES expression(id),
   tree_id            integer  NOT NULL REFERENCES lineage_tree(id)
-);
-
--- Lineage root definition
-CREATE TABLE definition (
-  id       serial   PRIMARY KEY,
-  tree_id  integer  NOT NULL UNIQUE REFERENCES lineage_tree(id)
 );
 
 --------------------------------------------------------------------------------

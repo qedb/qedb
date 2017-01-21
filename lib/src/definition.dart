@@ -4,10 +4,11 @@
 
 part of eqpg;
 
-String sqlInsersectFunctions(List<int> functionIds) => '''
+String sqlIntersectFunctions(List<int> functionIds) => '''
 SELECT id FROM function WHERE category_id IN (
-  SELECT array_append(path, id) FROM category WHERE id = @categoryId:int4)
-UNION
+  SELECT unnest(array_append(parents, id))
+  FROM category WHERE id = @categoryId:int4)
+INTERSECT
 SELECT id FROM function WHERE id IN (${functionIds.join(',')})''';
 
 Future<table.Definition> _createDefinition(
@@ -28,26 +29,30 @@ Future<table.Definition> _createDefinition(
     // Retrieve all function IDs that are defined under this category.
     final allIds = leftData.functionId.toSet()..addAll(rightData.functionId);
     final intersectResult = await db.query(
-        sqlInsersectFunctions(allIds.toList()),
+        sqlIntersectFunctions(allIds.toList()),
         substitutionValues: {'categoryId': input.categoryId});
 
     // Validate if all functions are defined in the context category.
     if (intersectResult.length != allIds.length) {
+      log.info(
+          'Definition function ID intersection result: $intersectResult (input: $allIds)');
       throw new RpcError(400, 'reject_expr', 'not all functions are known');
     }
 
-    // Decode expressions.
-    final leftExpr = exprCodecDecode(leftData);
-    final rightExpr = exprCodecDecode(rightData);
-    final initialEq = new Eq(leftExpr, rightExpr);
+    // Decode and insert expressions.
+    final leftDecoded = exprCodecDecode(leftData);
+    final rightDecoded = exprCodecDecode(rightData);
+    log.info('Definition decoded as $leftDecoded = $rightDecoded');
+    final leftExpr = await _createExpression(db, leftDecoded);
+    final rightExpr = await _createExpression(db, rightDecoded);
 
-    // Create new lineage tree.
-    final tree = await _createLineageTree(db, initialEq, input.categoryId);
+    // Insert rule.
+    final rule = await _createRule(db, leftExpr.id, rightExpr.id);
 
     // Insert definition.
     final insertResult = await db.query(
-        'INSERT INTO definition VALUES (DEFAULT, @treeId:int4) RETURNING *',
-        substitutionValues: {'treeId': tree.id});
+        'INSERT INTO definition VALUES (DEFAULT, @ruleId:int4) RETURNING *',
+        substitutionValues: {'ruleId': rule.id});
     completer.complete(new table.Definition.from(insertResult));
   }).catchError(completer.completeError);
 
@@ -55,6 +60,6 @@ Future<table.Definition> _createDefinition(
 }
 
 class CreateDefinition {
-  int id, categoryId;
+  int categoryId;
   String left, right;
 }

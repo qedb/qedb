@@ -20,4 +20,4 @@ ID,CID,Category,Subfield,Arguments,Name,Keywords,Tags,"LaTeX template","Testing 
 19,1,Algebra,Calculus,1,,function,,{f},fn,TRUE,FALSE,,
 20,1,Algebra,Calculus,1,,delta,,\Delta$(a),d,FALSE,FALSE,,
 21,1,Algebra,Calculus,3,Limit,lim,,\lim_$a\to$b$(c),lim,FALSE,FALSE,,
-22,1,Algebra,Calculus,2,Differential,diff,,\frac{\partial}{\partial$b}$(a),frac,FALSE,FALSE,,
+22,1,Algebra,Calculus,2,Differential,diff,,\frac{\partial}{\partial$b}$(a),diff,FALSE,FALSE,,
