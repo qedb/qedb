@@ -3,7 +3,7 @@ sheets:
 - run: []
 
 - run:
-  - apiMethod:   createCategory
+  - apiMethod:   category/create
     httpMethod:  POST
     request:
       if:hasParent:parentId:  column:Parent ID
@@ -16,7 +16,7 @@ sheets:
       idColumn:           ID
       aliasColumn:        Testing only
   run:
-  - apiMethod:            createFunction
+  - apiMethod:            function/create
     httpMethod:           POST
     request:
       categoryId:         column:CID
@@ -34,7 +34,7 @@ sheets:
       generic:            column:Generic
 
 - run:
-  - apiMethod:            createDefinition
+  - apiMethod:            definition/create
     httpMethod:           POST
     request:
       categoryId:         column:CID

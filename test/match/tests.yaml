@@ -1,7 +1,7 @@
 baseUrl: http://localhost:8080/eqdb/v0/
 methods:
 
-- name: createCategory
+- name: category/create
   method: POST
   tests:
   - data: {}

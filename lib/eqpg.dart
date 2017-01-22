@@ -32,17 +32,17 @@ class EqDB {
       : pool = new Pool(dbUri,
             minConnections: minConnections, maxConnections: maxConnections);
 
-  @ApiMethod(path: 'createCategory', method: 'POST')
+  @ApiMethod(path: 'category/create', method: 'POST')
   Future<table.Category> createCategory(CreateCategory input) =>
       new MethodCaller<table.Category, CreateCategory>()
           .execute(input, _createCategory, pool);
 
-  @ApiMethod(path: 'createFunction', method: 'POST')
+  @ApiMethod(path: 'function/create', method: 'POST')
   Future<table.Function> createFunction(CreateFunction input) =>
       new MethodCaller<table.Function, CreateFunction>()
           .execute(input, _createFunction, pool);
 
-  @ApiMethod(path: 'createDefinition', method: 'POST')
+  @ApiMethod(path: 'definition/create', method: 'POST')
   Future<table.Definition> createDefinition(CreateDefinition input) =>
       new MethodCaller<table.Definition, CreateDefinition>()
           .execute(input, _createDefinition, pool);
