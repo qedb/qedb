@@ -18,7 +18,7 @@ docker run --name eqpg-database -e POSTGRES_DB="eqdb" -d eqpg-database
 
 # Give container some time to setup.
 IS_READY=`docker exec -u postgres eqpg-database pg_isready`
-while [ "${IS_READY}" != "/tmp:5432 - accepting connections" ]; do
+while [ "${IS_READY}" != "/var/run/postgresql:5432 - accepting connections" ]; do
   sleep 0.1
   IS_READY=`docker exec -u postgres eqpg-database pg_isready`
   echo $IS_READY

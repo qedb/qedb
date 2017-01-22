@@ -4,13 +4,11 @@
 
 part of eqpg;
 
-Future<table.Rule> _createRule(PostgreSQLExecutionContext db,
-    int leftExpressionId, int rightExpressionId) async {
-  final result = await db.query(
-      'INSERT INTO rule VALUES (DEFAULT, @leftId:int4, @rightId:int4) RETURNING *',
-      substitutionValues: {
-        'leftId': leftExpressionId,
-        'rightId': rightExpressionId
-      });
-  return new table.Rule.from(result);
+Future<table.Rule> _createRule(
+    Connection db, int leftExpressionId, int rightExpressionId) async {
+  return await db
+      .query('INSERT INTO rule VALUES (DEFAULT, @leftId, @rightId) RETURNING *',
+          {'leftId': leftExpressionId, 'rightId': rightExpressionId})
+      .map(table.Rule.map)
+      .first;
 }

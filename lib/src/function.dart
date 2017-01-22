@@ -6,43 +6,40 @@ part of eqpg;
 
 const sqlInsertFunction = '''
 INSERT INTO function (category_id, argument_count, latex_template, generic)
-VALUES (@categoryId:int4, @argumentCount:int2, @latexTemplate:text, @generic:bool)
+VALUES (@categoryId, @argumentCount, @latexTemplate, @generic)
 RETURNING *
 ''';
 
 const sqlInsertOperatorConfig = '''
 INSERT INTO operator_configuration
-VALUES (DEFAULT, @functionId:int4, @precedenceLevel:int2, @evaluationType)
+VALUES (DEFAULT, @functionId, @precedenceLevel, @evaluationType)
 RETURNING *
 ''';
 
-Future<table.Function> _createFunction(DbPool db, CreateFunction input) async {
-  final completer = new Completer<table.Function>();
+Future<table.Function> _createFunction(
+    Connection db, CreateFunction input) async {
+  // Insert new function.
+  final function = await db
+      .query(sqlInsertFunction, {
+        'categoryId': input.categoryId,
+        'argumentCount': input.argumentCount,
+        'latexTemplate': input.latexTemplate,
+        'generic': input.generic
+      })
+      .map(table.Function.map)
+      .first;
 
-  db.transaction((db) async {
-    // Insert new function.
-    final result = await db.query(sqlInsertFunction, substitutionValues: {
-      'categoryId': input.categoryId,
-      'argumentCount': input.argumentCount,
-      'latexTemplate': input.latexTemplate,
-      'generic': input.generic
+  // If this is an operator, insert the operator configuration.
+  if (input.asOperator != null) {
+    // If the query fails this should throw an error.
+    await db.query(sqlInsertOperatorConfig, {
+      'functionId': function.id,
+      'precedenceLevel': input.asOperator.precedenceLevel,
+      'evaluationType': input.asOperator.evaluationType
     });
-    final function = new table.Function.from(result.first);
+  }
 
-    // If this is an operator, insert the operator configuration.
-    if (input.asOperator != null) {
-      // If the query fails this should throw an error.
-      await db.query(sqlInsertOperatorConfig, substitutionValues: {
-        'functionId': function.id,
-        'precedenceLevel': input.asOperator.precedenceLevel,
-        'evaluationType': input.asOperator.evaluationType
-      });
-    }
-
-    completer.complete(function);
-  }).catchError(completer.completeError);
-
-  return completer.future;
+  return function;
 }
 
 class CreateFunction {

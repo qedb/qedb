@@ -51,7 +51,7 @@ Future main() async {
   final maxConnections = getParamInt(yamlData, keyMaxConn, 100);
 
   // Create connection object.
-  final connection = new DbConnection(dbHost, dbPort, dbName, dbUser, dbPass);
+  final connectionUri = 'postgres://$dbUser:$dbPass@$dbHost:$dbPort/$dbName';
 
   // Log everything
   Logger.root.level = Level.ALL;
@@ -68,7 +68,9 @@ Future main() async {
 
   // Create RPC API server.
   final ApiServer apiServer = new ApiServer();
-  apiServer.addApi(new EqDB(connection, maxConnections));
+  final eqdbApi = new EqDB(connectionUri, 2, maxConnections);
+  await eqdbApi.pool.start();
+  apiServer.addApi(eqdbApi);
   apiServer.enableDiscoveryApi();
 
   // Create a Shelf handler for your RPC API.
@@ -84,7 +86,8 @@ Future main() async {
 
   // Gracefully handle SIGKILL signals.
   ProcessSignal.SIGINT.watch().listen((signal) async {
-    log.info('Received SIGINT signal, terminating...');
+    log.info('Received $signal, terminating...');
+    await eqdbApi.pool.stop();
     await server.close();
     exit(0);
   });
