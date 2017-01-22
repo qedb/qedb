@@ -81,7 +81,7 @@ CREATE TYPE expression_reference AS (
 -- Expression node
 CREATE TABLE expression (
   id         serial                PRIMARY KEY,
-  reference  expression_reference  NOT NULL,
+  reference  expression_reference  NOT NULL UNIQUE,
   data       bytea                 NOT NULL UNIQUE,
   hash       bytea                 NOT NULL UNIQUE
 );

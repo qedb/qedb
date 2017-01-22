@@ -25,8 +25,8 @@ Future<table.Definition> _createDefinition(
 
   // Retrieve all function IDs that are defined under this category.
   final allIds = leftData.functionId.toSet()..addAll(rightData.functionId);
-  final intersectResult = await db.query(
-      sqlIntersectFunctions(allIds.toList()), {'categoryId': input.categoryId});
+  final intersectResult = await db.query(sqlIntersectFunctions(allIds.toList()),
+      {'categoryId': input.categoryId}).toList();
 
   // Validate if all functions are defined in the context category.
   if (intersectResult.length != allIds.length) {

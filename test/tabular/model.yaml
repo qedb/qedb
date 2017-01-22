@@ -33,13 +33,25 @@ sheets:
       latexTemplate:      column:LaTeX template
       generic:            column:Generic
 
-# - run:
-#   - apiMethod:            createDefinition
-#     httpMethod:           POST
-#     request:
-#       categoryId:         column:CID
-#       left:               eqlibCodec:column:Equation left
-#       right:              eqlibCodec:column:Equation right
-#     response:
-#       id:                 column:ID
-#       ruleId:             column:RID
+- run:
+  - apiMethod:            createDefinition
+    httpMethod:           POST
+    request:
+      categoryId:         column:CID
+      left:               eqlibCodec:column:Equation left
+      right:              eqlibCodec:column:Equation right
+    response:
+      id:                 column:ID
+      ruleId:             column:RID
+
+# To be implemented
+  # - apiMethod:            retrieveExpressionTree
+  #   httpMethod:           GET
+  #   query:
+  #     input:              eqlibCodec:column:Equation left
+  #     inputType:          raw
+  #     includeTree:        false
+  #     includeRawData:     true
+  #   response:
+  #     id:                 column:eqlID
+  #     rawData:            eqlibCodec:column:Equation left

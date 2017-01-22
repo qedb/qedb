@@ -101,7 +101,7 @@ class Rule {
 }
 
 class Definition {
-  final int id, treeId;
-  Definition(this.id, this.treeId);
+  final int id, ruleId;
+  Definition(this.id, this.ruleId);
   static Definition map(Row r) => new Definition(r[0], r[1]);
 }

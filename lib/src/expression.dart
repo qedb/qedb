@@ -50,7 +50,7 @@ Future<table.Expression> _createExpression(Connection db, Expr expr) async {
   // Create reference node.
   table.ExpressionReference reference;
   if (expr is NumberExpr) {
-    reference = await _createNumberReference(db, expr);
+    reference = await _createIntegerReference(db, expr);
   } else if (expr is SymbolExpr) {
     reference = await _createSymbolReference(db, expr);
   } else if (expr is FunctionExpr) {
@@ -63,7 +63,7 @@ Future<table.Expression> _createExpression(Connection db, Expr expr) async {
   return await db
       .query(sqlInsertExpr, {
         'referenceId': reference.id,
-        'referenceType': 'function',
+        'referenceType': reference.type,
         'data': encodedData
       })
       .map(table.Expression.map)
@@ -71,7 +71,7 @@ Future<table.Expression> _createExpression(Connection db, Expr expr) async {
 }
 
 /// Create expression reference for number expression in integer_reference.
-Future<table.ExpressionReference> _createNumberReference(
+Future<table.ExpressionReference> _createIntegerReference(
     Connection db, NumberExpr expr) async {
   log.info('Creating number reference, value = ${expr.value}');
 
