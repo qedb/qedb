@@ -15,14 +15,14 @@ Future main(List<String> args) async {
   final baseUrl = doc['baseUrl'];
 
   for (var i = 0; i < doc['methods'].length; i++) {
-    var method = doc['methods'][i];
-    var httpMethod = method['method'];
-    var path = '$baseUrl${method['name']}';
+    final method = doc['methods'][i];
+    final httpMethod = method['method'];
+    final path = '$baseUrl${method['name']}';
 
     // Run all tests for this method.
     test(method['name'], () async {
       for (var j = 0; j < method['tests'].length; j++) {
-        Map<String, dynamic> testData = method['tests'][j];
+        final Map<String, dynamic> testData = method['tests'][j];
 
         // Execute request.
         if (httpMethod == 'POST') {

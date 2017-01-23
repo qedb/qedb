@@ -72,9 +72,9 @@ CREATE TABLE operator_configuration (
 );
 
 -- Inline reference to another expression reference.
-CREATE TYPE expression_reference_type AS ENUM ('function', 'integer');
+CREATE TYPE expression_reference_type AS ENUM ('function', 'symbol', 'integer');
 CREATE TYPE expression_reference AS (
-  id    integer,
+  key   integer,
   type  expression_reference_type
 );
 

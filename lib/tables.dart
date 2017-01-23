@@ -15,7 +15,7 @@ class Category {
   final List<int> path;
   Category(this.id, this.path);
   static Category map(Row r) {
-    String path = r[1];
+    final String path = r[1];
     final splittedPath = path.isEmpty ? [] : path.split(',');
     return new Category(
         r[0],
@@ -35,9 +35,9 @@ class Function {
 }
 
 class ExpressionReference {
-  final int id;
+  final int key;
   final String type;
-  ExpressionReference(this.id, this.type);
+  ExpressionReference(this.key, this.type);
 }
 
 class Expression {
@@ -58,7 +58,7 @@ class FunctionReference {
     // PostgreSQL string representation of expression_reference[].
     final String argsString = r[2];
     if (argsString.isNotEmpty) {
-      final args = argsString.substring(1, argsString.length - 2).split(')(');
+      final args = argsString.substring(1, argsString.length - 1).split(')(');
       final arguments =
           new List<ExpressionReference>.generate(args.length, (i) {
         final parts = args[i].split(',');
@@ -72,8 +72,8 @@ class FunctionReference {
 }
 
 class IntegerReference {
-  final int id, val;
-  IntegerReference(this.id, this.val);
+  final int id, value;
+  IntegerReference(this.id, this.value);
   static IntegerReference map(Row r) => new IntegerReference(r[0], r[1]);
 }
 

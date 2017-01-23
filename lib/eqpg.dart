@@ -34,37 +34,44 @@ class EqDB {
 
   @ApiMethod(path: 'category/create', method: 'POST')
   Future<table.Category> createCategory(CreateCategory input) =>
-      new MethodCaller<table.Category, CreateCategory>()
-          .execute(input, _createCategory, pool);
+      new MethodCaller<table.Category>()
+          .execute((db) => _createCategory(db, input), pool);
 
   @ApiMethod(path: 'function/create', method: 'POST')
   Future<table.Function> createFunction(CreateFunction input) =>
-      new MethodCaller<table.Function, CreateFunction>()
-          .execute(input, _createFunction, pool);
+      new MethodCaller<table.Function>()
+          .execute((db) => _createFunction(db, input), pool);
+
+  @ApiMethod(path: 'expression/{id}/retrieveTree', method: 'GET')
+  Future<RetrieveTree> retrieveExpressionTree(int id) =>
+      new MethodCaller<RetrieveTree>()
+          .execute((db) => _retrieveExpressionTree(db, id), pool);
 
   @ApiMethod(path: 'definition/create', method: 'POST')
   Future<table.Definition> createDefinition(CreateDefinition input) =>
-      new MethodCaller<table.Definition, CreateDefinition>()
-          .execute(input, _createDefinition, pool);
+      new MethodCaller<table.Definition>()
+          .execute((db) => _createDefinition(db, input), pool);
 }
 
 /// Utility to reuse method calling boilerplate.
-class MethodCaller<T, I> {
-  Future<T> execute(
-      I input, Future<T> handler(Connection db, I input), Pool pool) async {
-    final db = await pool.connect();
+class MethodCaller<T> {
+  Future<T> execute(Future<T> handler(Connection db), Pool pool) {
     final completer = new Completer<T>();
 
-    // Run all methods in a transaction.
-    db
-        .runInTransaction(() async {
-          completer.complete(await handler(db, input));
+    // Get connection.
+    pool.connect()
+      ..then((db) {
+        // Run all methods in a transaction.
+        db.runInTransaction(() async {
+          completer.complete(await handler(db));
         })
-        .then((_) => db.close())
-        .catchError((error, stackTrace) {
-          db.close();
-          completer.completeError(error, stackTrace);
-        });
+          ..then((_) => db.close())
+          ..catchError((error, stackTrace) {
+            db.close();
+            completer.completeError(error, stackTrace);
+          });
+      })
+      ..catchError(completer.completeError);
 
     return completer.future;
   }

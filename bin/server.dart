@@ -74,14 +74,14 @@ Future main() async {
   apiServer.enableDiscoveryApi();
 
   // Create a Shelf handler for your RPC API.
-  var apiHandler = shelf_rpc.createRpcHandler(apiServer);
-  var apiRouter = shelf_route.router();
+  final apiHandler = shelf_rpc.createRpcHandler(apiServer);
+  final apiRouter = shelf_route.router();
   apiRouter.add('', null, apiHandler, exactMatch: false);
-  var handler = const shelf.Pipeline()
+  final handler = const shelf.Pipeline()
       .addMiddleware(shelf.logRequests())
       .addHandler(apiRouter.handler);
 
-  var server = await shelf_io.serve(handler, '0.0.0.0', srvPort);
+  final server = await shelf_io.serve(handler, '0.0.0.0', srvPort);
   log.info('Listening at port ${server.port}.');
 
   // Gracefully handle SIGKILL signals.

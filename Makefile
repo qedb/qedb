@@ -11,7 +11,7 @@ stop-database:
 restart-database: stop-database start-database
 
 check:
-	./tool/ci.sh
+	./tool/check.sh
 
 generate-openapi-spec: restart-database
 	sudo npm install -g api-spec-converter

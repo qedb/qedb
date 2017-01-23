@@ -31,12 +31,11 @@ Future<table.Function> _createFunction(
 
   // If this is an operator, insert the operator configuration.
   if (input.asOperator != null) {
-    // If the query fails this should throw an error.
     await db.query(sqlInsertOperatorConfig, {
       'functionId': function.id,
       'precedenceLevel': input.asOperator.precedenceLevel,
       'evaluationType': input.asOperator.evaluationType
-    });
+    }).toList();
   }
 
   return function;

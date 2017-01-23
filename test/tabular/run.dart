@@ -16,6 +16,11 @@ import 'package:http/http.dart' as http;
 
 part 'extensions.dart';
 
+const cliReset = '\x1B[0m';
+const cliRed = '\x1B[38;5;9m';
+const cliGreen = '\x1B[38;5;10m';
+const cliYellow = '\x1B[38;5;11m';
+
 abstract class Extension {
   void processTable(List<List> table, dynamic configuration) {}
   dynamic processValue(
@@ -43,11 +48,13 @@ Future main(List<String> files) async {
   }
 
   // Loop through tables.
-  for (var i = 0; i < csvFiles.length && i < sheetTests.length; i++) {
-    final table = csvTables[i];
+  for (var tablei = 0;
+      tablei < csvFiles.length && tablei < sheetTests.length;
+      tablei++) {
+    final table = csvTables[tablei];
 
     // Process according to model.
-    final sheetTest = sheetTests[i];
+    final sheetTest = sheetTests[tablei];
     if (!sheetTest.containsKey('run')) {
       continue;
     }
@@ -69,33 +76,98 @@ Future main(List<String> files) async {
       }
     }
 
-    for (final Map testData in sheetTest['run']) {
-      // Check if all required keys are present in the model.
-      if (['apiMethod', 'httpMethod', 'request', 'response']
-          .every((key) => testData.containsKey(key))) {
-        // Send one API request for each row in the table.
-        for (var idx = 1; idx < table.length; idx++) {
-          final row = table[idx];
+    const requiredKeys = const ['route', 'method', 'response'];
 
+    // Send one API request for each row in the table.
+    for (var rowi = 1; rowi < table.length; rowi++) {
+      final row = table[rowi];
+      final List<Map> tests = sheetTest['run'];
+
+      for (var testi = 0; testi < tests.length; testi++) {
+        final testData = tests[testi];
+
+        // Check if all required keys are present in the model.
+        if (requiredKeys.every((key) => testData.containsKey(key))) {
           // Process row.
-          final requestData =
-              globalProcessValue(columns, row, testData['request']);
+          final requestBody = testData.containsKey('request')
+              ? globalProcessValue(columns, row, testData['request'])
+              : null;
           final expectedResponse =
               globalProcessValue(columns, row, testData['response']);
 
-          // Run test.
-          test('table #$i, row #$idx', () async {
-            if (testData['httpMethod'] == 'POST') {
-              // Execute POST request.
-              final response = await http.post(
-                  '$baseUrl${testData['apiMethod']}',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.encode(requestData));
+          // Process request route.
+          String requestRoute = testData['route'];
+          if (testData.containsKey('url')) {
+            final Map<String, dynamic> urlParams = testData['url'];
+            final regex = new RegExp(r'\{([a-z]+)\}');
+            requestRoute = requestRoute.replaceAllMapped(regex, (match) {
+              final key = match.group(1);
+              if (urlParams.containsKey(key)) {
+                return globalProcessValue(columns, row, urlParams[key]);
+              } else {
+                return key;
+              }
+            });
+          }
 
-              // Compare.
-              expect(JSON.decode(response.body), equals(expectedResponse));
+          // Run test.
+          // Note: it is not possible to use test() because the tests are not
+          // isolated (state is stored in the database, misalignment between
+          // tests in the async runner is dangerous).
+          print([
+            '${cliGreen}table #${'$tablei'.padLeft(3, '0')}',
+            'row #${'$rowi'.padLeft(3, '0')}',
+            'test #${'${testi + 1}'.padLeft(3, '0')}$cliReset',
+          ].join(', '));
+
+          // Setup request object.
+          final request = new http.Request(
+              testData['method'], Uri.parse('$baseUrl$requestRoute'));
+
+          // Add request body.
+          if (requestBody != null) {
+            request.headers['Content-Type'] = 'application/json';
+            request.body = JSON.encode(requestBody);
+          }
+
+          // Execute request.
+          final response = await request.send();
+          final Map responseBody =
+              JSON.decode(await response.stream.bytesToString());
+
+          // Remove fields that are ignored.
+          if (testData.containsKey('ignore')) {
+            final ignored = new List<String>.from(testData['ignore']);
+            for (final key in ignored) {
+              responseBody.remove(key);
             }
-          });
+          }
+
+          // Compare.
+          final matcher = equals(expectedResponse);
+          final matchState = new Map();
+          if (!matcher.matches(responseBody, matchState)) {
+            print('${cliRed}Request failed$cliReset');
+            print(request);
+            print('Headers: ${request.headers}');
+            print('Body: ${request.body}');
+
+            // Describe mismatch.
+            final mismatch = matcher.describeMismatch(
+                responseBody, new StringDescription(), matchState, false);
+
+            print('Expected: $expectedResponse');
+            print('Actual: $responseBody');
+            print('${cliYellow}Which: $mismatch');
+
+            // Terminate any further action.
+            exit(1);
+          }
+        } else {
+          final missingKeys = new Set<String>.from(requiredKeys)
+              .difference(new Set<String>.from(testData.keys));
+          throw new ArgumentError(
+              'Sheet test misses required keys: $missingKeys');
         }
       }
     }

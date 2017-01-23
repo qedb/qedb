@@ -3,10 +3,10 @@ sheets:
 - run: []
 
 - run:
-  - apiMethod:   category/create
-    httpMethod:  POST
+  - route:       category/create
+    method:      POST
     request:
-      if:hasParent:parentId:  column:Parent ID
+      if:hasParent:parentId: column:Parent ID
     response:
       id:        column:ID
       path:      column:[]Parents
@@ -16,8 +16,8 @@ sheets:
       idColumn:           ID
       aliasColumn:        Testing only
   run:
-  - apiMethod:            function/create
-    httpMethod:           POST
+  - route:                function/create
+    method:               POST
     request:
       categoryId:         column:CID
       argumentCount:      column:Arguments
@@ -34,8 +34,8 @@ sheets:
       generic:            column:Generic
 
 - run:
-  - apiMethod:            definition/create
-    httpMethod:           POST
+  - route:                definition/create
+    method:               POST
     request:
       categoryId:         column:CID
       left:               eqlibCodec:column:Equation left
@@ -44,14 +44,12 @@ sheets:
       id:                 column:ID
       ruleId:             column:RID
 
-# To be implemented
-  # - apiMethod:            retrieveExpressionTree
-  #   httpMethod:           GET
-  #   query:
-  #     input:              eqlibCodec:column:Equation left
-  #     inputType:          raw
-  #     includeTree:        false
-  #     includeRawData:     true
-  #   response:
-  #     id:                 column:eqlID
-  #     rawData:            eqlibCodec:column:Equation left
+  - route:                expression/{id}/retrieveTree
+    method:               GET
+    url:
+      id:                 column:eqlID
+    response:
+      id:                 column:eqlID
+      rawData:            eqlibCodec:column:Equation left
+    ignore:
+    - reference

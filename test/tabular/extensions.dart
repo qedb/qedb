@@ -5,6 +5,7 @@
 part of eqpg.test.tabular;
 
 class ColumnExtension extends Extension {
+  @override
   dynamic processValue(columns, row, params) {
     var columnName = params.first;
     if (columnName.startsWith('[]')) {
@@ -32,6 +33,7 @@ class ColumnExtension extends Extension {
 class EqlibCodecExtension extends Extension {
   final map = new Map<String, int>();
 
+  @override
   void processTable(table, configuration) {
     // Get column names.
     final idColumn = configuration['idColumn'];
@@ -47,6 +49,7 @@ class EqlibCodecExtension extends Extension {
     }
   }
 
+  @override
   dynamic processValue(columns, row, params) {
     // If params.length > 1, do another pass through processValueExtension.
     // This allows usage of the column extension in the eqlibCodec extension.

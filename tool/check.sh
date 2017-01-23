@@ -6,6 +6,15 @@
 
 set -e
 
+# Check formatting.
+dartfmt --dry-run --set-exit-if-changed ./
+
+# Run analyzer checks.
+dartanalyzer \
+--options .analysis_options \
+--fatal-hints --fatal-warnings --fatal-lints ./
+
+# Run tests.
 ./tool/run-test.sh 'dart ./test/match/run.dart ./test/match/tests.yaml' match-coverage.json
 ./tool/run-test.sh ./test/tabular/run.sh tabular-coverage.json
 

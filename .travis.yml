@@ -7,4 +7,4 @@ services:
 - docker
 script:
 - pub global activate coverage
-- ./tool/ci.sh
+- ./tool/check.sh
