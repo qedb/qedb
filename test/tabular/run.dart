@@ -43,8 +43,19 @@ Future main(List<String> files) async {
   final csvFiles = files.sublist(1);
   final csvTables = [];
   for (final file in csvFiles) {
-    csvTables.add(const CsvToListConverter(eol: '\n')
-        .convert(await new File(file).readAsString()));
+    final table = const CsvToListConverter(eol: '\n')
+        .convert(await new File(file).readAsString());
+    // Convert boolean values.
+    for (final row in table) {
+      for (var i = 0; i < row.length; i++) {
+        if (row[i] == 'TRUE') {
+          row[i] = true;
+        } else if (row[i] == 'FALSE') {
+          row[i] = false;
+        }
+      }
+    }
+    csvTables.add(table);
   }
 
   // Loop through tables.
@@ -179,9 +190,9 @@ dynamic processValue(List<String> columns, List<dynamic> row, dynamic data) {
   if (data is Map) {
     final ret = new Map();
     for (final key in data.keys) {
-      final result = processKey(columns, row, key);
-      if (result != null) {
-        ret[result] = processValue(columns, row, data[key]);
+      final newKey = processKey(columns, row, key);
+      if (newKey != null) {
+        ret[newKey] = processValue(columns, row, data[key]);
       }
     }
     return ret;
@@ -204,19 +215,12 @@ dynamic processStringValue(
   if (parts.length > 1) {
     return processValueExtension(columns, row, parts);
   } else {
-    // Match with Gnumeric's strings for boolean values.
-    if (str == 'TRUE') {
-      return true;
-    } else if (str == 'FALSE') {
-      return false;
-    } else {
-      // Try to parse as number (when a comma separated list is splitted it is
-      // possible for stringified numbers to exist)
-      try {
-        return num.parse(str);
-      } on FormatException {
-        return str;
-      }
+    // Try to parse as number (when a comma separated list is splitted it is
+    // possible for stringified numbers to exist)
+    try {
+      return num.parse(str);
+    } on FormatException {
+      return str;
     }
   }
 }

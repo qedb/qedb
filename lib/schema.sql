@@ -90,7 +90,7 @@ CREATE TABLE expression (
 CREATE TABLE function_reference (
   id           serial                  PRIMARY KEY,
   function_id  integer                 NOT NULL REFERENCES function(id),
-  arguments    expression_reference[]  NOT NULL
+  arguments    expression_reference[]  NOT NULL CHECK (array_length(arguments, 1) > 0)
 );
 
 -- Integer expression reference

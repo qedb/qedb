@@ -54,20 +54,16 @@ class FunctionReference {
   final List<ExpressionReference> arguments;
   FunctionReference(this.id, this.functionId, this.arguments);
   static FunctionReference map(Row r) {
-    // For the time being, this is implemented by ad-hock parsing of the
-    // PostgreSQL string representation of expression_reference[].
+    // Successful parsing requires the use of: `array_to_string(arguments, '')`
+    // Note: it is not neccesary to check for empty strings, it is not allowed
+    // for function references to have zero arguments.
     final String argsString = r[2];
-    if (argsString.isNotEmpty) {
-      final args = argsString.substring(1, argsString.length - 1).split(')(');
-      final arguments =
-          new List<ExpressionReference>.generate(args.length, (i) {
-        final parts = args[i].split(',');
-        return new ExpressionReference(int.parse(parts[0]), parts[1]);
-      });
-      return new FunctionReference(r[0], r[1], arguments);
-    } else {
-      return new FunctionReference(r[0], r[1], []);
-    }
+    final args = argsString.substring(1, argsString.length - 1).split(')(');
+    final arguments = new List<ExpressionReference>.generate(args.length, (i) {
+      final parts = args[i].split(',');
+      return new ExpressionReference(int.parse(parts[0]), parts[1]);
+    });
+    return new FunctionReference(r[0], r[1], arguments);
   }
 }
 
