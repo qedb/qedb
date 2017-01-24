@@ -4,6 +4,31 @@
 
 part of eqpg;
 
+class CreateFunction {
+  @ApiProperty(required: true)
+  int categoryId;
+
+  @ApiProperty(required: true)
+  int argumentCount;
+
+  @ApiProperty(required: true)
+  String latexTemplate;
+
+  @ApiProperty(required: true)
+  bool generic;
+
+  @ApiProperty(required: false)
+  OperatorConfiguration asOperator;
+}
+
+class OperatorConfiguration {
+  @ApiProperty(required: true)
+  int precedenceLevel;
+
+  @ApiProperty(required: true)
+  String evaluationType;
+}
+
 Future<table.Function> _createFunction(
     Connection db, CreateFunction input) async {
   // Insert new function.
@@ -35,17 +60,4 @@ RETURNING *''';
   }
 
   return function;
-}
-
-class CreateFunction {
-  int categoryId;
-  int argumentCount;
-  String latexTemplate;
-  bool generic;
-  OperatorConfiguration asOperator;
-}
-
-class OperatorConfiguration {
-  int precedenceLevel;
-  String evaluationType;
 }

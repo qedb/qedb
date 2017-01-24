@@ -5,8 +5,14 @@
 part of eqpg;
 
 class CreateDefinition {
+  @ApiProperty(required: true)
   int categoryId;
-  String left, right;
+
+  @ApiProperty(required: true)
+  String left;
+
+  @ApiProperty(required: true)
+  String right;
 }
 
 String queryIntersectFunctionIds(List<int> functionIds) => '''

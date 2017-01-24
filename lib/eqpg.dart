@@ -52,6 +52,11 @@ class EqDB {
   Future<table.Definition> createDefinition(CreateDefinition input) =>
       new MethodCaller<table.Definition>()
           .execute((db) => _createDefinition(db, input), pool);
+
+  @ApiMethod(path: 'lineage/create', method: 'POST')
+  Future<table.Lineage> createLineage(CreateLineage input) =>
+      new MethodCaller<table.Lineage>()
+          .execute((db) => _createLineage(db, input), pool);
 }
 
 /// Utility to reuse method calling boilerplate.

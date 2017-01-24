@@ -29,8 +29,9 @@ abstract class Extension {
 
 // Register extensions (dirty, but easy).
 Map<String, Extension> extensions = {
+  'isEmpty': new IsEmptyExtension(),
   'column': new ColumnExtension(),
-  'eqlibCodec': new EqlibCodecExtension()
+  'eqlib': new EqlibExtension()
 };
 
 Future main(List<String> files) async {
@@ -88,17 +89,27 @@ Future main(List<String> files) async {
     }
 
     const requiredKeys = const ['route', 'method', 'response'];
+    final List<Map> tests = sheetTest['run'];
 
     // Send one API request for each row in the table.
     for (var rowi = 1; rowi < table.length; rowi++) {
       final row = table[rowi];
-      final List<Map> tests = sheetTest['run'];
 
       for (var testi = 0; testi < tests.length; testi++) {
         final testData = tests[testi];
 
         // Check if all required keys are present in the model.
         if (requiredKeys.every((key) => testData.containsKey(key))) {
+          // Skip test if condition is set.
+          if (testData.containsKey('skipIf') &&
+              processValue(columns, row, testData['skipIf']) == true) {
+            continue;
+          }
+
+          // Tiny delay.
+          // The database needs a bit of time sometimes to pick up new records.
+          await new Future.delayed(new Duration(milliseconds: 50));
+
           // Process row.
           final requestBody = testData.containsKey('request')
               ? processValue(columns, row, testData['request'])
@@ -125,11 +136,6 @@ Future main(List<String> files) async {
           // Note: it is not possible to use test() because the tests are not
           // isolated (state is stored in the database, misalignment between
           // tests in the async runner is dangerous).
-          print([
-            '${cliGreen}table #${'$tablei'.padLeft(3, '0')}',
-            'row #${'$rowi'.padLeft(3, '0')}',
-            'test #${'${testi + 1}'.padLeft(3, '0')}$cliReset',
-          ].join(', '));
 
           // Setup request object.
           final request = new http.Request(
@@ -157,8 +163,17 @@ Future main(List<String> files) async {
           // Compare.
           final matcher = equals(expectedResponse);
           final matchState = new Map();
-          if (!matcher.matches(responseBody, matchState)) {
-            print('${cliRed}Request failed$cliReset');
+          final matches = matcher.matches(responseBody, matchState);
+
+          // Print test state.
+          print([
+            '${matches ? cliGreen : cliRed}table #${'$tablei'.padLeft(3, '0')}',
+            'row #${'$rowi'.padLeft(3, '0')}',
+            'test #${'${testi + 1}'.padLeft(3, '0')}$cliReset',
+          ].join(', '));
+
+          if (!matches) {
+            print('Request failed');
             print(request);
             print('Headers: ${request.headers}');
             print('Body: ${request.body}');

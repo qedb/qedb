@@ -1,7 +1,9 @@
 baseUrl: http://localhost:8080/eqdb/v0/
 sheets:
+# Descriptors
 - run: []
 
+# Categories
 - run:
   - route:       category/create
     method:      POST
@@ -11,8 +13,9 @@ sheets:
       id:        column:ID
       path:      column:[]Parents
 
+# Functions
 - extensions:
-  - eqlibCodec:
+  - eqlib:
       idColumn:           ID
       aliasColumn:        Testing only
   run:
@@ -33,13 +36,14 @@ sheets:
       latexTemplate:      column:LaTeX template
       generic:            column:Generic
 
+# Definitions
 - run:
   - route:                definition/create
     method:               POST
     request:
       categoryId:         column:CID
-      left:               eqlibCodec:column:Equation left
-      right:              eqlibCodec:column:Equation right
+      left:               eqlib:codec:column:Equation left
+      right:              eqlib:codec:column:Equation right
     response:
       id:                 column:ID
       ruleId:             column:RID
@@ -47,9 +51,33 @@ sheets:
   - route:                expression/{id}/retrieveTree
     method:               GET
     url:
-      id:                 column:eqlID
+      id:                 eqlib:index:column:Equation left
     response:
-      id:                 column:eqlID
-      rawData:            eqlibCodec:column:Equation left
+      id:                 eqlib:index:column:Equation left
+      rawData:            eqlib:codec:column:Equation left
     ignore:
     - reference
+
+  - route:                expression/{id}/retrieveTree
+    method:               GET
+    url:
+      id:                 eqlib:index:column:Equation right
+    response:
+      id:                 eqlib:index:column:Equation right
+      rawData:            eqlib:codec:column:Equation right
+    ignore:
+    - reference
+
+# Lineages (1)
+- run:
+  - skipIf:               isEmpty:column:Initial
+    route:                lineage/create
+    method:               POST
+    request:
+      firstExpression:    eqlib:codec:column:Initial
+    response:
+      id:                 column:L
+      treeId:             column:T
+      branchIndex:        0
+      initialCategoryId:  column:C
+      firstExpressionId:  eqlib:index:column:Initial

@@ -4,6 +4,14 @@
 
 part of eqpg.test.tabular;
 
+class IsEmptyExtension extends Extension {
+  @override
+  bool processParams(columns, row, params) {
+    final value = processValueExtension(columns, row, params);
+    return value == null || value is String && value.isEmpty;
+  }
+}
+
 class ColumnExtension extends Extension {
   @override
   dynamic processParams(columns, row, params) {
@@ -30,8 +38,9 @@ class ColumnExtension extends Extension {
   }
 }
 
-class EqlibCodecExtension extends Extension {
+class EqlibExtension extends Extension {
   final map = new Map<String, int>();
+  final index = new List<Expr>();
 
   @override
   void processTable(table, configuration) {
@@ -51,14 +60,19 @@ class EqlibCodecExtension extends Extension {
 
   @override
   dynamic processParams(columns, row, params) {
-    // If params.length > 1, do another pass through processValueExtension.
-    // This allows usage of the column extension in the eqlibCodec extension.
-    final str = params.length == 1
-        ? params.first
-        : processValueExtension(columns, row, params);
+    final subcommand = params.first;
+    final input = params.length == 2
+        ? params[1]
+        : processValueExtension(columns, row, params.sublist(1));
+    if (input.isEmpty) {
+      print(params);
+      print(columns);
+      print(row);
+    }
 
-    if (str is String) {
-      final expr = new Expr.parse(str, (String name, [bool generic = false]) {
+    if (input is String) {
+      // Parse expression.
+      final expr = new Expr.parse(input, (String name, [bool generic = false]) {
         if (map.containsKey(name)) {
           return map[name];
         } else {
@@ -66,10 +80,35 @@ class EqlibCodecExtension extends Extension {
         }
       });
 
-      // Return Base64 encoded value.
-      return expr.toBase64();
+      if (subcommand == 'codec') {
+        // Return Base64 encoded value.
+        return expr.toBase64();
+      } else if (subcommand == 'index') {
+        // Get index for this expression.
+        return getExpressionIndex(expr) + 1;
+      } else {
+        throw new UnsupportedError('subcommand $subcommand not supported');
+      }
     } else {
-      throw new Exception('could not resolve eqlibCodec input to string');
+      throw new Exception('could not resolve eqlib extension input to string');
     }
+  }
+
+  /// Return index of given expression in [index] (0 indexed).
+  int getExpressionIndex(Expr expr) {
+    // Try to find expression.
+    final idx = index.indexOf(expr);
+    if (idx != -1) {
+      return idx;
+    } else if (expr is FunctionExpr) {
+      // First store all child expressions.
+      for (final arg in expr.args) {
+        getExpressionIndex(arg);
+      }
+    }
+
+    // Strore expression and return index.
+    index.add(expr);
+    return index.length - 1;
   }
 }

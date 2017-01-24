@@ -84,10 +84,15 @@ class LineageTree {
 }
 
 class Lineage {
-  final int id, treeId, parentId, branchIndex, initialCategoryId;
+  final int id,
+      treeId,
+      parentId,
+      branchIndex,
+      initialCategoryId,
+      firstExpressionId;
   Lineage(this.id, this.treeId, this.parentId, this.branchIndex,
-      this.initialCategoryId);
-  static Lineage map(Row r) => new Lineage(r[0], r[1], r[2], r[3], r[4]);
+      this.initialCategoryId, this.firstExpressionId);
+  static Lineage map(Row r) => new Lineage(r[0], r[1], r[2], r[3], r[4], r[5]);
 }
 
 class Rule {

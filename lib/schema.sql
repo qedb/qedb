@@ -112,9 +112,10 @@ CREATE TABLE lineage_tree (
 CREATE TABLE lineage (
   id                   serial   PRIMARY KEY,
   tree_id              integer  NOT NULL REFERENCES lineage_tree(id),
-  parent_id            integer           REFERENCES lineage(id),
+  parent_id            integer           REFERENCES lineage(id) DEFAULT NULL,
   branch_index         integer  NOT NULL DEFAULT 0,
-  initial_category_id  integer  NOT NULL REFERENCES category(id)
+  initial_category_id  integer  NOT NULL REFERENCES category(id),
+  first_expression_id  integer  NOT NULL REFERENCES expression(id)
 );
 
 -- Lineage category transition
@@ -148,8 +149,8 @@ CREATE TABLE definition (
 CREATE TABLE lineage_expression (
   id                     serial    PRIMARY KEY,
   lineage_id             integer   NOT NULL REFERENCES lineage(id),
-  lineage_index          integer   NOT NULL,
-  rule_id                integer            REFERENCES rule(id),
+  lineage_index          integer   NOT NULL CHECK (lineage_index > 0),
+  rule_id                integer   NOT NULL REFERENCES rule(id),
   expression_id          integer   NOT NULL REFERENCES expression(id),
   substitution_position  smallint  NOT NULL CHECK (substitution_position >= 0),
 

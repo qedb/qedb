@@ -4,6 +4,10 @@
 
 part of eqpg;
 
+class CreateCategory {
+  int parentId;
+}
+
 Future<table.Category> _createCategory(
     Connection db, CreateCategory input) async {
   if (input.parentId != null) {
@@ -32,8 +36,4 @@ RETURNING id, array_to_string(parents, ',')''';
 
     return await db.query(query).map(table.Category.map).single;
   }
-}
-
-class CreateCategory {
-  int parentId;
 }

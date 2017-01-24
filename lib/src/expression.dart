@@ -152,11 +152,16 @@ Future<RetrieveTree> _retrieveExpressionTree(Connection db, int id) async {
 SELECT id, (reference).key, (reference).type,
   encode(data, 'base64'), encode(hash, 'base64')
 FROM expression WHERE id = @id''';
-  final expression =
-      await db.query(query, {'id': id}).map(table.Expression.map).single;
-  final reference = await _retrieveExpressionTreeRef(db, expression.reference);
-  final rawData = reference.buildExpression().toBase64();
-  return new RetrieveTree(expression.id, rawData, reference);
+  final result =
+      await db.query(query, {'id': id}).map(table.Expression.map).toList();
+  if (result.length == 1) {
+    final expr = result.first;
+    final reference = await _retrieveExpressionTreeRef(db, expr.reference);
+    final rawData = reference.buildExpression().toBase64();
+    return new RetrieveTree(expr.id, rawData, reference);
+  } else {
+    throw new NotFoundError('expression #$id could not be found');
+  }
 }
 
 Future<RetrieveTreeReference> _retrieveExpressionTreeRef(
