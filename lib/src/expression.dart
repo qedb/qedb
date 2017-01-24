@@ -4,124 +4,6 @@
 
 part of eqpg;
 
-const sqlSelectExprLookup = '''
-SELECT id, (reference).key, (reference).type, encode(data, 'base64'), encode(hash, 'base64')
-FROM expression WHERE hash = digest(decode(@data, 'base64'), 'sha256')
-''';
-
-const sqlInsertExpr = '''
-INSERT INTO expression
-VALUES (DEFAULT, ROW(@referenceKey, @referenceType),
-  decode(@data, 'base64'), digest(decode(@data, 'base64'), 'sha256'))
-RETURNING id, (reference).key, (reference).type,
-  encode(data, 'base64'), encode(hash, 'base64')
-''';
-
-const sqlSelectExpr = '''
-SELECT id, (reference).key, (reference).type, encode(data, 'base64'), encode(hash, 'base64')
-FROM expression WHERE id = @id
-''';
-
-String sqlInsertFunctionRef(int argCount) {
-  final args = new List<String>.generate(
-      argCount, (i) => 'ROW(@referenceKey$i, @referenceType$i)',
-      growable: false);
-  return '''
-INSERT INTO function_reference
-VALUES (DEFAULT, @functionId, ARRAY[${args.join(', ')}]::expression_reference[])
-RETURNING id, function_id, array_to_string(arguments, '')
-''';
-}
-
-/// Shortcut for decoding base64 codec headers.
-ExprCodecData _decodeCodecHeader(String base64Data) =>
-    new ExprCodecData.decodeHeader(
-        new Uint8List.fromList(BASE64.decode(base64Data)).buffer);
-
-Future<table.Expression> _createExpression(Connection db, Expr expr) async {
-  // Encode expression.
-  final String encodedData = expr.toBase64();
-
-  // Check if expression exists.
-  final lookupResult = await db
-      .query(sqlSelectExprLookup, {'data': encodedData})
-      .map(table.Expression.map)
-      .toList();
-  if (lookupResult.isNotEmpty) {
-    return lookupResult.first;
-  }
-
-  // Create reference node.
-  table.ExpressionReference reference;
-  if (expr is NumberExpr) {
-    reference = await _createIntegerReference(db, expr);
-  } else if (expr is SymbolExpr) {
-    reference = await _createSymbolReference(db, expr);
-  } else if (expr is FunctionExpr) {
-    reference = await _createFunctionReference(db, expr);
-  } else {
-    throw new UnsupportedError('unsupported expression type');
-  }
-
-  // Create expression node.
-  return await db
-      .query(sqlInsertExpr, {
-        'referenceKey': reference.key,
-        'referenceType': reference.type,
-        'data': encodedData
-      })
-      .map(table.Expression.map)
-      .first;
-}
-
-/// Create expression reference for number expression in integer_reference.
-Future<table.ExpressionReference> _createIntegerReference(
-    Connection db, NumberExpr expr) async {
-  log.info('Creating number reference, value = ${expr.value}');
-
-  // Insert reference.
-  final intRef = await db
-      .query('INSERT INTO integer_reference VALUES (DEFAULT, @val) RETURNING *',
-          {'val': expr.value.toInt()})
-      .map(table.IntegerReference.map)
-      .first;
-
-  // Get linking data.
-  return new table.ExpressionReference(intRef.id, 'integer');
-}
-
-/// Create expression reference for symbol expression in function_reference.
-Future<table.ExpressionReference> _createSymbolReference(
-    Connection db, SymbolExpr expr) async {
-  /// Symbol references are compressed into the reference key.
-  return new table.ExpressionReference(expr.id, 'symbol');
-}
-
-/// Create expression reference for function expression in function_reference.
-Future<table.ExpressionReference> _createFunctionReference(
-    Connection db, FunctionExpr expr) async {
-  log.info(
-      'Creating function references, functionId: ${expr.id}, argument count: ${expr.args.length}');
-
-  // Create map of query data.
-  final Map<String, dynamic> data = {'functionId': expr.id};
-  for (var i = 0; i < expr.args.length; i++) {
-    final arg = expr.args[i];
-    final argExpr = await _createExpression(db, arg);
-    data['referenceKey$i'] = argExpr.reference.key;
-    data['referenceType$i'] = argExpr.reference.type;
-  }
-
-  // Insert reference.
-  final functionRef = await db
-      .query(sqlInsertFunctionRef(expr.args.length), data)
-      .map(table.FunctionReference.map)
-      .first;
-
-  // Get linking data.
-  return new table.ExpressionReference(functionRef.id, 'function');
-}
-
 class RetrieveTree {
   final int id;
 
@@ -156,9 +38,122 @@ class RetrieveTreeReference {
   }
 }
 
+/// Shortcut for decoding base64 codec headers.
+ExprCodecData _decodeCodecHeader(String base64Data) =>
+    new ExprCodecData.decodeHeader(
+        new Uint8List.fromList(BASE64.decode(base64Data)).buffer);
+
+Future<table.Expression> _createExpression(Connection db, Expr expr) async {
+  // Encode expression.
+  final String encodedData = expr.toBase64();
+
+  // Check if expression exists.
+  const queryLookupExpression = '''
+SELECT id, (reference).key, (reference).type, encode(data, 'base64'), encode(hash, 'base64')
+FROM expression WHERE hash = digest(decode(@data, 'base64'), 'sha256')''';
+  final lookupResult = await db
+      .query(queryLookupExpression, {'data': encodedData})
+      .map(table.Expression.map)
+      .toList();
+  if (lookupResult.isNotEmpty) {
+    return lookupResult.single;
+  }
+
+  // Create reference node.
+  table.ExpressionReference reference;
+  if (expr is NumberExpr) {
+    reference = await _createIntegerReference(db, expr);
+  } else if (expr is SymbolExpr) {
+    reference = await _createSymbolReference(db, expr);
+  } else if (expr is FunctionExpr) {
+    reference = await _createFunctionReference(db, expr);
+  }
+  assert(reference != null);
+
+  // Create expression node.
+  const queryInsertExpression = '''
+INSERT INTO expression
+VALUES (DEFAULT, ROW(@referenceKey, @referenceType),
+  decode(@data, 'base64'), digest(decode(@data, 'base64'), 'sha256'))
+RETURNING id, (reference).key, (reference).type,
+  encode(data, 'base64'), encode(hash, 'base64')
+''';
+  return await db
+      .query(queryInsertExpression, {
+        'referenceKey': reference.key,
+        'referenceType': reference.type,
+        'data': encodedData
+      })
+      .map(table.Expression.map)
+      .single;
+}
+
+/// Create expression reference for number expression in integer_reference.
+Future<table.ExpressionReference> _createIntegerReference(
+    Connection db, NumberExpr expr) async {
+  log.info('Creating number reference, value = ${expr.value}');
+
+  // Insert reference.
+  final integerReference = await db
+      .query('INSERT INTO integer_reference VALUES (DEFAULT, @val) RETURNING *',
+          {'val': expr.value.toInt()})
+      .map(table.IntegerReference.map)
+      .single;
+
+  // Get linking data.
+  return new table.ExpressionReference(integerReference.id, 'integer');
+}
+
+/// Create expression reference for symbol expression in function_reference.
+Future<table.ExpressionReference> _createSymbolReference(
+    Connection db, SymbolExpr expr) async {
+  /// Symbol references are compressed into the reference key.
+  return new table.ExpressionReference(expr.id, 'symbol');
+}
+
+String queryInsertFunctionReference(int argCount) {
+  final args = new List<String>.generate(
+      argCount, (i) => 'ROW(@referenceKey$i, @referenceType$i)',
+      growable: false);
+  return '''
+INSERT INTO function_reference
+VALUES (DEFAULT, @functionId, ARRAY[${args.join(', ')}]::expression_reference[])
+RETURNING id, function_id, array_to_string(arguments, '')
+''';
+}
+
+/// Create expression reference for function expression in function_reference.
+Future<table.ExpressionReference> _createFunctionReference(
+    Connection db, FunctionExpr expr) async {
+  log.info(
+      'Creating function references, functionId: ${expr.id}, argument count: ${expr.args.length}');
+
+  // Create map of query data.
+  final Map<String, dynamic> data = {'functionId': expr.id};
+  for (var i = 0; i < expr.args.length; i++) {
+    final arg = expr.args[i];
+    final argExpr = await _createExpression(db, arg);
+    data['referenceKey$i'] = argExpr.reference.key;
+    data['referenceType$i'] = argExpr.reference.type;
+  }
+
+  // Insert reference.
+  final functionReference = await db
+      .query(queryInsertFunctionReference(expr.args.length), data)
+      .map(table.FunctionReference.map)
+      .single;
+
+  // Get linking data.
+  return new table.ExpressionReference(functionReference.id, 'function');
+}
+
 Future<RetrieveTree> _retrieveExpressionTree(Connection db, int id) async {
+  const query = '''
+SELECT id, (reference).key, (reference).type,
+  encode(data, 'base64'), encode(hash, 'base64')
+FROM expression WHERE id = @id''';
   final expression =
-      await db.query(sqlSelectExpr, {'id': id}).map(table.Expression.map).first;
+      await db.query(query, {'id': id}).map(table.Expression.map).single;
   final reference = await _retrieveExpressionTreeRef(db, expression.reference);
   final rawData = reference.buildExpression().toBase64();
   return new RetrieveTree(expression.id, rawData, reference);
@@ -166,34 +161,28 @@ Future<RetrieveTree> _retrieveExpressionTree(Connection db, int id) async {
 
 Future<RetrieveTreeReference> _retrieveExpressionTreeRef(
     Connection db, table.ExpressionReference reference) async {
-  if (reference.type == 'integer') {
-    final integerRef = await db
-        .query('SELECT * FROM integer_reference WHERE id = @id',
-            {'id': reference.key})
-        .map(table.IntegerReference.map)
-        .first;
-    return new RetrieveTreeReference(integerRef.id, value: integerRef.value);
-  } else if (reference.type == 'symbol') {
-    final generic = (await db.query(
-            'SELECT generic FROM function WHERE id = @id',
-            {'id': reference.key}).toList())
-        .first[0];
-    return new RetrieveTreeReference(null,
-        functionId: reference.key, generic: generic);
-  } else if (reference.type == 'function') {
-    final functionRef = await db
-        .query(
-            '''
-SELECT id, function_id, array_to_string(arguments, '')
-FROM function_reference WHERE id = @id''',
-            {'id': reference.key})
-        .map(table.FunctionReference.map)
-        .first;
+  assert(['symbol', 'function', 'integer'].contains(reference.type));
 
-    final generic = (await db.query(
-            'SELECT generic FROM function WHERE id = @id',
-            {'id': functionRef.functionId}).toList())
-        .first[0];
+  // Symbol reference
+  if (reference.type == 'symbol') {
+    final row = await db.query('SELECT generic FROM function WHERE id = @id',
+        {'id': reference.key}).single;
+    return new RetrieveTreeReference(null,
+        functionId: reference.key, generic: row.generic);
+  }
+
+  // Function reference.
+  else if (reference.type == 'function') {
+    const querySelectFunctionReference = '''
+SELECT id, function_id, array_to_string(arguments, '')
+FROM function_reference WHERE id = @id''';
+    final functionRef = await db
+        .query(querySelectFunctionReference, {'id': reference.key})
+        .map(table.FunctionReference.map)
+        .single;
+
+    final row = await db.query('SELECT generic FROM function WHERE id = @id',
+        {'id': functionRef.functionId}).single;
 
     final argumentsQueue = new List<Future<RetrieveTreeReference>>.generate(
         functionRef.arguments.length,
@@ -201,10 +190,17 @@ FROM function_reference WHERE id = @id''',
 
     return new RetrieveTreeReference(functionRef.id,
         functionId: functionRef.functionId,
-        generic: generic,
+        generic: row.generic,
         arguments: await Future.wait(argumentsQueue));
-  } else {
-    throw new ArgumentError(
-        'reference type must be one of: integer, symbol, function; found ${reference.type}');
+  }
+
+  // Integer reference
+  else {
+    final integerRef = await db
+        .query('SELECT * FROM integer_reference WHERE id = @id',
+            {'id': reference.key})
+        .map(table.IntegerReference.map)
+        .single;
+    return new RetrieveTreeReference(integerRef.id, value: integerRef.value);
   }
 }

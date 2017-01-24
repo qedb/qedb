@@ -10,6 +10,10 @@ stop-database:
 
 restart-database: stop-database start-database
 
+restart-server:
+	./tool/kill-server.sh
+	dart bin/server.dart > /dev/null &
+
 check:
 	./tool/check.sh
 

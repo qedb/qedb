@@ -6,7 +6,7 @@ part of eqpg.test.tabular;
 
 class ColumnExtension extends Extension {
   @override
-  dynamic processValue(columns, row, params) {
+  dynamic processParams(columns, row, params) {
     var columnName = params.first;
     if (columnName.startsWith('[]')) {
       columnName = columnName.substring('[]'.length);
@@ -15,14 +15,14 @@ class ColumnExtension extends Extension {
         final String value = row[index];
         return value.isEmpty
             ? []
-            : globalProcessValue(columns, row, value.split(','));
+            : processValue(columns, row, value.split(','));
       } else {
         throw new Exception('column "$columnName" not found');
       }
     } else {
       final index = columns.indexOf(columnName);
       if (index != -1 && index < row.length) {
-        return globalProcessValue(columns, row, row[index]);
+        return processValue(columns, row, row[index]);
       } else {
         throw new Exception('column "$columnName" not found');
       }
@@ -50,7 +50,7 @@ class EqlibCodecExtension extends Extension {
   }
 
   @override
-  dynamic processValue(columns, row, params) {
+  dynamic processParams(columns, row, params) {
     // If params.length > 1, do another pass through processValueExtension.
     // This allows usage of the column extension in the eqlibCodec extension.
     final str = params.length == 1

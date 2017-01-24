@@ -4,34 +4,33 @@
 
 part of eqpg;
 
-const sqlInsertCategoryWithParents = '''
-INSERT INTO category VALUES (DEFAULT, array_append(
-  (SELECT parents FROM category WHERE id = @parentId), @parentId)::integer[])
-RETURNING category.id, array_to_string(category.parents, ',')''';
-
-const sqlInsertCategory = '''
-INSERT INTO category VALUES (DEFAULT, ARRAY[]::integer[])
-RETURNING id, array_to_string(parents, ',')''';
-
 Future<table.Category> _createCategory(
     Connection db, CreateCategory input) async {
   if (input.parentId != null) {
     // First check if parent exists.
-    final result = await db.query(
-        "SELECT id FROM category WHERE id = @parentId",
-        {'parentId': input.parentId}).toList();
+    const query = 'SELECT id FROM category WHERE id = @parentId';
+    final result = await db.query(query, {'parentId': input.parentId}).toList();
 
     if (result.length == 1) {
+      const query = '''
+INSERT INTO category VALUES (DEFAULT, array_append(
+  (SELECT parents FROM category WHERE id = @parentId), @parentId)::integer[])
+RETURNING category.id, array_to_string(category.parents, ',')''';
+
       return await db
-          .query(sqlInsertCategoryWithParents, {'parentId': input.parentId})
+          .query(query, {'parentId': input.parentId})
           .map(table.Category.map)
-          .first;
+          .single;
     } else {
-      // TODO: replace with proper error reporting.
-      throw new ArgumentError('parentId does not exist');
+      throw new UnprocessableEntityError(
+          'parentId not found in category table');
     }
   } else {
-    return await db.query(sqlInsertCategory).map(table.Category.map).first;
+    const query = '''
+INSERT INTO category VALUES (DEFAULT, ARRAY[]::integer[])
+RETURNING id, array_to_string(parents, ',')''';
+
+    return await db.query(query).map(table.Category.map).single;
   }
 }
 

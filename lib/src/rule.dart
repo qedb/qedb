@@ -10,5 +10,5 @@ Future<table.Rule> _createRule(
       .query('INSERT INTO rule VALUES (DEFAULT, @leftId, @rightId) RETURNING *',
           {'leftId': leftExpressionId, 'rightId': rightExpressionId})
       .map(table.Rule.map)
-      .first;
+      .single;
 }

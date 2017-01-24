@@ -15,12 +15,13 @@ import 'package:postgresql/pool.dart';
 import 'package:postgresql/postgresql.dart';
 import 'package:eqpg/tables.dart' as table;
 
+part 'src/rule.dart';
 part 'src/lineage.dart';
 part 'src/category.dart';
 part 'src/function.dart';
 part 'src/expression.dart';
-part 'src/rule.dart';
 part 'src/definition.dart';
+part 'src/exceptions.dart';
 
 final log = new Logger('eqpg');
 

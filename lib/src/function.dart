@@ -4,34 +4,30 @@
 
 part of eqpg;
 
-const sqlInsertFunction = '''
-INSERT INTO function (category_id, argument_count, latex_template, generic)
-VALUES (@categoryId, @argumentCount, @latexTemplate, @generic)
-RETURNING *
-''';
-
-const sqlInsertOperatorConfig = '''
-INSERT INTO operator_configuration
-VALUES (DEFAULT, @functionId, @precedenceLevel, @evaluationType)
-RETURNING *
-''';
-
 Future<table.Function> _createFunction(
     Connection db, CreateFunction input) async {
   // Insert new function.
+  const queryInsertFunction = '''
+INSERT INTO function (category_id, argument_count, latex_template, generic)
+VALUES (@categoryId, @argumentCount, @latexTemplate, @generic)
+RETURNING *''';
   final function = await db
-      .query(sqlInsertFunction, {
+      .query(queryInsertFunction, {
         'categoryId': input.categoryId,
         'argumentCount': input.argumentCount,
         'latexTemplate': input.latexTemplate,
         'generic': input.generic
       })
       .map(table.Function.map)
-      .first;
+      .single;
 
   // If this is an operator, insert the operator configuration.
+  const queryInsertOperator = '''
+INSERT INTO operator_configuration
+VALUES (DEFAULT, @functionId, @precedenceLevel, @evaluationType)
+RETURNING *''';
   if (input.asOperator != null) {
-    await db.query(sqlInsertOperatorConfig, {
+    await db.query(queryInsertOperator, {
       'functionId': function.id,
       'precedenceLevel': input.asOperator.precedenceLevel,
       'evaluationType': input.asOperator.evaluationType

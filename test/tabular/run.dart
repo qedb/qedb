@@ -23,7 +23,7 @@ const cliYellow = '\x1B[38;5;11m';
 
 abstract class Extension {
   void processTable(List<List> table, dynamic configuration) {}
-  dynamic processValue(
+  dynamic processParams(
       List<String> columns, List<dynamic> row, List<String> params);
 }
 
@@ -90,10 +90,10 @@ Future main(List<String> files) async {
         if (requiredKeys.every((key) => testData.containsKey(key))) {
           // Process row.
           final requestBody = testData.containsKey('request')
-              ? globalProcessValue(columns, row, testData['request'])
+              ? processValue(columns, row, testData['request'])
               : null;
           final expectedResponse =
-              globalProcessValue(columns, row, testData['response']);
+              processValue(columns, row, testData['response']);
 
           // Process request route.
           String requestRoute = testData['route'];
@@ -103,7 +103,7 @@ Future main(List<String> files) async {
             requestRoute = requestRoute.replaceAllMapped(regex, (match) {
               final key = match.group(1);
               if (urlParams.containsKey(key)) {
-                return globalProcessValue(columns, row, urlParams[key]);
+                return processValue(columns, row, urlParams[key]);
               } else {
                 return key;
               }
@@ -158,7 +158,7 @@ Future main(List<String> files) async {
 
             print('Expected: $expectedResponse');
             print('Actual: $responseBody');
-            print('${cliYellow}Which: $mismatch');
+            print('${cliYellow}Which: $mismatch$cliReset');
 
             // Terminate any further action.
             exit(1);
@@ -174,20 +174,20 @@ Future main(List<String> files) async {
   }
 }
 
-dynamic globalProcessValue(
-    List<String> columns, List<dynamic> row, dynamic data) {
+/// Process value.
+dynamic processValue(List<String> columns, List<dynamic> row, dynamic data) {
   if (data is Map) {
     final ret = new Map();
     for (final key in data.keys) {
       final result = processKey(columns, row, key);
       if (result != null) {
-        ret[result] = globalProcessValue(columns, row, data[key]);
+        ret[result] = processValue(columns, row, data[key]);
       }
     }
     return ret;
   } else if (data is List) {
     return new List.generate(
-        data.length, (i) => globalProcessValue(columns, row, data[i]));
+        data.length, (i) => processValue(columns, row, data[i]));
   } else if (data is String) {
     return processStringValue(columns, row, data);
   } else {
@@ -195,6 +195,7 @@ dynamic globalProcessValue(
   }
 }
 
+/// Process string value (can contain an extension).
 dynamic processStringValue(
     List<String> columns, List<dynamic> row, String str) {
   // Split value.
@@ -220,16 +221,18 @@ dynamic processStringValue(
   }
 }
 
+/// Process a value field extension.
 dynamic processValueExtension(
     List<String> columns, List<dynamic> row, List<String> params) {
   if (extensions.containsKey(params.first)) {
     return extensions[params.first]
-        .processValue(columns, row, params.sublist(1));
+        .processParams(columns, row, params.sublist(1));
   } else {
     return null;
   }
 }
 
+/// Process a key (can contain an extension).
 String processKey(List<String> columns, List<dynamic> row, String key) {
   // Split key.
   final parts = key.split(':');

@@ -4,7 +4,12 @@
 
 part of eqpg;
 
-String sqlIntersectFunctions(List<int> functionIds) => '''
+class CreateDefinition {
+  int categoryId;
+  String left, right;
+}
+
+String queryIntersectFunctionIds(List<int> functionIds) => '''
 SELECT id FROM function WHERE category_id IN (
   SELECT unnest(array_append(parents, id))
   FROM category WHERE id = @categoryId)
@@ -19,26 +24,36 @@ Future<table.Definition> _createDefinition(
 
   // For now we only accept single byte signed integers in non-evaluated
   // expressions.
-  if (leftData.float64Count > 0 || rightData.float64Count > 0) {
-    throw new RpcError(400, 'reject_expr', 'contains float64');
+  if (leftData.float64Count > 0) {
+    throw new BadRequestError('rejected left expression')
+      ..errors.add(new RpcErrorDetail(
+          reason: 'left expression contains floating point numbers'));
+  } else if (rightData.float64Count > 0) {
+    throw new BadRequestError('rejected right expression')
+      ..errors.add(new RpcErrorDetail(
+          reason: 'right expression contains floating point numbers'));
   }
 
   // Retrieve all function IDs that are defined under this category.
   final allIds = leftData.functionId.toSet()..addAll(rightData.functionId);
-  final intersectResult = await db.query(sqlIntersectFunctions(allIds.toList()),
+  final intersectResult = await db.query(
+      queryIntersectFunctionIds(allIds.toList()),
       {'categoryId': input.categoryId}).toList();
 
   // Validate if all functions are defined in the context category.
   if (intersectResult.length != allIds.length) {
-    log.info(
-        'Definition function ID intersection result: $intersectResult (input: $allIds)');
-    throw new RpcError(400, 'reject_expr', 'not all functions are known');
+    final missing = allIds.difference(intersectResult.toSet());
+    throw new UnprocessableEntityError(
+        'given category does not contain some functions: $missing');
   }
 
-  // Decode and insert expressions.
+  // Decode expressions.
   final leftDecoded = exprCodecDecode(leftData);
   final rightDecoded = exprCodecDecode(rightData);
+
   log.info('Definition decoded as $leftDecoded = $rightDecoded');
+
+  // Insert expressions.
   final leftExpr = await _createExpression(db, leftDecoded);
   final rightExpr = await _createExpression(db, rightDecoded);
 
@@ -50,10 +65,5 @@ Future<table.Definition> _createDefinition(
       .query('INSERT INTO definition VALUES (DEFAULT, @ruleId) RETURNING *',
           {'ruleId': rule.id})
       .map(table.Definition.map)
-      .first;
-}
-
-class CreateDefinition {
-  int categoryId;
-  String left, right;
+      .single;
 }

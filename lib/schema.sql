@@ -51,8 +51,8 @@ CREATE TABLE function (
   id              serial    PRIMARY KEY,
   category_id     integer   NOT NULL REFERENCES category(id),
   argument_count  smallint  NOT NULL CHECK (argument_count >= 0),
-  latex_template  text      NOT NULL,
-  generic         boolean   NOT NULL
+  latex_template  text      NOT NULL CHECK (NOT latex_template = ''),
+  generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2)
 );
 
 -- Function subfield: reference descriptor

@@ -22,3 +22,9 @@ methods:
     response:
       id: 4
       path: [1, 3]
+  - data:
+      parentId: 5
+    response:
+      error:
+        code: 422
+        message: parentId not found in category table
