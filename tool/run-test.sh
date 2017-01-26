@@ -23,7 +23,7 @@ sleep 4
 
 # Start the API server and redirect logging to testlog.txt
 export EQPG_SERVER_LOG='testlog.txt'
-dart --checked --observe=$OBSERVATORY_PORT bin/server.dart > /dev/null &
+dart --checked --observe=$OBSERVATORY_PORT bin/server.dart > /dev/null 2>&1 &
 
 # Wait untill server has started.
 while [ -z "`cat testlog.txt | grep 'Listening at port 8080'`"  ]; do

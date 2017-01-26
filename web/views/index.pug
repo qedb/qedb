@@ -1,0 +1,21 @@
+doctype html
+html
+  head
+    title= title
+    link(
+      rel="stylesheet",
+      href=bootstrap.src,
+      integrity=bootstrap.sha
+      crossorigin="anonymous")
+  body
+    .jumbotron
+      .container
+        h1.display-3 EqDB admin
+    .container
+      .list-group
+        each method in methods
+          a(href=method.route).list-group-item.justify-content-between.list-group-item-action= method.name
+            if (method.count)
+              span.badge.badge-default.badge-pill= method.count
+
+    

@@ -81,3 +81,44 @@ sheets:
       branchIndex:        0
       initialCategoryId:  column:C
       firstExpressionId:  eqlib:index:column:Initial
+
+#   - skipIf:               isEmpty:column:Previous
+#     route:                rule/resolve
+#     method:               POST
+#     request:
+#       from:               eqlib:codec:column:Previous
+#       to:                 eqlib:codec:column:Append
+#     response:
+#       differences:
+#       - type:             definition
+#         left:             eqlib:codec:column:Rule left
+#         right:            eqlib:codec:column:Rule right
+#         definitionId:     column:Definition ID
+      
+#   - skipIf:               isEmpty:column:Previous
+#     route:                lineage/{id}/append
+#     method:               POST
+#     url:
+#       id:                 column:L
+#     request:
+#       ruleId:             column:Definition ID
+#     response:
+#       id:                 column:ID
+#       lineageId:          column:L
+#       lineageIndex:       column:Index
+#       ruleId:             column:Definition ID
+#       expressionId:       eqlib:index:column:Append
+
+# # Proofs
+# - run:
+#     route:                rule/resolve
+#     method:               POST
+#     request:
+#       from:               eqlib:codec:column:Proof left
+#       to:                 eqlib:codec:column:Proof right
+#     response:
+#       differences:
+#       - type:             proof
+#         left:             eqlib:codec:column:Proof left
+#         right:            eqlib:codec:column:Proof right
+#         proof:            []

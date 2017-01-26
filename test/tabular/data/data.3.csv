@@ -3,6 +3,8 @@ ID,RID,CID,Category,Area,"Equation left",,"Equation right"
 2,2,1,Algebra,"Basic algebra",?a-?b,=,?b-?a
 3,3,1,Algebra,"Basic algebra",?a+(-?b),=,?a-?b
 4,4,1,Algebra,"Basic algebra",?a*?b,=,?b*?a
-5,5,1,Algebra,"Basic algebra",?a*?b+?a*?c,=,?a*(?b+?c)
-6,6,1,Algebra,Calculus,"diff(?fn(?x),?x)",=,"lim(d(?x),0,(?fn(?x+d(?x))-?fn(?x))/d(?x))"
-7,7,1,Algebra,Calculus,"lim(?a,0,?fn(?b+?a))",=,?fn(?b)
+5,5,1,Algebra,"Basic algebra",?a*(?b*?c),=,(?a*?b)*?c
+6,6,1,Algebra,"Basic algebra",?a*?b+?a*?c,=,?a*(?b+?c)
+7,7,1,Algebra,"Basic algebra",-?a,=,-1*?a
+8,8,1,Algebra,Calculus,"diff(?fn(?x),?x)",=,"lim(d(?x),0,(?fn(?x+d(?x))-?fn(?x))/d(?x))"
+9,9,1,Algebra,Calculus,"lim(?a,0,?fn(?b+?a))",=,?fn(?b)

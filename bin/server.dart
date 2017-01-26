@@ -29,9 +29,9 @@ const keyMaxConn = 'MAX_CONNECTIONS';
 // Environment variable prefix.
 const envPrefix = 'EQPG_';
 
-final log = new Logger('server');
-
 Future main() async {
+  final log = new Logger('server');
+
   // Read YAML file.
   final yamlConfigPath = env('EQPG_CONFIG_PATH', 'dev-config.yaml');
   final yamlFile = new File(yamlConfigPath);
@@ -66,25 +66,26 @@ Future main() async {
     Logger.root.onRecord.listen(new LogPrintHandler());
   }
 
-  // Create RPC API server.
+  // Create RPC API handler.
   final ApiServer apiServer = new ApiServer();
   final eqdbApi = new EqDB(connectionUri, 2, maxConnections);
   await eqdbApi.pool.start();
   apiServer.addApi(eqdbApi);
   apiServer.enableDiscoveryApi();
 
-  // Create a Shelf handler for your RPC API.
+  // Create a Shelf handler.
   final apiHandler = shelf_rpc.createRpcHandler(apiServer);
   final apiRouter = shelf_route.router();
   apiRouter.add('', null, apiHandler, exactMatch: false);
   final handler = const shelf.Pipeline()
-      .addMiddleware(shelf.logRequests())
+      .addMiddleware(shelf.logRequests(
+          logger: (msg, isError) => isError ? log.severe(msg) : log.info(msg)))
       .addHandler(apiRouter.handler);
 
   final server = await shelf_io.serve(handler, '0.0.0.0', srvPort);
   log.info('Listening at port ${server.port}.');
 
-  // Gracefully handle SIGKILL signals.
+  // Gracefully handle SIGINT signals.
   ProcessSignal.SIGINT.watch().listen((signal) async {
     log.info('Received $signal, terminating...');
     await eqdbApi.pool.stop();

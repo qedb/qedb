@@ -1,8 +1,10 @@
 .vscode
+./*.json
+testlog.txt
+node_modules
 dev-config.yaml
 tool/docker/setup.sql
-testlog.txt
-./*.json
+web/views/compiled.dart
 
 #################
 # Linux.gitignore
