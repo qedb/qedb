@@ -44,9 +44,16 @@ class Expression {
   final int id;
   final ExpressionReference reference;
   final String data, hash;
-  Expression(this.id, this.reference, this.data, this.hash);
-  static Expression map(Row r) =>
-      new Expression(r[0], new ExpressionReference(r[1], r[2]), r[3], r[4]);
+  final List<int> functions;
+  Expression(this.id, this.reference, this.data, this.hash, this.functions);
+  static Expression map(Row r) {
+    final String row5 = r[5];
+    final List<String> ids = row5.isEmpty ? [] : row5.split(',');
+    final functions =
+        new List<int>.generate(ids.length, (i) => int.parse(ids[i]));
+    return new Expression(
+        r[0], new ExpressionReference(r[1], r[2]), r[3], r[4], functions);
+  }
 }
 
 class FunctionReference {

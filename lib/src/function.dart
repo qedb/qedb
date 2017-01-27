@@ -26,7 +26,7 @@ class OperatorConfiguration {
   int precedenceLevel;
 
   @ApiProperty(required: true)
-  String evaluationType;
+  String associativity;
 }
 
 Future<table.Function> _createFunction(
@@ -49,13 +49,13 @@ RETURNING *''';
   // If this is an operator, insert the operator configuration.
   const queryInsertOperator = '''
 INSERT INTO operator_configuration
-VALUES (DEFAULT, @functionId, @precedenceLevel, @evaluationType)
+VALUES (DEFAULT, @functionId, @precedenceLevel, @associativity)
 RETURNING *''';
   if (input.asOperator != null) {
     await db.query(queryInsertOperator, {
       'functionId': function.id,
       'precedenceLevel': input.asOperator.precedenceLevel,
-      'evaluationType': input.asOperator.evaluationType
+      'associativity': input.asOperator.associativity
     }).toList();
   }
 

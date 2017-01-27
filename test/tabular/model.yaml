@@ -63,7 +63,7 @@ sheets:
       generic:            column:Generic
       if:Op:asOperator:
         precedenceLevel:  column:Precedence level
-        evaluationType:   column:Evaluation type
+        associativity:    column:Associativity
     response:
       id:                 column:ID
       categoryId:         column:CID

@@ -4,6 +4,15 @@
 
 part of eqpg;
 
+final selectAllExpressionFields = [
+  'id',
+  '(reference).key',
+  '(reference).type',
+  "encode(data, 'base64')",
+  "encode(hash, 'base64')",
+  "array_to_string(functions, ',')"
+].join(',');
+
 class RetrieveTree {
   final int id;
 
@@ -45,14 +54,15 @@ ExprCodecData _decodeCodecHeader(String base64Data) =>
 
 Future<table.Expression> _createExpression(Connection db, Expr expr) async {
   // Encode expression.
-  final String encodedData = expr.toBase64();
+  final codecData = exprCodecEncode(expr);
+  final base64 = BASE64.encode(codecData.writeToBuffer().asUint8List());
 
   // Check if expression exists.
-  const queryLookupExpression = '''
-SELECT id, (reference).key, (reference).type, encode(data, 'base64'), encode(hash, 'base64')
+  final queryLookupExpression = '''
+SELECT $selectAllExpressionFields
 FROM expression WHERE hash = digest(decode(@data, 'base64'), 'sha256')''';
   final lookupResult = await db
-      .query(queryLookupExpression, {'data': encodedData})
+      .query(queryLookupExpression, {'data': base64})
       .map(table.Expression.map)
       .toList();
   if (lookupResult.isNotEmpty) {
@@ -71,18 +81,18 @@ FROM expression WHERE hash = digest(decode(@data, 'base64'), 'sha256')''';
   assert(reference != null);
 
   // Create expression node.
-  const queryInsertExpression = '''
+  final queryInsertExpression = '''
 INSERT INTO expression
 VALUES (DEFAULT, ROW(@referenceKey, @referenceType),
-  decode(@data, 'base64'), digest(decode(@data, 'base64'), 'sha256'))
-RETURNING id, (reference).key, (reference).type,
-  encode(data, 'base64'), encode(hash, 'base64')
+  decode(@data, 'base64'), digest(decode(@data, 'base64'), 'sha256'),
+  ARRAY[${codecData.functionId.join(',')}]::integer[])
+RETURNING $selectAllExpressionFields
 ''';
   return await db
       .query(queryInsertExpression, {
         'referenceKey': reference.key,
         'referenceType': reference.type,
-        'data': encodedData
+        'data': base64
       })
       .map(table.Expression.map)
       .single;
@@ -148,9 +158,8 @@ Future<table.ExpressionReference> _createFunctionReference(
 }
 
 Future<RetrieveTree> _retrieveExpressionTree(Connection db, int id) async {
-  const query = '''
-SELECT id, (reference).key, (reference).type,
-  encode(data, 'base64'), encode(hash, 'base64')
+  final query = '''
+SELECT $selectAllExpressionFields
 FROM expression WHERE id = @id''';
   final result =
       await db.query(query, {'id': id}).map(table.Expression.map).toList();

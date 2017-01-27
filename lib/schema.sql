@@ -67,6 +67,7 @@ CREATE TABLE function (
   latex_template  text      NOT NULL CHECK (NOT latex_template = ''),
   generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2)
 );
+CREATE INDEX function_category_id_index ON function(category_id);
 
 -- Function name
 CREATE TABLE function_name (
@@ -108,6 +109,7 @@ CREATE TYPE keyword_type AS ENUM (
 );
 
 -- Keywords ([a-z]+ sequences that identify the function)
+-- TODO: more general keywords (vector, circle, algebra)
 CREATE TABLE keyword (
   id     serial        PRIMARY KEY,
   value  text          NOT NULL CHECK (value ~ '^[a-z]+$'),
@@ -128,14 +130,14 @@ CREATE TABLE function_keyword (
 );
 
 -- Operator evaluation (relevant for printing parentheses)
-CREATE TYPE read_evaluation_type AS ENUM ('isolated', 'afirst', 'bfirst');
+CREATE TYPE operator_associativity AS ENUM ('ltr', 'rtl');
 
 -- Operator configuration
 CREATE TABLE operator_configuration (
-  id                serial                PRIMARY KEY,
-  function_id       integer               NOT NULL UNIQUE REFERENCES function(id),
-  precedence_level  smallint              NOT NULL CHECK (precedence_level > 0),
-  evaluation_type   read_evaluation_type  NOT NULL
+  id                serial                  PRIMARY KEY,
+  function_id       integer                 NOT NULL UNIQUE REFERENCES function(id),
+  precedence_level  smallint                NOT NULL CHECK (precedence_level > 0),
+  associativity     operator_associativity  NOT NULL
 );
 
 -- Inline reference to another expression reference.
@@ -150,8 +152,12 @@ CREATE TABLE expression (
   id         serial                PRIMARY KEY,
   reference  expression_reference  NOT NULL UNIQUE,
   data       bytea                 NOT NULL UNIQUE,
-  hash       bytea                 NOT NULL UNIQUE
+  hash       bytea                 NOT NULL UNIQUE,
+
+  -- All function IDs in this expression for fast indexing and searching.
+  functions  integer[]             NOT NULL
 );
+CREATE INDEX expression_functions_index on expression USING GIN (functions);
 
 -- Function expression reference
 CREATE TABLE function_reference (
@@ -210,6 +216,20 @@ CREATE TABLE rule (
 CREATE TABLE definition (
   id       serial   PRIMARY KEY,
   rule_id  integer  NOT NULL UNIQUE REFERENCES rule(id)
+);
+
+-- Function property naming
+CREATE TABLE function_property (
+  id             serial   PRIMARY KEY,
+  descriptor_id  integer  NOT NULL REFERENCES descriptor(id)
+);
+
+-- Function property definition
+CREATE TABLE function_property_definition (
+  id                    serial   PRIMARY KEY,
+  function_id           integer  NOT NULL REFERENCES function(id),
+  definition_id         integer  NOT NULL REFERENCES definition(id),
+  function_property_id  integer  NOT NULL REFERENCES function_property(id)
 );
 
 -- Lineage expression
