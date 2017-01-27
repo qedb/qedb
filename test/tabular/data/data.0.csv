@@ -1,17 +1,26 @@
-ID,TID1,"Translation (en_US)",TID2,"Translation (nl_NL)"
-1,1,Algebra,17,Algebra
-2,2,"Basic Algebra",18,"Basis algebra"
-3,3,"Linear Algebra",19,"Lineare algebra"
-4,4,Trigonometry,20,Trigonometrie
-5,5,Calculus,21,Calculus
-6,6,Operator,22,Operator
-7,7,Circle,23,Cirkel
-8,8,Vector,24,Vector
-9,9,"Unit Vector",25,Eenheidsvector
-10,10,Generic,26,Generiek
-11,11,Add,27,Optellen
-12,12,Subtract,28,Aftrekken
-13,13,Multiply,29,Vermenigvuldigen
-14,14,Divide,30,Delen
-15,15,Power,31,Macht
-16,16,Negate,32,Omkeren
+"Translation (en_US)","Translation (nl_NL)",ID,isSubject
+Algebra,Algebra,1,TRUE
+"Basic Algebra","Basis algebra",2,TRUE
+"Linear Algebra","Lineare algebra",3,TRUE
+Trigonometry,Trigonometrie,4,TRUE
+Calculus,Calculus,5,TRUE
+"Vector Algebra",Vectoralgebra,6,TRUE
+Operator,Operator,6,FALSE
+Circle,Cirkel,7,FALSE
+Vector,Vector,8,FALSE
+"Unit Vector",Eenheidsvector,9,FALSE
+Generic,Generiek,10,FALSE
+Add,Optellen,11,FALSE
+Subtract,Aftrekken,12,FALSE
+Multiply,Vermenigvuldigen,13,FALSE
+Divide,Delen,14,FALSE
+Power,Macht,15,FALSE
+Negate,Omkeren,16,FALSE
+Radius,Radius,17,FALSE
+Theta,Theta,18,FALSE
+Sine,Sinus,19,FALSE
+Cosine,Cosinus,20,FALSE
+Limit,Limiet,21,FALSE
+Differential,Differentiaal,22,FALSE
+Function,Functie,23,FALSE
+Delta,Delta,24,FALSE

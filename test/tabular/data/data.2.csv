@@ -1,23 +1,23 @@
-ID,CID,Category,Subfield,Arguments,Name,Keywords,Tags,"LaTeX template","Testing only",Generic,Op,"Precedence level","Evaluation type"
-1,1,Algebra,"Basic algebra",2,Addition,add,Operator,$(a)+$(b),add,FALSE,TRUE,1,afirst
-2,1,Algebra,"Basic algebra",2,Subtraction,subtract,Operator,$(a)-$(b),sub,FALSE,TRUE,1,afirst
-3,1,Algebra,"Basic algebra",2,Multiplication,multiply,Operator,$(a)\cdot$(b),mul,FALSE,TRUE,2,afirst
-4,1,Algebra,"Basic algebra",2,Division,divide,Operator,\frac{$a}{$b},div,FALSE,TRUE,2,afirst
-5,1,Algebra,"Basic algebra",2,Power,power,Operator,$!(a)^{$b},pow,FALSE,TRUE,3,bfirst
-6,1,Algebra,"Basic algebra",1,Negation,negate,Operator,-$(a),neg,FALSE,TRUE,4,afirst
-7,1,Algebra,"Basic algebra",0,,,,{a},a,TRUE,FALSE,,
-8,1,Algebra,"Basic algebra",0,,,,{b},b,TRUE,FALSE,,
-9,1,Algebra,"Basic algebra",0,,,,{c},c,TRUE,FALSE,,
-10,1,Algebra,"Vector algebra",0,,e1,"Unit Vector",\hat{i},i,FALSE,FALSE,,
-11,1,Algebra,"Vector algebra",0,,e2,"Unit Vector",\hat{j},j,FALSE,FALSE,,
-12,1,Algebra,"Vector algebra",0,,e3,"Unit Vector",\hat{k},k,FALSE,FALSE,,
-13,1,Algebra,Trigonometry,0,Radius,,Circle,{r},r,FALSE,FALSE,,
-14,1,Algebra,Trigonometry,0,Theta,,Circle,{\theta},th,FALSE,FALSE,,
-15,1,Algebra,Trigonometry,1,Sine,sin,"Circle ",\sin{$(a)},sin,FALSE,FALSE,,
-16,1,Algebra,Trigonometry,1,Cosine,cos,Circle,\cos{$(a)},cos,FALSE,FALSE,,
-17,1,Algebra,Calculus,0,,,,{x},x,TRUE,FALSE,,
-18,1,Algebra,Calculus,0,,,,{y},y,TRUE,FALSE,,
-19,1,Algebra,Calculus,1,,function,,{f},fn,TRUE,FALSE,,
-20,1,Algebra,Calculus,1,,delta,,\Delta$(a),d,FALSE,FALSE,,
-21,1,Algebra,Calculus,3,Limit,lim,,\lim_{$a\to$b}$(c),lim,FALSE,FALSE,,
-22,1,Algebra,Calculus,2,Differential,diff,,\frac{\partial}{\partial$(b)}$(a),diff,FALSE,FALSE,,
+ID,CID,Category,sdID,Subject,ndID,Name,Keywords,"K type",Argc,"LaTeX template","Testing only",Generic,Op,"Precedence level","Evaluation type"
+1,1,Algebra,2,"Basic algebra",11,Add,add,word,2,$(a)+$(b),add,FALSE,TRUE,1,afirst
+2,1,Algebra,2,"Basic algebra",12,Subtract,subtract,word,2,$(a)-$(b),sub,FALSE,TRUE,1,afirst
+3,1,Algebra,2,"Basic algebra",13,Multiply,multiply,word,2,$(a)\cdot$(b),mul,FALSE,TRUE,2,afirst
+4,1,Algebra,2,"Basic algebra",14,Divide,divide,word,2,\frac{$a}{$b},div,FALSE,TRUE,2,afirst
+5,1,Algebra,2,"Basic algebra",15,Power,power,word,2,$!(a)^{$b},pow,FALSE,TRUE,3,bfirst
+6,1,Algebra,2,"Basic algebra",16,Negate,negate,word,1,-$(a),neg,FALSE,TRUE,4,afirst
+7,1,Algebra,2,"Basic algebra",,,a,symbol,0,{a},a,TRUE,FALSE,,
+8,1,Algebra,2,"Basic algebra",,,b,symbol,0,{b},b,TRUE,FALSE,,
+9,1,Algebra,2,"Basic algebra",,,c,symbol,0,{c},c,TRUE,FALSE,,
+10,1,Algebra,6,"Vector algebra",,,e1,symbol,0,\hat{i},i,FALSE,FALSE,,
+11,1,Algebra,6,"Vector algebra",,,e2,symbol,0,\hat{j},j,FALSE,FALSE,,
+12,1,Algebra,6,"Vector algebra",,,e3,symbol,0,\hat{k},k,FALSE,FALSE,,
+13,1,Algebra,4,Trigonometry,17,Radius,r,symbol,0,{r},r,FALSE,FALSE,,
+14,1,Algebra,4,Trigonometry,18,Theta,theta,word,0,{\theta},th,FALSE,FALSE,,
+15,1,Algebra,4,Trigonometry,19,Sine,sin,abbreviation,1,\sin{$(a)},sin,FALSE,FALSE,,
+16,1,Algebra,4,Trigonometry,20,Cosine,cos,abbreviation,1,\cos{$(a)},cos,FALSE,FALSE,,
+17,1,Algebra,5,Calculus,,,x,symbol,0,{x},x,TRUE,FALSE,,
+18,1,Algebra,5,Calculus,,,y,symbol,0,{y},y,TRUE,FALSE,,
+19,1,Algebra,5,Calculus,23,Function,fn,abbreviation,1,{f},fn,TRUE,FALSE,,
+20,1,Algebra,5,Calculus,24,Delta,delta,word,1,\Delta$(a),d,FALSE,FALSE,,
+21,1,Algebra,5,Calculus,21,Limit,lim,abbreviation,3,\lim_{$a\to$b}$(c),lim,FALSE,FALSE,,
+22,1,Algebra,5,Calculus,22,Differential,diff,abbreviation,2,\frac{\partial}{\partial$(b)}$(a),diff,FALSE,FALSE,,

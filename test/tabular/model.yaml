@@ -1,17 +1,50 @@
 baseUrl: http://localhost:8080/eqdb/v0/
 sheets:
+
 # Descriptors
 - run: []
 
+  # # Create descriptor.
+  # - route:                descriptor/create
+  #   method:               POST
+  #   request:
+  #     isSubject:          column:isSubject
+  #     translations:
+  #     - locale:           en_US
+  #       text:             column:Translation (en_US)
+  #   response:
+  #     id:                 pkey:next:descriptor
+  #     translations:
+  #     - id:               pkey:next:descriptor_translation
+  #       locale:           en_US
+  #       text:             column:Translation (en_US)
+
+  # # Add Dutch translation.
+  # - route:                descriptor/{id}/translations/create
+  #   method:               POST
+  #   url:
+  #     id:                 current:ID
+  #   request:
+  #     locale:             nl_NL
+  #     text:               column:Translation (nl_NL)
+  #   response:
+  #     id:                 pkey:next:descriptor_translation
+  #     locale:             nl_NL
+  #     text:               column:Translation (nl_NL)
+
 # Categories
 - run:
-  - route:       category/create
-    method:      POST
+
+  # Create category.
+  - route:                category/create
+    method:               POST
     request:
-      if:hasParent:parentId: column:Parent ID
+      if:hasParent:parentId:  column:Parent ID
+      #nameId:                 column:dID 
     response:
-      id:        column:ID
-      path:      column:[]Parents
+      id:                 column:ID
+      path:               column:[]Parents
+      #name:               column:dID
 
 # Functions
 - extensions:
@@ -19,11 +52,13 @@ sheets:
       idColumn:           ID
       aliasColumn:        Testing only
   run:
+
+  # Create function.
   - route:                function/create
     method:               POST
     request:
       categoryId:         column:CID
-      argumentCount:      column:Arguments
+      argumentCount:      column:Argc
       latexTemplate:      column:LaTeX template
       generic:            column:Generic
       if:Op:asOperator:
@@ -32,12 +67,50 @@ sheets:
     response:
       id:                 column:ID
       categoryId:         column:CID
-      argumentCount:      column:Arguments
+      argumentCount:      column:Argc
       latexTemplate:      column:LaTeX template
       generic:            column:Generic
 
+  # # Add name.
+  # - route:                function/{id}/name/update
+  #   method:               POST
+  #   url:
+  #     id:                 column:ID
+  #   request:
+  #     descriptorId:       column:ndID
+  #   response:
+  #     id:                 pkey:next:function_name
+  #     functionId:         column:ID
+  #     descriptorId:       column:ndID
+
+  # # Add tags.
+  # - route:                function/{id}/tags/create
+  #   method:               POST
+  #   url:
+  #     id:                 column:ID
+  #   request:
+  #     descriptorId:       column:sdID
+  #   response:
+  #     id:                 pkey:next:function_name
+  #     functionId:         column:ID
+
+  # # Add keyword.
+  # - route:                function/{id}/keywords/create
+  #   method:               POST
+  #   url:
+  #     id:                 column:ID
+  #   request:
+  #     keyword:            column:Keyword
+  #     keywordType:        column:K type
+  #   response:
+  #     id:                 pkey:next:keyword
+  #     value:              column:Keyword
+  #     type:               column:K type
+
 # Definitions
 - run:
+
+  # Create definition.
   - route:                definition/create
     method:               POST
     request:
@@ -48,6 +121,7 @@ sheets:
       id:                 column:ID
       ruleId:             column:RID
 
+  # Retrieve expression tree for left expression.
   - route:                expression/{id}/retrieveTree
     method:               GET
     url:
@@ -58,6 +132,7 @@ sheets:
     ignore:
     - reference
 
+  # Retrieve expression tree for right expression.
   - route:                expression/{id}/retrieveTree
     method:               GET
     url:
@@ -70,6 +145,8 @@ sheets:
 
 # Lineages (1)
 - run:
+
+  # Create lineage.
   - skipIf:               isEmpty:column:Initial
     route:                lineage/create
     method:               POST
