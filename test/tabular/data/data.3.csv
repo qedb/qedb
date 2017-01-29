@@ -1,4 +1,4 @@
-ID,RID,CID,Category,Area,"Equation left",,"Equation right"
+ID,rID,cID,Category,Area,"Equation left",,"Equation right"
 1,1,1,Algebra,"Basic algebra",?a+?b,=,?b+?a
 2,2,1,Algebra,"Basic algebra",?a-?b,=,?b-?a
 3,3,1,Algebra,"Basic algebra",?a+(-?b),=,?a-?b

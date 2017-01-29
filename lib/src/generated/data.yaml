@@ -1,0 +1,61 @@
+tables:
+- tableName:  category
+  className:  Category
+  varName:    category
+  listName:   categories
+
+- tableName:  definition
+  className:  Definition
+  varName:    definition
+  listName:   definitions
+
+- tableName:  descriptor
+  className:  Descriptor
+  varName:    descriptor
+  listName:   descriptors
+
+- tableName:  expression
+  className:  Expression
+  varName:    expression
+  listName:   expressions
+
+- tableName:  function
+  className:  Function
+  varName:    function
+  listName:   functions
+
+- tableName:  function_reference
+  className:  FunctionReference
+  varName:    functionReference
+  listName:   functionReferences
+
+- tableName:  integer_reference
+  className:  IntegerReference
+  varName:    integerReference
+  listName:   integerReferences
+
+- tableName:  lineage
+  className:  Lineage
+  varName:    lineage
+  listName:   lineages
+
+- tableName:  locale
+  className:  Locale
+  varName:    locale
+  listName:   locales
+
+- tableName:  operator_configuration
+  className:  OperatorConfiguration
+  varName:    operatorConfiguration
+  listName:   operatorConfigurations
+
+- tableName:  rule
+  className:  Rule
+  varName:    rule
+  listName:   rules
+  
+- tableName:  translation
+  className:  Translation
+  varName:    translation
+  listName:   translations
+    

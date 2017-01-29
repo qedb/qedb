@@ -16,7 +16,7 @@ import 'router.dart';
 const envLogFile = 'EQPG_ADMIN_WEBSITE_LOG_FILE';
 const envPort = 'EQPG_ADMIN_WEBSITE_PORT';
 
-Future main() async {
+Future<Null> main() async {
   final log = new Logger('server');
 
   // Setup file based logging.

@@ -2,55 +2,66 @@ baseUrl: http://localhost:8080/eqdb/v0/
 sheets:
 
 # Descriptors
-- run: []
+- run:
 
-  # # Create descriptor.
-  # - route:                descriptor/create
-  #   method:               POST
-  #   request:
-  #     isSubject:          column:isSubject
-  #     translations:
-  #     - locale:           en_US
-  #       text:             column:Translation (en_US)
-  #   response:
-  #     id:                 pkey:next:descriptor
-  #     translations:
-  #     - id:               pkey:next:descriptor_translation
-  #       locale:           en_US
-  #       text:             column:Translation (en_US)
+  # Create descriptor.
+  - route:             descriptor/create
+    method:            POST
+    request:
+      isSubject:       column:isSubject
+      translations:
+      - locale:        en_US
+        content:       column:Translation (en_US)
+    response:
+      descriptors:
+      - id:            column:ID
+        isSubject:     column:isSubject
+      locales:
+      - id:            1
+        code:          en_US
+      translations:
+      - id:            pkey:next:translation
+        descriptorId:  column:ID
+        localeId:      1
+        content:       column:Translation (en_US)
 
-  # # Add Dutch translation.
-  # - route:                descriptor/{id}/translations/create
-  #   method:               POST
-  #   url:
-  #     id:                 current:ID
-  #   request:
-  #     locale:             nl_NL
-  #     text:               column:Translation (nl_NL)
-  #   response:
-  #     id:                 pkey:next:descriptor_translation
-  #     locale:             nl_NL
-  #     text:               column:Translation (nl_NL)
+  # Add Dutch translation.
+  - route:             descriptor/{id}/translations/create
+    method:            POST
+    url:
+      id:              column:ID
+    request:
+      locale:          nl_NL
+      content:         column:Translation (nl_NL)
+    response:
+      locales:
+      - id:            2
+        code:          nl_NL
+      translations:
+      - id:            pkey:next:translation
+        descriptorId:  column:ID
+        localeId:      2
+        content:       column:Translation (nl_NL)
 
 # Categories
 - run:
 
   # Create category.
-  - route:                category/create
-    method:               POST
+  - route:        category/create
+    method:       POST
     request:
-      if:hasParent:parentId:  column:Parent ID
-      #nameId:                 column:dID 
+      if:hasParent:parentId:
+                  column:Parent ID
     response:
-      id:                 column:ID
-      path:               column:[]Parents
-      #name:               column:dID
+      categories:
+      - id:       column:ID
+        parents:  column:[]Parents
 
 # Functions
 - extensions:
   - eqlib:
-      idColumn:           ID
-      aliasColumn:        Testing only
+      idColumn: ID
+      aliasColumn: Testing only
   run:
 
   # Create function.
@@ -65,11 +76,17 @@ sheets:
         precedenceLevel:  column:Precedence level
         associativity:    column:Associativity
     response:
-      id:                 column:ID
-      categoryId:         column:CID
-      argumentCount:      column:Argc
-      latexTemplate:      column:LaTeX template
-      generic:            column:Generic
+      functions:
+      - id:               column:ID
+        categoryId:       column:CID
+        argumentCount:    column:Argc
+        latexTemplate:    column:LaTeX template
+        generic:          column:Generic
+      if:Op:operatorConfigurations:
+      - id:               pkey:next:operator_configuration
+        functionId:       column:ID
+        precedenceLevel:  column:Precedence level
+        associativity:    column:Associativity
 
   # # Add name.
   # - route:                function/{id}/name/update
@@ -111,35 +128,45 @@ sheets:
 - run:
 
   # Create definition.
-  - route:                definition/create
-    method:               POST
+  - route:                    definition/create
+    method:                   POST
     request:
-      categoryId:         column:CID
-      left:               eqlib:codec:column:Equation left
-      right:              eqlib:codec:column:Equation right
+      categoryId:             column:cID
+      left:                   eqlib:codec:column:Equation left
+      right:                  eqlib:codec:column:Equation right
     response:
-      id:                 column:ID
-      ruleId:             column:RID
+      rules:
+      - id:                   column:rID
+        categoryId:           column:cID
+        0:leftExpressionId:   eqlib:index:column:Equation left
+        1:rightExpressionId:  eqlib:index:column:Equation right
+      definitions:
+      - id:                   column:ID
+        ruleId:               column:rID
+    ignore:
+    - expressions
+    - functionReferences
+    - integerReferences
 
   # Retrieve expression tree for left expression.
-  - route:                expression/{id}/retrieveTree
-    method:               GET
+  - route:      expression/{id}/retrieveTree
+    method:     GET
     url:
-      id:                 eqlib:index:column:Equation left
+      id:       eqlib:index:column:Equation left
     response:
-      id:                 eqlib:index:column:Equation left
-      rawData:            eqlib:codec:column:Equation left
+      id:       eqlib:index:column:Equation left
+      rawData:  eqlib:codec:column:Equation left
     ignore:
     - reference
 
   # Retrieve expression tree for right expression.
-  - route:                expression/{id}/retrieveTree
-    method:               GET
+  - route:      expression/{id}/retrieveTree
+    method:     GET
     url:
-      id:                 eqlib:index:column:Equation right
+      id:       eqlib:index:column:Equation right
     response:
-      id:                 eqlib:index:column:Equation right
-      rawData:            eqlib:codec:column:Equation right
+      id:       eqlib:index:column:Equation right
+      rawData:  eqlib:codec:column:Equation right
     ignore:
     - reference
 
@@ -147,17 +174,22 @@ sheets:
 - run:
 
   # Create lineage.
-  - skipIf:               isEmpty:column:Initial
-    route:                lineage/create
-    method:               POST
+  - skipIf:                 isEmpty:column:Initial
+    route:                  lineage/create
+    method:                 POST
     request:
-      firstExpression:    eqlib:codec:column:Initial
+      firstExpression:      eqlib:codec:column:Initial
     response:
-      id:                 column:L
-      treeId:             column:T
-      branchIndex:        0
-      initialCategoryId:  column:C
-      firstExpressionId:  eqlib:index:column:Initial
+      lineages:
+      - id:                 column:L
+        treeId:             column:T
+        branchIndex:        0
+        initialCategoryId:  column:C
+        firstExpressionId:  eqlib:index:column:Initial
+    ignore:
+    - expressions
+    - functionReferences
+    - integerReferences
 
 #   - skipIf:               isEmpty:column:Previous
 #     route:                rule/resolve

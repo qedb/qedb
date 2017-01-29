@@ -27,7 +27,9 @@ linter:
   # Infer types as much as possible.
   #- always_specify_types
 
-  - annotate_overrides
+  # We don't want to annotate every PK ID in tables.dart
+  #- annotate_overrides
+  
   - avoid_as
   - avoid_init_to_null
   - avoid_return_types_on_setters

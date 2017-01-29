@@ -4,11 +4,11 @@
 
 part of eqpg;
 
-Future<table.Rule> _createRule(
-    Connection db, int leftExpressionId, int rightExpressionId) async {
-  return await db
-      .query('INSERT INTO rule VALUES (DEFAULT, @leftId, @rightId) RETURNING *',
-          {'leftId': leftExpressionId, 'rightId': rightExpressionId})
-      .map(table.Rule.map)
-      .single;
+Future<table.Rule> _createRule(Session s, int categoryId, int leftExpressionId,
+    int rightExpressionId) async {
+  return await ruleHelper.insert(s, {
+    'category_id': categoryId,
+    'left_expression_id': leftExpressionId,
+    'right_expression_id': rightExpressionId
+  });
 }

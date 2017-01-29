@@ -8,7 +8,7 @@
 CREATE EXTENSION pgcrypto;
 
 --------------------------------------------------------------------------------
--- Descriptors
+-- Descriptors and translations
 --------------------------------------------------------------------------------
 
 -- Descriptor
@@ -206,6 +206,7 @@ CREATE TABLE lineage_transition (
 -- Rule (equation of two expression)
 CREATE TABLE rule (
   id                   serial   PRIMARY KEY,
+  category_id          integer  NOT NULL REFERENCES category(id),
   left_expression_id   integer  NOT NULL REFERENCES expression(id),
   right_expression_id  integer  NOT NULL REFERENCES expression(id),
 

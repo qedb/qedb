@@ -6,22 +6,26 @@ methods:
   tests:
   - data: {}
     response:
-      id: 1
-      path: []
+      categories:
+      - id: 1
+        parents: []
   - data: {}
     response:
-      id: 2
-      path: []
+      categories:
+      - id: 2
+        parents: []
   - data:
       parentId: 1
     response:
-      id: 3
-      path: [1]
+      categories:
+      - id: 3
+        parents: [1]
   - data:
       parentId: 3
     response:
-      id: 4
-      path: [1, 3]
+      categories:
+      - id: 4
+        parents: [1, 3]
   - data:
       parentId: 5
     response:

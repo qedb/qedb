@@ -5,22 +5,22 @@ Algebra,Algebra,1,TRUE
 Trigonometry,Trigonometrie,4,TRUE
 Calculus,Calculus,5,TRUE
 "Vector Algebra",Vectoralgebra,6,TRUE
-Operator,Operator,6,FALSE
-Circle,Cirkel,7,FALSE
-Vector,Vector,8,FALSE
-"Unit Vector",Eenheidsvector,9,FALSE
-Generic,Generiek,10,FALSE
-Add,Optellen,11,FALSE
-Subtract,Aftrekken,12,FALSE
-Multiply,Vermenigvuldigen,13,FALSE
-Divide,Delen,14,FALSE
-Power,Macht,15,FALSE
-Negate,Omkeren,16,FALSE
-Radius,Radius,17,FALSE
-Theta,Theta,18,FALSE
-Sine,Sinus,19,FALSE
-Cosine,Cosinus,20,FALSE
-Limit,Limiet,21,FALSE
-Differential,Differentiaal,22,FALSE
-Function,Functie,23,FALSE
-Delta,Delta,24,FALSE
+Operator,Operator,7,FALSE
+Circle,Cirkel,8,FALSE
+Vector,Vector,9,FALSE
+"Unit Vector",Eenheidsvector,10,FALSE
+Generic,Generiek,11,FALSE
+Add,Optellen,12,FALSE
+Subtract,Aftrekken,13,FALSE
+Multiply,Vermenigvuldigen,14,FALSE
+Divide,Delen,15,FALSE
+Power,Macht,16,FALSE
+Negate,Omkeren,17,FALSE
+Radius,Radius,18,FALSE
+Theta,Theta,19,FALSE
+Sine,Sinus,20,FALSE
+Cosine,Cosinus,21,FALSE
+Limit,Limiet,22,FALSE
+Differential,Differentiaal,23,FALSE
+Function,Functie,24,FALSE
+Delta,Delta,25,FALSE

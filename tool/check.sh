@@ -6,6 +6,9 @@
 
 set -e
 
+# Regenerate generated files.
+./lib/src/generated/generate.sh
+
 # Check formatting.
 dartfmt --dry-run --set-exit-if-changed ./
 

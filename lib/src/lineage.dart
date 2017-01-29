@@ -9,9 +9,9 @@ class CreateLineage {
   String firstExpression;
 }
 
-Future<table.Lineage> _createLineage(Connection db, CreateLineage input) async {
+Future<table.Lineage> _createLineage(Session s, CreateLineage body) async {
   // Decode expression.
-  final header = _decodeCodecHeader(input.firstExpression);
+  final header = _decodeCodecHeader(body.firstExpression);
 
   // Compute category.
   final queryFindCategory = '''
@@ -20,25 +20,22 @@ WITH tmp AS (
     SELECT category_id FROM function WHERE id IN (${header.functionId.join(',')})))
 SELECT DISTINCT id FROM tmp WHERE id NOT IN (SELECT unnest FROM tmp)''';
   final parentCategory = new List<int>.from(
-      await db.query(queryFindCategory).map((r) => r[0]).toList());
+      await s.db.query(queryFindCategory).map((r) => r[0]).toList());
   if (parentCategory.length > 1) {
     throw new UnprocessableEntityError(
         'expression depends on multiple isolated categories: $parentCategory');
   }
 
   // Insert expression.
-  final expression = await _createExpression(db, exprCodecDecode(header));
+  final expression = await _createExpression(s, exprCodecDecode(header));
 
   // Insert lineage.
   const queryInsertLineage = '''
 WITH tree_id AS (
   INSERT INTO lineage_tree VALUES (DEFAULT) RETURNING id
 ) INSERT INTO lineage (tree_id, initial_category_id, first_expression_id)
-SELECT id, @categoryId, @expressionId FROM tree_id
+SELECT id, @category_id, @expression_id FROM tree_id
 RETURNING *''';
-  return await db
-      .query(queryInsertLineage,
-          {'categoryId': parentCategory.first, 'expressionId': expression.id})
-      .map(table.Lineage.map)
-      .single;
+  return lineageHelper.insertCustom(s, queryInsertLineage,
+      {'category_id': parentCategory.first, 'expression_id': expression.id});
 }

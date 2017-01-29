@@ -12,6 +12,20 @@ class IsEmptyExtension extends Extension {
   }
 }
 
+class PKeyExtension extends Extension {
+  final pkeys = new Map<String, int>();
+
+  @override
+  dynamic processParams(columns, row, params) {
+    if (params.first == 'next') {
+      pkeys.putIfAbsent(params[1], () => 0);
+      return ++pkeys[params[1]];
+    } else {
+      return 0;
+    }
+  }
+}
+
 class ColumnExtension extends Extension {
   @override
   dynamic processParams(columns, row, params) {

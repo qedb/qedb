@@ -22,7 +22,7 @@ class PugRenderer {
   Process process;
   final queue = new List<Completer<String>>();
 
-  Future initialize(String template) async {
+  Future<Null> initialize(String template) async {
     process = await Process.start('node', ['render.js', '$template.pug'],
         workingDirectory: '${Directory.current.path}/web/views');
 
@@ -54,11 +54,11 @@ class AdminRouter {
 
   AdminRouter() : router = route.router();
 
-  Future terminate() async {
+  Future<Null> terminate() async {
     indexTemplate.process.kill();
   }
 
-  Future intialize() async {
+  Future<Null> intialize() async {
     await indexTemplate.initialize('index');
     router.get('/', getIndex);
   }

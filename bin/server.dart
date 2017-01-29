@@ -29,7 +29,7 @@ const keyMaxConn = 'MAX_CONNECTIONS';
 // Environment variable prefix.
 const envPrefix = 'EQPG_';
 
-Future main() async {
+Future<Null> main() async {
   final log = new Logger('server');
 
   // Read YAML file.

@@ -10,7 +10,7 @@ import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 import 'package:http/http.dart' as http;
 
-Future main(List<String> args) async {
+Future<Null> main(List<String> args) async {
   final doc = loadYaml(await new File(args.first).readAsString());
   final baseUrl = doc['baseUrl'];
 

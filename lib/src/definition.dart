@@ -23,10 +23,10 @@ INTERSECT
 SELECT id FROM function WHERE id IN (${functionIds.join(',')})''';
 
 Future<table.Definition> _createDefinition(
-    Connection db, CreateDefinition input) async {
+    Session s, CreateDefinition body) async {
   // Decode expression headers.
-  final leftData = _decodeCodecHeader(input.left);
-  final rightData = _decodeCodecHeader(input.right);
+  final leftData = _decodeCodecHeader(body.left);
+  final rightData = _decodeCodecHeader(body.right);
 
   // For now we only accept single byte signed integers in non-evaluated
   // expressions.
@@ -42,9 +42,9 @@ Future<table.Definition> _createDefinition(
 
   // Retrieve all function IDs that are defined under this category.
   final allIds = leftData.functionId.toSet()..addAll(rightData.functionId);
-  final intersectResult = await db.query(
+  final intersectResult = await s.db.query(
       queryIntersectFunctionIds(allIds.toList()),
-      {'categoryId': input.categoryId}).toList();
+      {'categoryId': body.categoryId}).toList();
 
   // Validate if all functions are defined in the context category.
   if (intersectResult.length != allIds.length) {
@@ -60,16 +60,12 @@ Future<table.Definition> _createDefinition(
   log.info('Definition decoded as $leftDecoded = $rightDecoded');
 
   // Insert expressions.
-  final leftExpr = await _createExpression(db, leftDecoded);
-  final rightExpr = await _createExpression(db, rightDecoded);
+  final leftExpr = await _createExpression(s, leftDecoded);
+  final rightExpr = await _createExpression(s, rightDecoded);
 
   // Insert rule.
-  final rule = await _createRule(db, leftExpr.id, rightExpr.id);
+  final rule = await _createRule(s, body.categoryId, leftExpr.id, rightExpr.id);
 
   // Insert definition.
-  return await db
-      .query('INSERT INTO definition VALUES (DEFAULT, @ruleId) RETURNING *',
-          {'ruleId': rule.id})
-      .map(table.Definition.map)
-      .single;
+  return await definitionHelper.insert(s, {'rule_id': rule.id});
 }

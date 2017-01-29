@@ -31,10 +31,11 @@ abstract class Extension {
 Map<String, Extension> extensions = {
   'isEmpty': new IsEmptyExtension(),
   'column': new ColumnExtension(),
-  'eqlib': new EqlibExtension()
+  'eqlib': new EqlibExtension(),
+  'pkey': new PKeyExtension()
 };
 
-Future main(List<String> files) async {
+Future<Null> main(List<String> files) async {
   // Load testing model.
   final model = loadYaml(await new File(files.first).readAsString());
   final baseUrl = model['baseUrl'];
@@ -167,7 +168,7 @@ Future main(List<String> files) async {
 
           // Print test state.
           print([
-            '${matches ? cliGreen : cliRed}table #${'$tablei'.padLeft(3, '0')}',
+            '${matches ? cliGreen : cliRed}table #${'${tablei + 1}'.padLeft(3, '0')}',
             'row #${'$rowi'.padLeft(3, '0')}',
             'test #${'${testi + 1}'.padLeft(3, '0')}$cliReset',
           ].join(', '));
@@ -204,7 +205,12 @@ Future main(List<String> files) async {
 dynamic processValue(List<String> columns, List<dynamic> row, dynamic data) {
   if (data is Map) {
     final ret = new Map();
-    for (final key in data.keys) {
+    final keys = data.keys.toList();
+
+    // This enables sequential key processing.
+    keys.sort();
+
+    for (final key in keys) {
       final newKey = processKey(columns, row, key);
       if (newKey != null) {
         ret[newKey] = processValue(columns, row, data[key]);
@@ -273,7 +279,17 @@ String processKey(List<String> columns, List<dynamic> row, String key) {
       }
     }
 
-    // Not yet returned: return null.
+    // Sequential key processing.
+    if (parts.length == 2) {
+      try {
+        int.parse(parts.first);
+        return parts.last;
+      } on FormatException {
+        return null;
+      }
+    }
+
+    // Fallback
     return null;
   } else {
     return key; // default

@@ -18,10 +18,10 @@ class CreateFunction {
   bool generic;
 
   @ApiProperty(required: false)
-  OperatorConfiguration asOperator;
+  OperatorConfigurationInput asOperator;
 }
 
-class OperatorConfiguration {
+class OperatorConfigurationInput {
   @ApiProperty(required: true)
   int precedenceLevel;
 
@@ -29,34 +29,21 @@ class OperatorConfiguration {
   String associativity;
 }
 
-Future<table.Function> _createFunction(
-    Connection db, CreateFunction input) async {
-  // Insert new function.
-  const queryInsertFunction = '''
-INSERT INTO function (category_id, argument_count, latex_template, generic)
-VALUES (@categoryId, @argumentCount, @latexTemplate, @generic)
-RETURNING *''';
-  final function = await db
-      .query(queryInsertFunction, {
-        'categoryId': input.categoryId,
-        'argumentCount': input.argumentCount,
-        'latexTemplate': input.latexTemplate,
-        'generic': input.generic
-      })
-      .map(table.Function.map)
-      .single;
+Future<table.Function> _createFunction(Session s, CreateFunction body) async {
+  final function = await functionHelper.insert(s, {
+    'category_id': body.categoryId,
+    'argument_count': body.argumentCount,
+    'latex_template': body.latexTemplate,
+    'generic': body.generic
+  });
 
   // If this is an operator, insert the operator configuration.
-  const queryInsertOperator = '''
-INSERT INTO operator_configuration
-VALUES (DEFAULT, @functionId, @precedenceLevel, @associativity)
-RETURNING *''';
-  if (input.asOperator != null) {
-    await db.query(queryInsertOperator, {
-      'functionId': function.id,
-      'precedenceLevel': input.asOperator.precedenceLevel,
-      'associativity': input.asOperator.associativity
-    }).toList();
+  if (body.asOperator != null) {
+    await operatorConfigurationHelper.insert(s, {
+      'function_id': function.id,
+      'precedence_level': body.asOperator.precedenceLevel,
+      'associativity': body.asOperator.associativity
+    });
   }
 
   return function;

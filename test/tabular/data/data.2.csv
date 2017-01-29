@@ -1,23 +1,23 @@
 ID,CID,Category,sdID,Subject,ndID,Name,Keywords,"K type",Argc,"LaTeX template","Testing only",Generic,Op,"Precedence level",Associativity
-1,1,Algebra,2,"Basic algebra",11,Add,add,word,2,$(a)+$(b),add,FALSE,TRUE,1,ltr
-2,1,Algebra,2,"Basic algebra",12,Subtract,subtract,word,2,$(a)-$(b),sub,FALSE,TRUE,1,ltr
-3,1,Algebra,2,"Basic algebra",13,Multiply,multiply,word,2,$(a)\cdot$(b),mul,FALSE,TRUE,2,ltr
-4,1,Algebra,2,"Basic algebra",14,Divide,divide,word,2,\frac{$a}{$b},div,FALSE,TRUE,2,ltr
-5,1,Algebra,2,"Basic algebra",15,Power,power,word,2,$!(a)^{$b},pow,FALSE,TRUE,3,rtl
-6,1,Algebra,2,"Basic algebra",16,Negate,negate,word,1,-$(a),neg,FALSE,TRUE,4,rtl
+1,1,Algebra,2,"Basic algebra",12,Add,add,word,2,$(a)+$(b),add,FALSE,TRUE,1,ltr
+2,1,Algebra,2,"Basic algebra",13,Subtract,subtract,word,2,$(a)-$(b),sub,FALSE,TRUE,1,ltr
+3,1,Algebra,2,"Basic algebra",14,Multiply,multiply,word,2,$(a)\cdot$(b),mul,FALSE,TRUE,2,ltr
+4,1,Algebra,2,"Basic algebra",15,Divide,divide,word,2,\frac{$a}{$b},div,FALSE,TRUE,2,ltr
+5,1,Algebra,2,"Basic algebra",16,Power,power,word,2,$!(a)^{$b},pow,FALSE,TRUE,3,rtl
+6,1,Algebra,2,"Basic algebra",17,Negate,negate,word,1,-$(a),neg,FALSE,TRUE,4,rtl
 7,1,Algebra,2,"Basic algebra",,,a,symbol,0,{a},a,TRUE,FALSE,,
 8,1,Algebra,2,"Basic algebra",,,b,symbol,0,{b},b,TRUE,FALSE,,
 9,1,Algebra,2,"Basic algebra",,,c,symbol,0,{c},c,TRUE,FALSE,,
 10,1,Algebra,6,"Vector algebra",,,e1,symbol,0,\hat{i},i,FALSE,FALSE,,
 11,1,Algebra,6,"Vector algebra",,,e2,symbol,0,\hat{j},j,FALSE,FALSE,,
 12,1,Algebra,6,"Vector algebra",,,e3,symbol,0,\hat{k},k,FALSE,FALSE,,
-13,1,Algebra,4,Trigonometry,17,Radius,r,symbol,0,{r},r,FALSE,FALSE,,
-14,1,Algebra,4,Trigonometry,18,Theta,theta,word,0,{\theta},th,FALSE,FALSE,,
-15,1,Algebra,4,Trigonometry,19,Sine,sin,abbreviation,1,\sin{$(a)},sin,FALSE,FALSE,,
-16,1,Algebra,4,Trigonometry,20,Cosine,cos,abbreviation,1,\cos{$(a)},cos,FALSE,FALSE,,
+13,1,Algebra,4,Trigonometry,18,Radius,r,symbol,0,{r},r,FALSE,FALSE,,
+14,1,Algebra,4,Trigonometry,19,Theta,theta,word,0,{\theta},th,FALSE,FALSE,,
+15,1,Algebra,4,Trigonometry,20,Sine,sin,abbreviation,1,\sin{$(a)},sin,FALSE,FALSE,,
+16,1,Algebra,4,Trigonometry,21,Cosine,cos,abbreviation,1,\cos{$(a)},cos,FALSE,FALSE,,
 17,1,Algebra,5,Calculus,,,x,symbol,0,{x},x,TRUE,FALSE,,
 18,1,Algebra,5,Calculus,,,y,symbol,0,{y},y,TRUE,FALSE,,
-19,1,Algebra,5,Calculus,23,Function,fn,abbreviation,1,{f},fn,TRUE,FALSE,,
-20,1,Algebra,5,Calculus,24,Delta,delta,word,1,\Delta$(a),d,FALSE,FALSE,,
-21,1,Algebra,5,Calculus,21,Limit,lim,abbreviation,3,\lim_{$a\to$b}$(c),lim,FALSE,FALSE,,
-22,1,Algebra,5,Calculus,22,Differential,diff,abbreviation,2,\frac{\partial}{\partial$(b)}$(a),diff,FALSE,FALSE,,
+19,1,Algebra,5,Calculus,24,Function,fn,abbreviation,1,{f},fn,TRUE,FALSE,,
+20,1,Algebra,5,Calculus,25,Delta,delta,word,1,\Delta$(a),d,FALSE,FALSE,,
+21,1,Algebra,5,Calculus,22,Limit,lim,abbreviation,3,\lim_{$a\to$b}$(c),lim,FALSE,FALSE,,
+22,1,Algebra,5,Calculus,23,Differential,diff,abbreviation,2,\frac{\partial}{\partial$(b)}$(a),diff,FALSE,FALSE,,

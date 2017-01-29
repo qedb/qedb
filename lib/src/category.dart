@@ -8,32 +8,23 @@ class CreateCategory {
   int parentId;
 }
 
-Future<table.Category> _createCategory(
-    Connection db, CreateCategory input) async {
-  if (input.parentId != null) {
+Future<table.Category> _createCategory(Session s, CreateCategory body) async {
+  if (body.parentId != null) {
     // First check if parent exists.
-    const query = 'SELECT id FROM category WHERE id = @parentId';
-    final result = await db.query(query, {'parentId': input.parentId}).toList();
-
-    if (result.length == 1) {
-      const query = '''
-INSERT INTO category VALUES (DEFAULT, array_append(
-  (SELECT parents FROM category WHERE id = @parentId), @parentId)::integer[])
-RETURNING category.id, array_to_string(category.parents, ',')''';
-
-      return await db
-          .query(query, {'parentId': input.parentId})
-          .map(table.Category.map)
-          .single;
+    if (await categoryHelper.exists(s, {'id': body.parentId})) {
+      return await categoryHelper.insert(s, {
+        'parents': new Sql.arrayAppend(
+            '(SELECT parents FROM category WHERE id = @parent_id)',
+            '@parent_id',
+            'integer[]',
+            {'parent_id': body.parentId})
+      });
     } else {
       throw new UnprocessableEntityError(
           'parentId not found in category table');
     }
   } else {
-    const query = '''
-INSERT INTO category VALUES (DEFAULT, ARRAY[]::integer[])
-RETURNING id, array_to_string(parents, ',')''';
-
-    return await db.query(query).map(table.Category.map).single;
+    return await categoryHelper
+        .insert(s, {'parents': new Sql('ARRAY[]::integer[]')});
   }
 }

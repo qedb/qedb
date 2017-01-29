@@ -10,8 +10,11 @@ export EQPG_DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-64}; echo;`
 # Replace password in setup SQL.
 sed "s/\$password/${EQPG_DB_PASS}/" < ./lib/schema.sql > ./tool/docker/setup.sql
 
+# Remove old container to not mess up dev environment.
+docker rmi eqpg-database:latest
+
 # Build container.
-docker build -t eqpg-database ./tool/docker/
+docker build -t eqpg-database:latest ./tool/docker/
 
 # Run container.
 docker run --name eqpg-database -e POSTGRES_DB="eqdb" -d eqpg-database

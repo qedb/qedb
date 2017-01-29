@@ -13,15 +13,19 @@ import 'package:eqlib/eqlib.dart';
 import 'package:logging/logging.dart';
 import 'package:postgresql/pool.dart';
 import 'package:postgresql/postgresql.dart';
+
+import 'package:eqpg/dbutils.dart';
 import 'package:eqpg/tables.dart' as table;
 
 part 'src/rule.dart';
 part 'src/lineage.dart';
 part 'src/category.dart';
 part 'src/function.dart';
-part 'src/expression.dart';
 part 'src/definition.dart';
 part 'src/exceptions.dart';
+part 'src/descriptor.dart';
+part 'src/expression.dart';
+part 'src/expression_tree.dart';
 
 final log = new Logger('eqpg');
 
@@ -33,35 +37,41 @@ class EqDB {
       : pool = new Pool(dbUri,
             minConnections: minConnections, maxConnections: maxConnections);
 
+  @ApiMethod(path: 'descriptor/create', method: 'POST')
+  Future<QueryResult> createDescriptor(CreateDescriptor body) =>
+      callApiMethod((s) => _createDescriptor(s, body), pool);
+
+  @ApiMethod(path: 'descriptor/{id}/translations/create', method: 'POST')
+  Future<QueryResult> createTranslation(int id, CreateTranslation body) =>
+      callApiMethod((s) => _createTranslation(s, id, body), pool);
+
   @ApiMethod(path: 'category/create', method: 'POST')
-  Future<table.Category> createCategory(CreateCategory input) =>
-      new MethodCaller<table.Category>()
-          .execute((db) => _createCategory(db, input), pool);
+  Future<QueryResult> createCategory(CreateCategory body) =>
+      callApiMethod((s) => _createCategory(s, body), pool);
 
   @ApiMethod(path: 'function/create', method: 'POST')
-  Future<table.Function> createFunction(CreateFunction input) =>
-      new MethodCaller<table.Function>()
-          .execute((db) => _createFunction(db, input), pool);
+  Future<QueryResult> createFunction(CreateFunction body) =>
+      callApiMethod((s) => _createFunction(s, body), pool);
 
   @ApiMethod(path: 'expression/{id}/retrieveTree', method: 'GET')
-  Future<RetrieveTree> retrieveExpressionTree(int id) =>
-      new MethodCaller<RetrieveTree>()
-          .execute((db) => _retrieveExpressionTree(db, id), pool);
+  Future<ExpressionTree> retrieveExpressionTree(int id) =>
+      new MethodCaller<ExpressionTree>().run(
+          (db) =>
+              _retrieveExpressionTree(new Session(db, new QueryResult()), id),
+          pool);
 
   @ApiMethod(path: 'definition/create', method: 'POST')
-  Future<table.Definition> createDefinition(CreateDefinition input) =>
-      new MethodCaller<table.Definition>()
-          .execute((db) => _createDefinition(db, input), pool);
+  Future<QueryResult> createDefinition(CreateDefinition body) =>
+      callApiMethod((s) => _createDefinition(s, body), pool);
 
   @ApiMethod(path: 'lineage/create', method: 'POST')
-  Future<table.Lineage> createLineage(CreateLineage input) =>
-      new MethodCaller<table.Lineage>()
-          .execute((db) => _createLineage(db, input), pool);
+  Future<QueryResult> createLineage(CreateLineage body) =>
+      callApiMethod((s) => _createLineage(s, body), pool);
 }
 
 /// Utility to reuse method calling boilerplate.
 class MethodCaller<T> {
-  Future<T> execute(Future<T> handler(Connection db), Pool pool) {
+  Future<T> run(Future<T> handler(Connection db), Pool pool) {
     final completer = new Completer<T>();
 
     // Get connection.
@@ -81,4 +91,14 @@ class MethodCaller<T> {
 
     return completer.future;
   }
+}
+
+/// Utility to reuse method calling boilerplate.
+Future<QueryResult> callApiMethod(Future handler(Session s), Pool pool) {
+  return new MethodCaller<QueryResult>().run((db) async {
+    final result = new QueryResult();
+    await handler(new Session(db, result));
+    result.finalize();
+    return result;
+  }, pool);
 }
