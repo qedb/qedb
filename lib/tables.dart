@@ -8,8 +8,7 @@ import 'package:postgresql/postgresql.dart';
 
 /// Base class.
 abstract class DbTable {
-  final int id;
-  DbTable(this.id);
+  int get id;
 }
 
 //------------------------------------------------------------------------------
@@ -164,15 +163,6 @@ class IntegerReference implements DbTable {
 //------------------------------------------------------------------------------
 // Lineages
 //------------------------------------------------------------------------------
-
-/// Lineage tree
-class LineageTree implements DbTable {
-  final int id;
-  LineageTree(this.id);
-
-  static const mapFormat = '*';
-  static LineageTree map(Row r) => new LineageTree(r[0]);
-}
 
 /// Lineage
 class Lineage implements DbTable {

@@ -35,6 +35,7 @@ Map<String, Extension> extensions = {
   'pkey': new PKeyExtension()
 };
 
+/// TODO: implement accept:any
 Future<Null> main(List<String> files) async {
   // Load testing model.
   final model = loadYaml(await new File(files.first).readAsString());
@@ -101,6 +102,15 @@ Future<Null> main(List<String> files) async {
 
         // Check if all required keys are present in the model.
         if (requiredKeys.every((key) => testData.containsKey(key))) {
+          // Skip if test is to be skipped.
+          if (testData.containsKey('skip') && testData['skip'] == true) {
+            print([
+              '${cliYellow}skipped:  ${cliReset}table #${'${tablei + 1}'.padLeft(3, '0')}',
+              'row #${'$rowi'.padLeft(3, '0')}',
+              'test #${'${testi + 1}'.padLeft(3, '0')}',
+            ].join(', '));
+            continue;
+          }
           // Skip test if condition is set.
           if (testData.containsKey('skipIf') &&
               processValue(columns, row, testData['skipIf']) == true) {
@@ -168,9 +178,9 @@ Future<Null> main(List<String> files) async {
 
           // Print test state.
           print([
-            '${matches ? cliGreen : cliRed}table #${'${tablei + 1}'.padLeft(3, '0')}',
+            '${matches ? cliGreen : cliRed}${matches ? 'passed' : 'failed'}:   ${cliReset}table #${'${tablei + 1}'.padLeft(3, '0')}',
             'row #${'$rowi'.padLeft(3, '0')}',
-            'test #${'${testi + 1}'.padLeft(3, '0')}$cliReset',
+            'test #${'${testi + 1}'.padLeft(3, '0')}',
           ].join(', '));
 
           if (!matches) {

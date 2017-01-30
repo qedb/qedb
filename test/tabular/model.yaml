@@ -88,41 +88,52 @@ sheets:
         precedenceLevel:  column:Precedence level
         associativity:    column:Associativity
 
-  # # Add name.
-  # - route:                function/{id}/name/update
-  #   method:               POST
-  #   url:
-  #     id:                 column:ID
-  #   request:
-  #     descriptorId:       column:ndID
-  #   response:
-  #     id:                 pkey:next:function_name
-  #     functionId:         column:ID
-  #     descriptorId:       column:ndID
+  # Add name.
+  - skip:                 true
+    route:                function/{id}/name/update
+    method:               POST
+    url:
+      id:                 column:ID
+    request:
+      descriptorId:       column:ndID
+    response:
+      functionNames:
+      - id:               pkey:next:function_name
+        functionId:       column:ID
+        descriptorId:     column:ndID
 
-  # # Add tags.
-  # - route:                function/{id}/tags/create
-  #   method:               POST
-  #   url:
-  #     id:                 column:ID
-  #   request:
-  #     descriptorId:       column:sdID
-  #   response:
-  #     id:                 pkey:next:function_name
-  #     functionId:         column:ID
+  # Add tags.
+  - skip:                 true
+    route:                function/{id}/tags/create
+    method:               POST
+    url:
+      id:                 column:ID
+    request:
+      descriptorId:       column:sdID
+    response:
+      functionTags:
+      - id:               pkey:next:function_tag
+        functionId:       column:ID
+        descriptorId:     column:sdID
 
-  # # Add keyword.
-  # - route:                function/{id}/keywords/create
-  #   method:               POST
-  #   url:
-  #     id:                 column:ID
-  #   request:
-  #     keyword:            column:Keyword
-  #     keywordType:        column:K type
-  #   response:
-  #     id:                 pkey:next:keyword
-  #     value:              column:Keyword
-  #     type:               column:K type
+  # Add keyword.
+  - skip:                 true
+    route:                function/{id}/keywords/create
+    method:               POST
+    url:
+      id:                 column:ID
+    request:
+      keyword:            column:Keyword
+      keywordType:        column:K type
+    response:
+      0:keywords:
+      - id:               pkey:next:keyword
+        value:            column:Keyword
+        type:             column:K type
+      1:functionKeywords:
+      - id:               pkey:next:function_keyword
+        functionId:       column:ID
+        keywordId:        pkey:current:keyword
 
 # Definitions
 - run:
@@ -143,6 +154,9 @@ sheets:
       definitions:
       - id:                   column:ID
         ruleId:               column:rID
+      # expressions:            accect:anyList
+      # functionReferences:     accect:anyList
+      # integerReferences:      accect:anyList
     ignore:
     - expressions
     - functionReferences
@@ -191,43 +205,55 @@ sheets:
     - functionReferences
     - integerReferences
 
-#   - skipIf:               isEmpty:column:Previous
-#     route:                rule/resolve
-#     method:               POST
-#     request:
-#       from:               eqlib:codec:column:Previous
-#       to:                 eqlib:codec:column:Append
-#     response:
-#       differences:
-#       - type:             definition
-#         left:             eqlib:codec:column:Rule left
-#         right:            eqlib:codec:column:Rule right
-#         definitionId:     column:Definition ID
-      
-#   - skipIf:               isEmpty:column:Previous
-#     route:                lineage/{id}/append
-#     method:               POST
-#     url:
-#       id:                 column:L
-#     request:
-#       ruleId:             column:Definition ID
-#     response:
-#       id:                 column:ID
-#       lineageId:          column:L
-#       lineageIndex:       column:Index
-#       ruleId:             column:Definition ID
-#       expressionId:       eqlib:index:column:Append
+  # Resolve difference between two expressions to a single definition.
+  - skip:                 true
+    skipIf:               isEmpty:column:Previous
+    route:                rule/resolve
+    method:               POST
+    request:
+      from:               eqlib:codec:column:Previous
+      to:                 eqlib:codec:column:Append
+    response:
+      differences:
+      - type:             definition
+        left:             eqlib:codec:column:Rule left
+        right:            eqlib:codec:column:Rule right
+        definitionId:     column:Definition ID
+  
+  # Append single expression to lineage by applying a rule.
+  - skip:                 true
+    skipIf:               isEmpty:column:Previous
+    route:                lineage/{id}/append
+    method:               POST
+    url:
+      id:                 column:L
+    request:
+      ruleId:             column:Definition ID
+    response:
+      lineageExpressions:
+      - accept:any
+      - id:               column:ID
+        lineageId:        column:L
+        lineageIndex:     column:Index
+        ruleId:           column:Definition ID
+        expressionId:     eqlib:index:column:Append
+    ignore:
+    - rules
+    - expressions
 
-# # Proofs
-# - run:
-#     route:                rule/resolve
-#     method:               POST
-#     request:
-#       from:               eqlib:codec:column:Proof left
-#       to:                 eqlib:codec:column:Proof right
-#     response:
-#       differences:
-#       - type:             proof
-#         left:             eqlib:codec:column:Proof left
-#         right:            eqlib:codec:column:Proof right
-#         proof:            []
+# Proofs
+- run:
+
+  # Resolve difference between two expressions to a proof path.
+  - skip:                 true
+    route:                rule/resolve
+    method:               POST
+    request:
+      from:               eqlib:codec:column:Proof left
+      to:                 eqlib:codec:column:Proof right
+    response:
+      differences:
+      - type:             proof
+        left:             eqlib:codec:column:Proof left
+        right:            eqlib:codec:column:Proof right
+        proof:            []
