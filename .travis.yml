@@ -5,6 +5,8 @@ dart:
 sudo: required
 services:
 - docker
+before_install:
+- npm install -g mustache
 script:
 - pub global activate coverage
 - ./tool/check.sh
