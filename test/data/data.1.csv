@@ -1,2 +1,4 @@
-ID,"Parent ID",dID,Name,Parents,hasParent
-1,,1,Algebra,,FALSE
+ID,"Parent ID",Name,Parents
+1,,Algebra,
+2,1,"Classical Mechanics",1
+3,2,"Circular Motion","1,2"

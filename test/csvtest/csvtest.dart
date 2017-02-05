@@ -105,7 +105,7 @@ CsvTest route(String method, String path,
         Map<String, dynamic> request: const {},
         Map<String, dynamic> response: const {},
         bool skip: false,
-        ValueResolver<bool> skipIf: resolveFalse}) =>
+        ValueResolver runIf: resolveTrue}) =>
     (row, baseUrl) async {
       // Skip if this test is to be skipped.
       if (skip) {
@@ -113,7 +113,7 @@ CsvTest route(String method, String path,
       }
 
       // Silent skip.
-      if (skipIf(row)) {
+      if (runIf(row) == false) {
         return TestState.silentSkip;
       }
 
@@ -147,7 +147,7 @@ CsvTest route(String method, String path,
       // Compare response body with expected response.
       final expectedResponseBody = evaluate(response, row);
       try {
-        compare(responseBody, expectedResponseBody);
+        compare(expectedResponseBody, responseBody);
         return TestState.passed;
       } catch (e) {
         // Print error details.
@@ -166,10 +166,23 @@ CsvTest route(String method, String path,
 /// Evaluate into a new object.
 dynamic evaluate(dynamic obj, Row row) {
   if (obj is Map) {
-    return new Map.fromIterable(obj.keys,
-        value: (key) => evaluate(obj[key], row));
+    final map = new Map();
+    for (final key in obj.keys) {
+      final value = evaluate(obj[key], row);
+      if (!(value is _RemoveMe)) {
+        map[key] = value;
+      }
+    }
+    return map;
   } else if (obj is List) {
-    return new List.generate(obj.length, (i) => evaluate(obj[i], row));
+    final list = new List();
+    for (final value in obj) {
+      final v = evaluate(value, row);
+      if (!(v is _RemoveMe)) {
+        list.add(v);
+      }
+    }
+    return list;
   } else if (obj is ValueResolver) {
     return obj(row);
   } else {
@@ -189,7 +202,7 @@ void compare(dynamic src, dynamic dst, [String path = '']) {
         compare(src[key], dst[key], path.isEmpty ? key : '$path.$key');
       }
     } else {
-      throw new Exception('$path is not a Map');
+      throw new Exception('$path is not a map');
     }
   } else if (src is List) {
     if (dst is List) {
@@ -202,7 +215,7 @@ void compare(dynamic src, dynamic dst, [String path = '']) {
         compare(src[i], dst[i], '$path[$i]');
       }
     } else {
-      throw new Exception('$path is not a List');
+      throw new Exception('$path is not a list');
     }
   } else if (src is String) {
     if (src.startsWith(_acceptPrefix)) {
@@ -234,7 +247,7 @@ void compare(dynamic src, dynamic dst, [String path = '']) {
   }
 }
 
-const _acceptPrefix = r'$accept';
+const _acceptPrefix = r'$any';
 
 enum AcceptType { map, list, string, number, boolean }
 final _acceptTypeText = {
@@ -247,3 +260,16 @@ final _acceptTypeText = {
 
 ValueResolver accept(AcceptType type) =>
     (_) => '$_acceptPrefix:${_acceptTypeText[type]}';
+
+/// Dummy class for item removal.
+class _RemoveMe {}
+
+/// Only include this item if the given value is not empty.
+ValueResolver includeIfNotEmpty(ValueResolver value) => (row) {
+      final v = value(row);
+      if (v == null || (v is String && v.isEmpty)) {
+        return new _RemoveMe();
+      } else {
+        return v;
+      }
+    };

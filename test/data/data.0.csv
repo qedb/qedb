@@ -1,4 +1,4 @@
-"Translation (en_US)","Translation (nl_NL)",ID,isSubject
+"Translation (en_US)","Translation (nl_NL)",ID,Subject
 Algebra,Algebra,1,TRUE
 "Basic Algebra","Basis algebra",2,TRUE
 "Linear Algebra","Lineare algebra",3,TRUE
@@ -24,3 +24,5 @@ Limit,Limiet,22,FALSE
 Differential,Differentiaal,23,FALSE
 Function,Functie,24,FALSE
 Delta,Delta,25,FALSE
+"Classical Mechanics","Klassieke mechanica",26,TRUE
+"Circular Motion","Cirkelvormige beweging",27,TRUE

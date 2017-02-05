@@ -17,7 +17,7 @@ Future<table.Category> _createCategory(Session s, CreateCategory body) async {
   final result = await subjectHelper.selectCustom(
       s,
       '''
-SELECT * FROM subject WHERE id = (
+SELECT * FROM subject WHERE descriptor_id = (
   SELECT descriptor_id FROM translation
   WHERE content = @content AND locale_id = (
     SELECT id FROM locale WHERE code = @locale))''',

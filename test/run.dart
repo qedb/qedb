@@ -19,7 +19,7 @@ Future main() async {
       ]
     }, response: {
       'descriptors': [
-        {'id': column('ID')}
+        {'id': pkey.get('descriptor', column('Translation (en_US)'))}
       ],
       'locales': [
         {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'}
@@ -50,6 +50,38 @@ Future main() async {
           'descriptorId': column('ID'),
           'localeId': pkey.get('locale', 'nl_NL'),
           'content': column('Translation (nl_NL)')
+        }
+      ]
+    }),
+
+    // Create subject from descriptor.
+    route('POST', 'subject/create', runIf: column('Subject'), request: {
+      'descriptorId': column('ID')
+    }, response: {
+      'subjects': [
+        {'id': pkey.get('subject', column('ID')), 'descriptorId': column('ID')}
+      ]
+    })
+  ]);
+
+  // Categories
+  await csvtest(baseUrl, 'data/data.1.csv', [
+    route('POST', 'category/create', request: {
+      'parentId': includeIfNotEmpty(column('Parent ID')),
+      'name': {'locale': 'en_US', 'content': column('Name')}
+    }, response: {
+      'subjects': [
+        {
+          'id': pkey.get('subject', pkey.get('descriptor', column('Name'))),
+          'descriptorId': pkey.get('descriptor', column('Name'))
+        }
+      ],
+      'categories': [
+        {
+          'id': pkey.get('category', column('Name')),
+          'subjectId':
+              pkey.get('subject', pkey.get('descriptor', column('Name'))),
+          'parents': intlist(column('Parents'))
         }
       ]
     })
