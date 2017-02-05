@@ -77,7 +77,7 @@ Future csvtest(String baseUrl, String csvPath, List<CsvTest> tests) async {
 
       // Tiny delay.
       // It turns out the database needs a bit of time to pick up new records.
-      await new Future.delayed(new Duration(milliseconds: 50));
+      await new Future.delayed(new Duration(milliseconds: 100));
     }
   }
 }
