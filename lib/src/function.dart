@@ -18,6 +18,9 @@ class CreateFunction {
   bool generic;
 
   @ApiProperty(required: false)
+  CreateTranslation name;
+
+  @ApiProperty(required: false)
   OperatorConfigurationInput asOperator;
 }
 

@@ -65,10 +65,12 @@ class TableHelper<R extends table.DbTable> {
     final subs = new List<String>.generate(
         keys.length, (i) => _formatParameter(keys[i], values[i], parameters));
 
-    final sql = '''
+    final sql = subs.isNotEmpty
+        ? '''
 INSERT INTO $tableName (${keys.join(',')})
 VALUES (${subs.join(',')})
-RETURNING $rowFormatter''';
+RETURNING $rowFormatter'''
+        : 'INSERT INTO $tableName DEFAULT VALUES RETURNING $rowFormatter';
     log.info(sql);
     final record = await s.db.query(sql, parameters).map(mapper).single;
 
@@ -87,8 +89,8 @@ RETURNING $rowFormatter''';
   }
 
   /// Select a record.
-  /// This function is intentionally limited. For more complex selects you can
-  /// use raw queries.
+  /// This function is intentionally limited in functionality. For more complex
+  /// selects you can use raw queries with [selectCustom].
   Future<List<R>> select(Session s, Map<String, dynamic> parameters,
       {bool save: true}) async {
     final keys = parameters.keys.toList();
@@ -105,6 +107,14 @@ RETURNING $rowFormatter''';
     if (save) {
       result.forEach((record) => saver(s.result, record));
     }
+    return result;
+  }
+
+  /// Process custom select statement.
+  Future<List<R>> selectCustom(
+      Session s, String sql, Map<String, dynamic> parameters) async {
+    final result = await s.db.query(sql, parameters).map(mapper).toList();
+    result.forEach((record) => saver(s.result, record));
     return result;
   }
 

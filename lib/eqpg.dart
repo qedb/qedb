@@ -45,6 +45,10 @@ class EqDB {
   Future<QueryResult> createTranslation(int id, CreateTranslation body) =>
       callApiMethod((s) => _createTranslation(s, id, body), pool);
 
+  @ApiMethod(path: 'subject/create', method: 'POST')
+  Future<QueryResult> createSubject(CreateSubject body) =>
+      callApiMethod((s) => _createSubject(s, body), pool);
+
   @ApiMethod(path: 'category/create', method: 'POST')
   Future<QueryResult> createCategory(CreateCategory body) =>
       callApiMethod((s) => _createCategory(s, body), pool);

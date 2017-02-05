@@ -2,6 +2,8 @@ doctype html
 html
   head
     title= title
+    meta(charset='utf-8')
+    meta(name='viewport' content='width=device-width,initial-scale=1,shrink-to-fit=no')
     link(
       rel="stylesheet",
       href=bootstrap.src,
@@ -17,5 +19,3 @@ html
           a(href=method.route).list-group-item.justify-content-between.list-group-item-action= method.name
             if (method.count)
               span.badge.badge-default.badge-pill= method.count
-
-    

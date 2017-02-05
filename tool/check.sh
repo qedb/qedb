@@ -18,8 +18,7 @@ dartanalyzer \
 --fatal-hints --fatal-warnings --fatal-lints ./
 
 # Run tests.
-./tool/run-test.sh 'dart ./test/match/run.dart ./test/match/tests.yaml' match-coverage.json
-./tool/run-test.sh ./test/tabular/run.sh tabular-coverage.json
+./tool/run-test.sh ./test/run.sh coverage.json
 
 # Upload coverage.
 if [ ! -z ${CODECOV_TOKEN+x} ];

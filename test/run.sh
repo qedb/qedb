@@ -12,10 +12,10 @@ cd "${0%/*}"
 if [ ! -z `command -v ssconvert` ];
 then
   echo 'Converting data.gnumeric to CSV...'
-  mkdir -p data/data
+  mkdir -p data
   rm -f data/data.*.csv
   ssconvert -S data.gnumeric data/data.csv
   rename -v 's/data.csv.([0-9]+)/data.$1.csv/' data/data.csv.*
 fi
 
-dart run.dart model.yaml data/data.*.csv
+dart run.dart

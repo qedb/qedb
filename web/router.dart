@@ -51,6 +51,7 @@ class PugRenderer {
 class AdminRouter {
   final route.Router router;
   final indexTemplate = new PugRenderer();
+  final createCategoryTemplate = new PugRenderer();
 
   AdminRouter() : router = route.router();
 
@@ -60,7 +61,9 @@ class AdminRouter {
 
   Future<Null> intialize() async {
     await indexTemplate.initialize('index');
+    await createCategoryTemplate.initialize('createCategory');
     router.get('/', getIndex);
+    router.get('/category/create', createCategory);
   }
 
   Future<Response> getIndex(Request request) async {
@@ -68,8 +71,22 @@ class AdminRouter {
       'title': 'Index',
       'bootstrap': {'src': bootstrapSrc, 'sha': bootstrapSha},
       'methods': [
-        {'name': 'List categories', 'route': 'categories/list', 'count': 10},
-        {'name': 'Create category', 'route': 'categories/create'}
+        {'name': 'Create category', 'route': 'category/create'}
+      ]
+    });
+    return new Response.ok(html, headers: {'Content-Type': 'text/html'});
+  }
+
+  Future<Response> createCategory(Request request) async {
+    final html = await createCategoryTemplate.render({
+      'title': 'Create category',
+      'bootstrap': {'src': bootstrapSrc, 'sha': bootstrapSha},
+      'categories': [
+        {'name': 'Algebra', 'id': 1},
+        {'name': 'Physics', 'id': 2},
+        {'name': 'Algebra', 'id': 3},
+        {'name': 'Physics', 'id': 4},
+        {'name': 'Algebra', 'id': 5}
       ]
     });
     return new Response.ok(html, headers: {'Content-Type': 'text/html'});

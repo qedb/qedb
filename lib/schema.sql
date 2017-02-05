@@ -12,11 +12,17 @@ CREATE EXTENSION pgcrypto;
 --------------------------------------------------------------------------------
 
 -- Descriptor
---
 -- Should NOT contain separate records for abbreviations or acronyms.
 CREATE TABLE descriptor (
-  id          serial   PRIMARY KEY,
-  is_subject  boolean  NOT NULL
+  id  serial  PRIMARY KEY
+);
+
+-- Subject
+-- A descriptor should be approved to be a subject. Subjects are used for
+-- categories and for secundary function grouping.
+CREATE TABLE subject (
+  id             serial   PRIMARY KEY,
+  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id)
 );
 
 -- Locale
@@ -32,17 +38,12 @@ CREATE TABLE translation (
   descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
   locale_id      integer  NOT NULL REFERENCES locale(id),
   content        text     NOT NULL
-    CHECK (content ~ E'^(?:[^\\s]+ )*[^\\s]+$') -- Check for repeated spaces in the regex.
+    CHECK (content ~ E'^(?:[^\\s]+ )*[^\\s]+$'), -- Check for repeated spaces in the regex.
   
-  -- Do NOT include a UNIQUE constraint, synonyms can now be stored by supplying
-  -- multiple translations for the same descriptor/locale pair.
-  --
-  -- Additionally, it is possible for different descriptors to have equal
-  -- translations. In this case their meaning can only be resolved by its
-  -- context (e.g. connected records). The addition of a duplicate translation
-  -- could be reviewed seperately to avoid descriptor duplication.
-  --
-  --UNIQUE (descriptor_id, locale_id)
+  -- Translations should have a unique meaning. If there are translations that
+  -- can mean different things, the translation should be further specified.
+  -- (as in Wikipedia page titles)
+  UNIQUE (locale_id, content)
 );
 
 --------------------------------------------------------------------------------
@@ -50,47 +51,32 @@ CREATE TABLE translation (
 --------------------------------------------------------------------------------
 
 -- Category
+-- The referenced subject can not already be used by any function subject tag.
+-- Currently a category must be tied to a subject. This in order to prevent
+-- unclarity about the category contents.
 CREATE TABLE category (
-  id             serial     PRIMARY KEY,
-  parents        integer[]  NOT NULL,
-
-  -- Category name
-  -- Must be a descriptor that is marked as subject.
-  descriptor_id  integer    REFERENCES descriptor(id)
+  id          serial     PRIMARY KEY,
+  subject_id  integer    NOT NULL UNIQUE REFERENCES subject(id),
+  parents     integer[]  NOT NULL
 );
 
 -- Function
 CREATE TABLE function (
   id              serial    PRIMARY KEY,
   category_id     integer   NOT NULL REFERENCES category(id),
+  descriptor_id   integer            REFERENCES descriptor(id),
   argument_count  smallint  NOT NULL CHECK (argument_count >= 0),
   latex_template  text      NOT NULL CHECK (NOT latex_template = ''),
   generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2)
 );
 CREATE INDEX function_category_id_index ON function(category_id);
 
--- Function name
-CREATE TABLE function_name (
-  id             serial   PRIMARY KEY,
-  function_id    integer  NOT NULL REFERENCES function(id),
-  descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
-
-  -- Names should uniquely identify a function.
-  UNIQUE (function_id, descriptor_id)
-);
-
--- Function tag
---
--- The only difference with function_name is that there is no unique constraint
--- (e.g. tags can be shared by multiple functions)
--- Currently only descriptors that are marked as subject are allowed as tag.
---
--- Note that this is not a database for extensive information about functions.
--- Tags should be kept minimal and primarily serve to enhance searching.
-CREATE TABLE function_tag (
-  id             serial   PRIMARY KEY,
-  function_id    integer  NOT NULL REFERENCES function(id),
-  descriptor_id  integer  NOT NULL REFERENCES descriptor(id)
+-- Function subject tag
+-- The referenced subject can not already be used by a category.
+CREATE TABLE function_subject_tag (
+  id           serial   PRIMARY KEY,
+  function_id  integer  NOT NULL REFERENCES function(id),
+  subject_id   integer  NOT NULL REFERENCES subject(id)
 );
 
 CREATE TYPE keyword_type AS ENUM (

@@ -18,11 +18,20 @@ abstract class DbTable {
 /// Descriptor
 class Descriptor implements DbTable {
   final int id;
-  final bool isSubject;
-  Descriptor(this.id, this.isSubject);
+  Descriptor(this.id);
 
   static const mapFormat = '*';
-  static Descriptor map(Row r) => new Descriptor(r[0], r[1]);
+  static Descriptor map(Row r) => new Descriptor(r[0]);
+}
+
+/// Subject
+class Subject implements DbTable {
+  final int id;
+  final int descriptorId;
+  Subject(this.id, this.descriptorId);
+
+  static const mapFormat = '*';
+  static Subject map(Row r) => new Subject(r[0], r[1]);
 }
 
 /// Locale
@@ -53,15 +62,17 @@ class Translation implements DbTable {
 /// Category
 class Category implements DbTable {
   final int id;
+  final int subjectId;
   final List<int> parents;
-  Category(this.id, this.parents);
+  Category(this.id, this.subjectId, this.parents);
 
-  static const mapFormat = "id, array_to_string(parents, ',')";
+  static const mapFormat = "id, subject_id, array_to_string(parents, ',')";
   static Category map(Row r) {
-    final String parents = r[1];
+    final String parents = r[2];
     final splittedParents = parents.isEmpty ? [] : parents.split(',');
     return new Category(
         r[0],
+        r[1],
         new List<int>.generate(
             splittedParents.length, (i) => int.parse(splittedParents[i])));
   }
@@ -71,14 +82,28 @@ class Category implements DbTable {
 class Function implements DbTable {
   final int id;
   final int categoryId;
+  final int descriptorId;
   final int argumentCount;
   final String latexTemplate;
   final bool generic;
-  Function(this.id, this.categoryId, this.argumentCount, this.latexTemplate,
-      this.generic);
+  Function(this.id, this.descriptorId, this.categoryId, this.argumentCount,
+      this.latexTemplate, this.generic);
 
   static const mapFormat = '*';
-  static Function map(Row r) => new Function(r[0], r[1], r[2], r[3], r[4]);
+  static Function map(Row r) =>
+      new Function(r[0], r[1], r[2], r[3], r[4], r[5]);
+}
+
+/// Function subject tag
+class FunctionSubjectTag implements DbTable {
+  final int id;
+  final int functionId;
+  final int subjectId;
+  FunctionSubjectTag(this.id, this.functionId, this.subjectId);
+
+  static const mapFormat = '*';
+  static FunctionSubjectTag map(Row r) =>
+      new FunctionSubjectTag(r[0], r[1], r[2]);
 }
 
 /// Operator configuration

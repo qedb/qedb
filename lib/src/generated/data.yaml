@@ -1,28 +1,48 @@
 tables:
-- tableName:  category
-  className:  Category
-  varName:    category
-  listName:   categories
-
-- tableName:  definition
-  className:  Definition
-  varName:    definition
-  listName:   definitions
-
 - tableName:  descriptor
   className:  Descriptor
   varName:    descriptor
   listName:   descriptors
 
-- tableName:  expression
-  className:  Expression
-  varName:    expression
-  listName:   expressions
+- tableName:  subject
+  className:  Subject
+  varName:    subject
+  listName:   subjects
+
+- tableName:  locale
+  className:  Locale
+  varName:    locale
+  listName:   locales
+
+- tableName:  translation
+  className:  Translation
+  varName:    translation
+  listName:   translations
+
+- tableName:  category
+  className:  Category
+  varName:    category
+  listName:   categories
 
 - tableName:  function
   className:  Function
   varName:    function
   listName:   functions
+
+- tableName:  function_subject_tag
+  className:  FunctionSubjectTag
+  varName:    functionSubjectTag
+  listName:   functionSubjectTags
+
+- tableName:  operator_configuration
+  className:  OperatorConfiguration
+  varName:    operatorConfiguration
+  listName:   operatorConfigurations
+
+- tableName:  expression
+  className:  Expression
+  varName:    expression
+  listName:   expressions
 
 - tableName:  function_reference
   className:  FunctionReference
@@ -39,23 +59,12 @@ tables:
   varName:    lineage
   listName:   lineages
 
-- tableName:  locale
-  className:  Locale
-  varName:    locale
-  listName:   locales
-
-- tableName:  operator_configuration
-  className:  OperatorConfiguration
-  varName:    operatorConfiguration
-  listName:   operatorConfigurations
-
 - tableName:  rule
   className:  Rule
   varName:    rule
   listName:   rules
   
-- tableName:  translation
-  className:  Translation
-  varName:    translation
-  listName:   translations
-    
+- tableName:  definition
+  className:  Definition
+  varName:    definition
+  listName:   definitions  

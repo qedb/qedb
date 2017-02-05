@@ -8,14 +8,12 @@ sheets:
   - route:             descriptor/create
     method:            POST
     request:
-      isSubject:       column:isSubject
       translations:
       - locale:        en_US
         content:       column:Translation (en_US)
     response:
       descriptors:
       - id:            column:ID
-        isSubject:     column:isSubject
       locales:
       - id:            1
         code:          en_US
@@ -42,20 +40,35 @@ sheets:
         descriptorId:  column:ID
         localeId:      2
         content:       column:Translation (nl_NL)
+  
+  # Approve descriptor as subject.
+  - skipIf:            not:column:isSubject
+    route:             subject/create
+    method:            POST
+    request:
+      descriptorId:    column:ID
+    response:
+      subjects:
+      - id:            pkey:next:subject
+        descriptorId:  column:ID
 
 # Categories
 - run:
 
   # Create category.
-  - route:        category/create
-    method:       POST
+  - route:             category/create
+    method:            POST
     request:
-      if:hasParent:parentId:
-                  column:Parent ID
+      if:hasParent:parentId:  column:Parent ID
+      name:
+        locale:        en_US
+        content:       column:Name
     response:
+      subjects:        any:list
       categories:
-      - id:       column:ID
-        parents:  column:[]Parents
+      - id:            column:ID
+        parents:       column:[]Parents
+        subjectId:     pkey(descriptor,hash(column:Name,en_US))
 
 # Functions
 - extensions:

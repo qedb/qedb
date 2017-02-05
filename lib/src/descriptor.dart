@@ -7,9 +7,11 @@ part of eqpg;
 class CreateDescriptor {
   @ApiProperty(required: true)
   List<CreateTranslation> translations;
+}
 
-  @ApiProperty(required: false, defaultValue: false)
-  bool isSubject;
+class CreateSubject {
+  @ApiProperty(required: true)
+  int descriptorId;
 }
 
 class CreateTranslation {
@@ -28,8 +30,7 @@ Future<table.Descriptor> _createDescriptor(
   }
 
   // Insert descriptor.
-  final descriptor =
-      await descriptorHelper.insert(s, {'is_subject': body.isSubject});
+  final descriptor = await descriptorHelper.insert(s, {});
 
   // Insert translations.
   for (final translation in body.translations) {
@@ -37,6 +38,11 @@ Future<table.Descriptor> _createDescriptor(
   }
 
   return descriptor;
+}
+
+Future<table.Subject> _createSubject(Session s, CreateSubject body) async {
+  // Insert translation.
+  return await subjectHelper.insert(s, {'descriptor_id': body.descriptorId});
 }
 
 Future<table.Translation> _createTranslation(
