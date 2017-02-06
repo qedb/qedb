@@ -74,10 +74,6 @@ Future csvtest(String baseUrl, String csvPath, List<CsvTest> tests) async {
       if (state == TestState.failed) {
         exit(1);
       }
-
-      // Tiny delay.
-      // It turns out the database needs a bit of time to pick up new records.
-      await new Future.delayed(new Duration(milliseconds: 100));
     }
   }
 }
