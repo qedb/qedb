@@ -34,6 +34,20 @@ Future main() async {
       ]
     }),
 
+    // Get descriptor translations.
+    route('GET', 'descriptor/{id}/translations/list', url: {
+      'id': column('ID')
+    }, response: {
+      'translations': [
+        {
+          'id': pkey.get('translation', column('Translation (en_US)')),
+          'descriptorId': column('ID'),
+          'localeId': pkey.get('locale', 'en_US'),
+          'content': column('Translation (en_US)')
+        }
+      ]
+    }),
+
     // Add Dutch translation to descriptor.
     route('POST', 'descriptor/{id}/translations/create', url: {
       'id': column('ID')
@@ -45,6 +59,26 @@ Future main() async {
         {'id': pkey.get('locale', 'nl_NL'), 'code': 'nl_NL'}
       ],
       'translations': [
+        {
+          'id': pkey.get('translation', column('Translation (nl_NL)')),
+          'descriptorId': column('ID'),
+          'localeId': pkey.get('locale', 'nl_NL'),
+          'content': column('Translation (nl_NL)')
+        }
+      ]
+    }),
+
+    // Get descriptor translations again.
+    route('GET', 'descriptor/{id}/translations/list', url: {
+      'id': column('ID')
+    }, response: {
+      'translations': [
+        {
+          'id': pkey.get('translation', column('Translation (en_US)')),
+          'descriptorId': column('ID'),
+          'localeId': pkey.get('locale', 'en_US'),
+          'content': column('Translation (en_US)')
+        },
         {
           'id': pkey.get('translation', column('Translation (nl_NL)')),
           'descriptorId': column('ID'),

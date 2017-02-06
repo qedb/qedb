@@ -54,3 +54,10 @@ Future<db.TranslationTable> _createTranslation(
     'content': body.content
   });
 }
+
+Future<List<db.TranslationTable>> _listTranslations(Session s,
+    [int descriptorId = -1]) {
+  return descriptorId == -1
+      ? translationHelper.select(s, {})
+      : translationHelper.select(s, {'descriptor_id': descriptorId});
+}

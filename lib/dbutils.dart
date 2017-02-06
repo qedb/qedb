@@ -71,7 +71,7 @@ INSERT INTO $tableName (${keys.join(',')})
 VALUES (${subs.join(',')})
 RETURNING $rowFormatter'''
         : 'INSERT INTO $tableName DEFAULT VALUES RETURNING $rowFormatter';
-    log.info(sql);
+    log.info('$sql, $parameters');
     final record = await s.conn.query(sql, parameters).map(mapper).single;
 
     // Inserts are always saved by convention.
@@ -83,6 +83,7 @@ RETURNING $rowFormatter'''
   /// Insert a record using custom SQL.
   Future<R> insertCustom(
       Session s, String sql, Map<String, dynamic> parameters) async {
+    log.info('$sql, $parameters');
     final record = await s.conn.query(sql, parameters).map(mapper).single;
     saver(s.result, record);
     return record;
@@ -101,8 +102,10 @@ RETURNING $rowFormatter'''
     }).join(' AND ');
 
     // Return mapped results.
-    final sql = 'SELECT $rowFormatter FROM $tableName WHERE $conditions';
-    log.info(sql);
+    final sql = conditions.isNotEmpty
+        ? 'SELECT $rowFormatter FROM $tableName WHERE $conditions'
+        : 'SELECT $rowFormatter FROM $tableName';
+    log.info('$sql, $parameters');
     final result = await s.conn.query(sql, parameters).map(mapper).toList();
     if (save) {
       result.forEach((record) => saver(s.result, record));
@@ -113,6 +116,7 @@ RETURNING $rowFormatter'''
   /// Process custom select statement.
   Future<List<R>> selectCustom(
       Session s, String sql, Map<String, dynamic> parameters) async {
+    log.info('$sql, $parameters');
     final result = await s.conn.query(sql, parameters).map(mapper).toList();
     result.forEach((record) => saver(s.result, record));
     return result;

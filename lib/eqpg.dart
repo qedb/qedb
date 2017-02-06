@@ -45,6 +45,10 @@ class EqDB {
   Future<QueryResult> createTranslation(int id, CreateTranslation body) =>
       callApiMethod((s) => _createTranslation(s, id, body), pool);
 
+  @ApiMethod(path: 'descriptor/{id}/translations/list', method: 'GET')
+  Future<QueryResult> listDescriptorTranslations(int id) =>
+      callApiMethod((s) => _listTranslations(s, id), pool);
+
   @ApiMethod(path: 'subject/create', method: 'POST')
   Future<QueryResult> createSubject(CreateSubject body) =>
       callApiMethod((s) => _createSubject(s, body), pool);
@@ -81,16 +85,24 @@ class MethodCaller<T> {
     // Get connection.
     pool.connect()
       ..then((conn) {
-        // Run all methods in a transaction.
+        T result;
+
+        // Run in a transaction.
         conn.runInTransaction(() async {
-          completer.complete(await handler(conn));
+          result = await handler(conn);
         })
-          ..then((_) => conn.close())
+          // When the handler inside the transaction is completed:
+          ..then((_) {
+            conn.close();
+            completer.complete(result);
+          })
+          // When an error occurs during the completion of the handler:
           ..catchError((error, stackTrace) {
             conn.close();
             completer.completeError(error, stackTrace);
           });
       })
+      // When an error occurs when obtaining a connection from the pool:
       ..catchError(completer.completeError);
 
     return completer.future;
