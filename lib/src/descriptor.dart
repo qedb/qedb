@@ -7,6 +7,9 @@ part of eqpg;
 class CreateDescriptor {
   @ApiProperty(required: true)
   List<CreateTranslation> translations;
+
+  CreateDescriptor();
+  CreateDescriptor.fromTranslations(this.translations);
 }
 
 class CreateSubject {

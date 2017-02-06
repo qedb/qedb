@@ -34,10 +34,10 @@ tables:
   varName:    functionSubjectTag
   listName:   functionSubjectTags
 
-- tableName:  operator_configuration
-  className:  OperatorConfiguration
-  varName:    operatorConfiguration
-  listName:   operatorConfigurations
+- tableName:  operator
+  className:  Operator
+  varName:    operator
+  listName:   operators
 
 - tableName:  expression
   className:  Expression

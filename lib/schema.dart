@@ -87,7 +87,7 @@ class FunctionTable implements Table {
   final int argumentCount;
   final String latexTemplate;
   final bool generic;
-  FunctionTable(this.id, this.descriptorId, this.categoryId, this.argumentCount,
+  FunctionTable(this.id, this.categoryId, this.descriptorId, this.argumentCount,
       this.latexTemplate, this.generic);
 
   static const mapFormat = '*';
@@ -107,18 +107,17 @@ class FunctionSubjectTagTable implements Table {
       new FunctionSubjectTagTable(r[0], r[1], r[2]);
 }
 
-/// Operator configuration
-class OperatorConfigurationTable implements Table {
+/// Operator
+class OperatorTable implements Table {
   final int id;
   final int functionId;
   final int precedenceLevel;
   final String associativity;
-  OperatorConfigurationTable(
+  OperatorTable(
       this.id, this.functionId, this.precedenceLevel, this.associativity);
 
   static const mapFormat = '*';
-  static OperatorConfigurationTable map(Row r) =>
-      new OperatorConfigurationTable(r[0], r[1], r[2], r[3]);
+  static OperatorTable map(Row r) => new OperatorTable(r[0], r[1], r[2], r[3]);
 }
 
 /// Expression reference

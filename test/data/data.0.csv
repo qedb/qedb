@@ -1,28 +1,24 @@
-"Translation (en_US)","Translation (nl_NL)",ID,Subject
-Algebra,Algebra,1,TRUE
-"Basic Algebra","Basis algebra",2,TRUE
-"Linear Algebra","Lineare algebra",3,TRUE
-Trigonometry,Trigonometrie,4,TRUE
-Calculus,Calculus,5,TRUE
-"Vector Algebra",Vectoralgebra,6,TRUE
-Operator,Operator,7,FALSE
-Circle,Cirkel,8,FALSE
-Vector,Vector,9,FALSE
-"Unit Vector",Eenheidsvector,10,FALSE
-Generic,Generiek,11,FALSE
-Add,Optellen,12,FALSE
-Subtract,Aftrekken,13,FALSE
-Multiply,Vermenigvuldigen,14,FALSE
-Divide,Delen,15,FALSE
-Power,Macht,16,FALSE
-Negate,Omkeren,17,FALSE
-Radius,Radius,18,FALSE
-Theta,Theta,19,FALSE
-Sine,Sinus,20,FALSE
-Cosine,Cosinus,21,FALSE
-Limit,Limiet,22,FALSE
-Differential,Differentiaal,23,FALSE
-Function,Functie,24,FALSE
-Delta,Delta,25,FALSE
-"Classical Mechanics","Klassieke mechanica",26,TRUE
-"Circular Motion","Cirkelvormige beweging",27,TRUE
+ID,"Translation (en_US)","Translation (nl_NL)",Subject
+1,Algebra,Algebra,TRUE
+2,"Basic Algebra","Basis algebra",TRUE
+3,"Linear Algebra","Lineare algebra",TRUE
+4,Trigonometry,Trigonometrie,TRUE
+5,Calculus,Calculus,TRUE
+6,"Vector Algebra",Vectoralgebra,TRUE
+7,Operator,Operator,FALSE
+8,Circle,Cirkel,FALSE
+9,Vector,Vector,FALSE
+10,"Unit Vector",Eenheidsvector,FALSE
+11,Generic,Generiek,FALSE
+12,Add,Optellen,FALSE
+13,Subtract,Aftrekken,FALSE
+14,Multiply,Vermenigvuldigen,FALSE
+15,Divide,Delen,FALSE
+16,Power,Macht,FALSE
+17,Negate,Omkeren,FALSE
+18,Radius,Radius,FALSE
+19,Theta,Theta,FALSE
+20,Sine,Sinus,FALSE
+21,Cosine,Cosinus,FALSE
+22,"Classical Mechanics","Klassieke mechanica",TRUE
+23,"Circular Motion","Cirkelvormige beweging",TRUE

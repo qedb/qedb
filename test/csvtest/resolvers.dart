@@ -7,6 +7,22 @@ part of eqpg.test.csvtest;
 /// Value resolver that always resolves to true.
 bool resolveTrue(_) => true;
 
+/// Value resolver that always resolves to false.
+bool resolveFalse(_) => false;
+
+/// Resolves to true if the given value is empty.
+ValueResolver empty(ValueResolver value) => (row) {
+      final v = value(row);
+      return v == null || (v is String && v.isEmpty);
+    };
+
+/// Inverting value resolver.
+ValueResolver not(ValueResolver value) => (row) => value(row) == false;
+
+/// Or condition with two value resolvers.
+ValueResolver or(ValueResolver a, ValueResolver b) =>
+    (row) => a(row) == true || b(row) == true;
+
 /// Resolve to a specific column in a row.
 ValueResolver column(String column) => (row) => row.getColumn(column);
 
@@ -49,5 +65,14 @@ class PrimaryKeyEmulator {
           db[table].add(recordHashCode);
           return db[table].length;
         }
+      };
+
+  ValueResolver contains(String table, dynamic value) => (row) {
+        // Get hash code for targeted record.
+        final recordHashCode =
+            value is ValueResolver ? value(row).hashCode : value.hashCode;
+        return db.containsKey(table)
+            ? db[table].contains(recordHashCode)
+            : false;
       };
 }

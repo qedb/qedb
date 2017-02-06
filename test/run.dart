@@ -101,7 +101,8 @@ Future main() async {
   // Categories
   await csvtest(baseUrl, 'data/data.1.csv', [
     route('POST', 'category/create', request: {
-      'parentId': includeIfNotEmpty(column('Parent ID')),
+      'parentId':
+          includeIf(not(empty(column('Parent ID'))), column('Parent ID')),
       'name': {'locale': 'en_US', 'content': column('Name')}
     }, response: {
       'subjects': [
@@ -118,6 +119,57 @@ Future main() async {
           'parents': intlist(column('Parents'))
         }
       ]
+    })
+  ]);
+
+  // Functions
+  await csvtest(baseUrl, 'data/data.2.csv', [
+    route('POST', 'function/create', request: {
+      'categoryId': pkey.get('category', column('Category')),
+      'argumentCount': column('ArgC'),
+      'latexTemplate': column('LaTeX template'),
+      'generic': column('Generic'),
+      'name': includeIf(not(empty(column('Name'))),
+          {'locale': 'en_US', 'content': column('Name')}),
+      'operator': includeIf(not(empty(column('Pre.'))),
+          {'precedenceLevel': column('Pre.'), 'associativity': column('Ass.')})
+    }, response: {
+      'descriptors': includeIf(
+          not(or(empty(column('Name')),
+              pkey.contains('translation', column('Name')))),
+          [
+            {'id': pkey.get('descriptor', column('Name'))}
+          ]),
+      'translations': includeIf(
+          not(or(empty(column('Name')),
+              pkey.contains('translation', column('Name')))),
+          [
+            {
+              'id': pkey.get('translation', column('Name')),
+              'descriptorId': pkey.get('descriptor', column('Name')),
+              'localeId': pkey.get('locale', 'en_US'),
+              'content': column('Name')
+            }
+          ]),
+      'functions': [
+        {
+          'id': column('ID'),
+          'categoryId': pkey.get('category', column('Category')),
+          'descriptorId': includeIf(not(empty(column('Name'))),
+              pkey.get('descriptor', column('Name'))),
+          'argumentCount': column('ArgC'),
+          'latexTemplate': column('LaTeX template'),
+          'generic': column('Generic')
+        }
+      ],
+      'operators': includeIf(not(empty(column('Pre.'))), [
+        {
+          'id': pkey.get('operator', column('ID')),
+          'functionId': column('ID'),
+          'precedenceLevel': column('Pre.'),
+          'associativity': column('Ass.')
+        }
+      ])
     })
   ]);
 }

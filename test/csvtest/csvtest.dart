@@ -261,11 +261,10 @@ ValueResolver accept(AcceptType type) =>
 class _RemoveMe {}
 
 /// Only include this item if the given value is not empty.
-ValueResolver includeIfNotEmpty(ValueResolver value) => (row) {
-      final v = value(row);
-      if (v == null || (v is String && v.isEmpty)) {
+ValueResolver includeIf(ValueResolver condition, dynamic value) => (row) {
+      if (condition(row) == false) {
         return new _RemoveMe();
       } else {
-        return v;
+        return evaluate(value, row);
       }
     };

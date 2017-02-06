@@ -41,12 +41,11 @@ final functionSubjectTagHelper = new TableHelper<db.FunctionSubjectTagTable>(
     db.FunctionSubjectTagTable.mapFormat,
     db.FunctionSubjectTagTable.map,
     (result, record) => result.functionSubjectTags.add(record));
-final operatorConfigurationHelper =
-    new TableHelper<db.OperatorConfigurationTable>(
-        'operator_configuration',
-        db.OperatorConfigurationTable.mapFormat,
-        db.OperatorConfigurationTable.map,
-        (result, record) => result.operatorConfigurations.add(record));
+final operatorHelper = new TableHelper<db.OperatorTable>(
+    'operator',
+    db.OperatorTable.mapFormat,
+    db.OperatorTable.map,
+    (result, record) => result.operators.add(record));
 final expressionHelper = new TableHelper<db.ExpressionTable>(
     'expression',
     db.ExpressionTable.mapFormat,

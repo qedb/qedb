@@ -14,7 +14,7 @@ class QueryResult {
   List<db.CategoryTable> categories = [];
   List<db.FunctionTable> functions = [];
   List<db.FunctionSubjectTagTable> functionSubjectTags = [];
-  List<db.OperatorConfigurationTable> operatorConfigurations = [];
+  List<db.OperatorTable> operators = [];
   List<db.ExpressionTable> expressions = [];
   List<db.FunctionReferenceTable> functionReferences = [];
   List<db.IntegerReferenceTable> integerReferences = [];
@@ -46,8 +46,8 @@ class QueryResult {
     if (functionSubjectTags.isEmpty) {
       functionSubjectTags = null;
     }
-    if (operatorConfigurations.isEmpty) {
-      operatorConfigurations = null;
+    if (operators.isEmpty) {
+      operators = null;
     }
     if (expressions.isEmpty) {
       expressions = null;

@@ -61,10 +61,11 @@ CREATE TABLE category (
 );
 
 -- Function
+-- Soft constraint: non-generic function with >0 arguments must have a name.
 CREATE TABLE function (
   id              serial    PRIMARY KEY,
   category_id     integer   NOT NULL REFERENCES category(id),
-  descriptor_id   integer            REFERENCES descriptor(id),
+  descriptor_id   integer   UNIQUE REFERENCES descriptor(id),
   argument_count  smallint  NOT NULL CHECK (argument_count >= 0),
   latex_template  text      NOT NULL CHECK (NOT latex_template = ''),
   generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2)
@@ -118,8 +119,8 @@ CREATE TABLE function_keyword (
 -- Operator evaluation (relevant for printing parentheses)
 CREATE TYPE operator_associativity AS ENUM ('ltr', 'rtl');
 
--- Operator configuration
-CREATE TABLE operator_configuration (
+-- Operator properties
+CREATE TABLE operator (
   id                serial                  PRIMARY KEY,
   function_id       integer                 NOT NULL UNIQUE REFERENCES function(id),
   precedence_level  smallint                NOT NULL CHECK (precedence_level > 0),
@@ -203,6 +204,8 @@ CREATE TABLE rule (
 CREATE TABLE definition (
   id       serial   PRIMARY KEY,
   rule_id  integer  NOT NULL UNIQUE REFERENCES rule(id)
+
+  -- TODO: definition subject, theoretical definition/empirical definition
 );
 
 -- Function property naming
