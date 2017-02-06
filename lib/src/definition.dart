@@ -22,7 +22,7 @@ SELECT id FROM function WHERE category_id IN (
 INTERSECT
 SELECT id FROM function WHERE id IN (${functionIds.join(',')})''';
 
-Future<table.Definition> _createDefinition(
+Future<db.DefinitionTable> _createDefinition(
     Session s, CreateDefinition body) async {
   // Decode expression headers.
   final leftData = _decodeCodecHeader(body.left);
@@ -42,7 +42,7 @@ Future<table.Definition> _createDefinition(
 
   // Retrieve all function IDs that are defined under this category.
   final allIds = leftData.functionId.toSet()..addAll(rightData.functionId);
-  final intersectResult = await s.db.query(
+  final intersectResult = await s.conn.query(
       queryIntersectFunctionIds(allIds.toList()),
       {'categoryId': body.categoryId}).toList();
 

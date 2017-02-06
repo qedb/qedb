@@ -9,7 +9,7 @@ class CreateLineage {
   String firstExpression;
 }
 
-Future<table.Lineage> _createLineage(Session s, CreateLineage body) async {
+Future<db.LineageTable> _createLineage(Session s, CreateLineage body) async {
   // Decode expression.
   final header = _decodeCodecHeader(body.firstExpression);
 
@@ -20,7 +20,7 @@ WITH tmp AS (
     SELECT category_id FROM function WHERE id IN (${header.functionId.join(',')})))
 SELECT DISTINCT id FROM tmp WHERE id NOT IN (SELECT unnest FROM tmp)''';
   final parentCategory = new List<int>.from(
-      await s.db.query(queryFindCategory).map((r) => r[0]).toList());
+      await s.conn.query(queryFindCategory).map((r) => r[0]).toList());
   if (parentCategory.length > 1) {
     throw new UnprocessableEntityError(
         'expression depends on multiple isolated categories: $parentCategory');

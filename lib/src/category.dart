@@ -12,7 +12,7 @@ class CreateCategory {
   CreateTranslation name;
 }
 
-Future<table.Category> _createCategory(Session s, CreateCategory body) async {
+Future<db.CategoryTable> _createCategory(Session s, CreateCategory body) async {
   // Resolve subject ID.
   final result = await subjectHelper.selectCustom(
       s,

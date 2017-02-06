@@ -53,7 +53,7 @@ Future<ExpressionTree> _retrieveExpressionTree(Session s, int id) async {
 }
 
 Future<ExpressionTreeReference> _retrieveExpressionTreeRef(
-    Session s, table.ExpressionReference reference) async {
+    Session s, db.ExpressionReference reference) async {
   assert(['symbol', 'function', 'integer'].contains(reference.type));
 
   // Symbol reference

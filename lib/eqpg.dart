@@ -15,7 +15,7 @@ import 'package:postgresql/pool.dart';
 import 'package:postgresql/postgresql.dart';
 
 import 'package:eqpg/dbutils.dart';
-import 'package:eqpg/tables.dart' as table;
+import 'package:eqpg/schema.dart' as db;
 
 part 'src/rule.dart';
 part 'src/lineage.dart';
@@ -60,8 +60,8 @@ class EqDB {
   @ApiMethod(path: 'expression/{id}/retrieveTree', method: 'GET')
   Future<ExpressionTree> retrieveExpressionTree(int id) =>
       new MethodCaller<ExpressionTree>().run(
-          (db) =>
-              _retrieveExpressionTree(new Session(db, new QueryResult()), id),
+          (conn) =>
+              _retrieveExpressionTree(new Session(conn, new QueryResult()), id),
           pool);
 
   @ApiMethod(path: 'definition/create', method: 'POST')
@@ -75,19 +75,19 @@ class EqDB {
 
 /// Utility to reuse method calling boilerplate.
 class MethodCaller<T> {
-  Future<T> run(Future<T> handler(Connection db), Pool pool) {
+  Future<T> run(Future<T> handler(Connection conn), Pool pool) {
     final completer = new Completer<T>();
 
     // Get connection.
     pool.connect()
-      ..then((db) {
+      ..then((conn) {
         // Run all methods in a transaction.
-        db.runInTransaction(() async {
-          completer.complete(await handler(db));
+        conn.runInTransaction(() async {
+          completer.complete(await handler(conn));
         })
-          ..then((_) => db.close())
+          ..then((_) => conn.close())
           ..catchError((error, stackTrace) {
-            db.close();
+            conn.close();
             completer.completeError(error, stackTrace);
           });
       })
@@ -99,9 +99,9 @@ class MethodCaller<T> {
 
 /// Utility to reuse method calling boilerplate.
 Future<QueryResult> callApiMethod(Future handler(Session s), Pool pool) {
-  return new MethodCaller<QueryResult>().run((db) async {
+  return new MethodCaller<QueryResult>().run((conn) async {
     final result = new QueryResult();
-    await handler(new Session(db, result));
+    await handler(new Session(conn, result));
     result.finalize();
     return result;
   }, pool);

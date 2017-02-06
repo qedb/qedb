@@ -7,7 +7,7 @@ library eqpg.tables;
 import 'package:postgresql/postgresql.dart';
 
 /// Base class.
-abstract class DbTable {
+abstract class Table {
   int get id;
 }
 
@@ -16,43 +16,44 @@ abstract class DbTable {
 //------------------------------------------------------------------------------
 
 /// Descriptor
-class Descriptor implements DbTable {
+class DescriptorTable implements Table {
   final int id;
-  Descriptor(this.id);
+  DescriptorTable(this.id);
 
   static const mapFormat = '*';
-  static Descriptor map(Row r) => new Descriptor(r[0]);
+  static DescriptorTable map(Row r) => new DescriptorTable(r[0]);
 }
 
 /// Subject
-class Subject implements DbTable {
+class SubjectTable implements Table {
   final int id;
   final int descriptorId;
-  Subject(this.id, this.descriptorId);
+  SubjectTable(this.id, this.descriptorId);
 
   static const mapFormat = '*';
-  static Subject map(Row r) => new Subject(r[0], r[1]);
+  static SubjectTable map(Row r) => new SubjectTable(r[0], r[1]);
 }
 
 /// Locale
-class Locale implements DbTable {
+class LocaleTable implements Table {
   final int id;
   final String code;
-  Locale(this.id, this.code);
+  LocaleTable(this.id, this.code);
 
   static const mapFormat = '*';
-  static Locale map(Row r) => new Locale(r[0], r[1]);
+  static LocaleTable map(Row r) => new LocaleTable(r[0], r[1]);
 }
 
 /// Translation
-class Translation implements DbTable {
+class TranslationTable implements Table {
   final int id;
   final int descriptorId, localeId;
   final String content;
-  Translation(this.id, this.descriptorId, this.localeId, this.content);
+  TranslationTable(this.id, this.descriptorId, this.localeId, this.content);
 
   static const mapFormat = '*';
-  static Translation map(Row r) => new Translation(r[0], r[1], r[2], r[3]);
+  static TranslationTable map(Row r) =>
+      new TranslationTable(r[0], r[1], r[2], r[3]);
 }
 
 //------------------------------------------------------------------------------
@@ -60,17 +61,17 @@ class Translation implements DbTable {
 //------------------------------------------------------------------------------
 
 /// Category
-class Category implements DbTable {
+class CategoryTable implements Table {
   final int id;
   final int subjectId;
   final List<int> parents;
-  Category(this.id, this.subjectId, this.parents);
+  CategoryTable(this.id, this.subjectId, this.parents);
 
   static const mapFormat = "id, subject_id, array_to_string(parents, ',')";
-  static Category map(Row r) {
+  static CategoryTable map(Row r) {
     final String parents = r[2];
     final splittedParents = parents.isEmpty ? [] : parents.split(',');
-    return new Category(
+    return new CategoryTable(
         r[0],
         r[1],
         new List<int>.generate(
@@ -79,45 +80,45 @@ class Category implements DbTable {
 }
 
 /// Function
-class Function implements DbTable {
+class FunctionTable implements Table {
   final int id;
   final int categoryId;
   final int descriptorId;
   final int argumentCount;
   final String latexTemplate;
   final bool generic;
-  Function(this.id, this.descriptorId, this.categoryId, this.argumentCount,
+  FunctionTable(this.id, this.descriptorId, this.categoryId, this.argumentCount,
       this.latexTemplate, this.generic);
 
   static const mapFormat = '*';
-  static Function map(Row r) =>
-      new Function(r[0], r[1], r[2], r[3], r[4], r[5]);
+  static FunctionTable map(Row r) =>
+      new FunctionTable(r[0], r[1], r[2], r[3], r[4], r[5]);
 }
 
 /// Function subject tag
-class FunctionSubjectTag implements DbTable {
+class FunctionSubjectTagTable implements Table {
   final int id;
   final int functionId;
   final int subjectId;
-  FunctionSubjectTag(this.id, this.functionId, this.subjectId);
+  FunctionSubjectTagTable(this.id, this.functionId, this.subjectId);
 
   static const mapFormat = '*';
-  static FunctionSubjectTag map(Row r) =>
-      new FunctionSubjectTag(r[0], r[1], r[2]);
+  static FunctionSubjectTagTable map(Row r) =>
+      new FunctionSubjectTagTable(r[0], r[1], r[2]);
 }
 
 /// Operator configuration
-class OperatorConfiguration implements DbTable {
+class OperatorConfigurationTable implements Table {
   final int id;
   final int functionId;
   final int precedenceLevel;
   final String associativity;
-  OperatorConfiguration(
+  OperatorConfigurationTable(
       this.id, this.functionId, this.precedenceLevel, this.associativity);
 
   static const mapFormat = '*';
-  static OperatorConfiguration map(Row r) =>
-      new OperatorConfiguration(r[0], r[1], r[2], r[3]);
+  static OperatorConfigurationTable map(Row r) =>
+      new OperatorConfigurationTable(r[0], r[1], r[2], r[3]);
 }
 
 /// Expression reference
@@ -128,12 +129,13 @@ class ExpressionReference {
 }
 
 /// Expression
-class Expression implements DbTable {
+class ExpressionTable implements Table {
   final int id;
   final ExpressionReference reference;
   final String data, hash;
   final List<int> functions;
-  Expression(this.id, this.reference, this.data, this.hash, this.functions);
+  ExpressionTable(
+      this.id, this.reference, this.data, this.hash, this.functions);
 
   static final mapFormat = [
     'id',
@@ -143,25 +145,25 @@ class Expression implements DbTable {
     "encode(hash, 'base64')",
     "array_to_string(functions, ',')"
   ].join(',');
-  static Expression map(Row r) {
+  static ExpressionTable map(Row r) {
     final String row5 = r[5];
     final List<String> ids = row5.isEmpty ? [] : row5.split(',');
     final functions =
         new List<int>.generate(ids.length, (i) => int.parse(ids[i]));
-    return new Expression(
+    return new ExpressionTable(
         r[0], new ExpressionReference(r[1], r[2]), r[3], r[4], functions);
   }
 }
 
 /// Function reference
-class FunctionReference implements DbTable {
+class FunctionReferenceTable implements Table {
   final int id;
   final int functionId;
   final List<ExpressionReference> arguments;
-  FunctionReference(this.id, this.functionId, this.arguments);
+  FunctionReferenceTable(this.id, this.functionId, this.arguments);
 
   static const mapFormat = "id, function_id, array_to_string(arguments, '')";
-  static FunctionReference map(Row r) {
+  static FunctionReferenceTable map(Row r) {
     // Successful parsing requires the use of: `array_to_string(arguments, '')`
     // Note: it is not neccesary to check for empty strings, it is not allowed
     // for function references to have zero arguments.
@@ -171,18 +173,19 @@ class FunctionReference implements DbTable {
       final parts = args[i].split(',');
       return new ExpressionReference(int.parse(parts[0]), parts[1]);
     });
-    return new FunctionReference(r[0], r[1], arguments);
+    return new FunctionReferenceTable(r[0], r[1], arguments);
   }
 }
 
 /// Integer reference
-class IntegerReference implements DbTable {
+class IntegerReferenceTable implements Table {
   final int id;
   final int value;
-  IntegerReference(this.id, this.value);
+  IntegerReferenceTable(this.id, this.value);
 
   static const mapFormat = '*';
-  static IntegerReference map(Row r) => new IntegerReference(r[0], r[1]);
+  static IntegerReferenceTable map(Row r) =>
+      new IntegerReferenceTable(r[0], r[1]);
 }
 
 //------------------------------------------------------------------------------
@@ -190,34 +193,36 @@ class IntegerReference implements DbTable {
 //------------------------------------------------------------------------------
 
 /// Lineage
-class Lineage implements DbTable {
+class LineageTable implements Table {
   final int id;
   final int treeId, parentId, branchIndex, initialCategoryId, firstExpressionId;
-  Lineage(this.id, this.treeId, this.parentId, this.branchIndex,
+  LineageTable(this.id, this.treeId, this.parentId, this.branchIndex,
       this.initialCategoryId, this.firstExpressionId);
 
   static const mapFormat = '*';
-  static Lineage map(Row r) => new Lineage(r[0], r[1], r[2], r[3], r[4], r[5]);
+  static LineageTable map(Row r) =>
+      new LineageTable(r[0], r[1], r[2], r[3], r[4], r[5]);
 }
 
 /// Rule
-class Rule implements DbTable {
+class RuleTable implements Table {
   final int id;
   final int categoryId;
   final int leftExpressionId;
   final int rightExpressionId;
-  Rule(this.id, this.categoryId, this.leftExpressionId, this.rightExpressionId);
+  RuleTable(
+      this.id, this.categoryId, this.leftExpressionId, this.rightExpressionId);
 
   static const mapFormat = '*';
-  static Rule map(Row r) => new Rule(r[0], r[1], r[2], r[3]);
+  static RuleTable map(Row r) => new RuleTable(r[0], r[1], r[2], r[3]);
 }
 
 /// Definition
-class Definition implements DbTable {
+class DefinitionTable implements Table {
   final int id;
   final int ruleId;
-  Definition(this.id, this.ruleId);
+  DefinitionTable(this.id, this.ruleId);
 
   static const mapFormat = '*';
-  static Definition map(Row r) => new Definition(r[0], r[1]);
+  static DefinitionTable map(Row r) => new DefinitionTable(r[0], r[1]);
 }

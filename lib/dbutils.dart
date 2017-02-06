@@ -9,7 +9,7 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:postgresql/postgresql.dart';
 
-import 'package:eqpg/tables.dart' as table;
+import 'package:eqpg/schema.dart' as db;
 
 part 'src/generated/result.dart';
 part 'src/generated/helpers.dart';
@@ -18,9 +18,9 @@ final log = new Logger('dbutils');
 
 /// Session state
 class Session {
-  final Connection db;
+  final Connection conn;
   final QueryResult result;
-  Session(this.db, this.result);
+  Session(this.conn, this.result);
 }
 
 /// Class for passing custom SQL to the TableHelper.
@@ -34,12 +34,12 @@ class Sql {
 }
 
 /// DB data Stream mapper.
-typedef R TableMapper<R extends table.DbTable>(Row r);
+typedef R TableMapper<R extends db.Table>(Row r);
 
 /// Saves data to correct field in QueryResult.
-typedef void DataSaver<R extends table.DbTable>(QueryResult result, R record);
+typedef void DataSaver<R extends db.Table>(QueryResult result, R record);
 
-class TableHelper<R extends table.DbTable> {
+class TableHelper<R extends db.Table> {
   final String tableName, rowFormatter;
   final TableMapper<R> mapper;
   final DataSaver<R> saver;
@@ -72,7 +72,7 @@ VALUES (${subs.join(',')})
 RETURNING $rowFormatter'''
         : 'INSERT INTO $tableName DEFAULT VALUES RETURNING $rowFormatter';
     log.info(sql);
-    final record = await s.db.query(sql, parameters).map(mapper).single;
+    final record = await s.conn.query(sql, parameters).map(mapper).single;
 
     // Inserts are always saved by convention.
     saver(s.result, record);
@@ -83,7 +83,7 @@ RETURNING $rowFormatter'''
   /// Insert a record using custom SQL.
   Future<R> insertCustom(
       Session s, String sql, Map<String, dynamic> parameters) async {
-    final record = await s.db.query(sql, parameters).map(mapper).single;
+    final record = await s.conn.query(sql, parameters).map(mapper).single;
     saver(s.result, record);
     return record;
   }
@@ -103,7 +103,7 @@ RETURNING $rowFormatter'''
     // Return mapped results.
     final sql = 'SELECT $rowFormatter FROM $tableName WHERE $conditions';
     log.info(sql);
-    final result = await s.db.query(sql, parameters).map(mapper).toList();
+    final result = await s.conn.query(sql, parameters).map(mapper).toList();
     if (save) {
       result.forEach((record) => saver(s.result, record));
     }
@@ -113,7 +113,7 @@ RETURNING $rowFormatter'''
   /// Process custom select statement.
   Future<List<R>> selectCustom(
       Session s, String sql, Map<String, dynamic> parameters) async {
-    final result = await s.db.query(sql, parameters).map(mapper).toList();
+    final result = await s.conn.query(sql, parameters).map(mapper).toList();
     result.forEach((record) => saver(s.result, record));
     return result;
   }

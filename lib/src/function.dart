@@ -32,7 +32,7 @@ class OperatorConfigurationInput {
   String associativity;
 }
 
-Future<table.Function> _createFunction(Session s, CreateFunction body) async {
+Future<db.FunctionTable> _createFunction(Session s, CreateFunction body) async {
   final function = await functionHelper.insert(s, {
     'category_id': body.categoryId,
     'argument_count': body.argumentCount,
