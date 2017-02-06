@@ -2,7 +2,6 @@ language: dart
 dart:
 - stable
 - dev
-sudo: required
 services:
 - docker
 before_install:
