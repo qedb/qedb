@@ -1,0 +1,23 @@
+doctype html
+html
+  head
+    title Create category
+    include ../head.pug
+  body
+    include ../breadcrumb.pug
+    .container
+      form(action='/category/create' method='POST')
+        .form-group
+          label(for='name') Name
+          input(name='name' type='text' aria-describedby='nameHelp')#name.form-control
+          small#nameHelp.form-text.text-muted Enter the English (en-US) name for the category.
+        .form-group
+          label(for='parent') Parent
+          input(name='parent' type='text' list='categoryDataList'
+            aria-describedby='parentHelp' autocomplete='off')#name.form-control
+          //- datalist#categoryDataList
+          //-   each category in categories
+          //-     option(value=category.name)= category.id
+          small#parentHelp.form-text.text-muted Select a parent category (optional).
+        button(type='submit').btn.btn-primary Submit
+

@@ -13,19 +13,19 @@ stop-database:
 restart-database: stop-database start-database
 
 restart-server:
-	./tool/kill-server.sh
+	./tool/kill.sh 'dart .*bin/server.dart'
 	dart bin/server.dart > /dev/null 2>&1 &
 
 restart-admin-website:
-	./tool/kill-server.sh
-	dart web/main.dart > /dev/null 2>&1 &
+	./tool/kill.sh 'node web/server.js'
+	node web/server.js > /dev/null 2>&1 &
 
 check:
 	./tool/check.sh
 
 generate-openapi-spec: restart-database
 	sudo npm install -g api-spec-converter
-	./tool/kill-server.sh
+	./tool/kill.sh 'dart .*bin/server.dart'
 	dart bin/server.dart
 	mkdir -p doc
 	api-spec-converter http://localhost:8080/discovery/v1/apis/eqdb/v0/rest \

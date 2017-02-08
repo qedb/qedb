@@ -2,11 +2,9 @@ doctype html
 html
   head
     title Admin index
-    include head.pug
+    include ../head.pug
   body
-    .jumbotron
-      .container
-        h1.display-3 EqDB admin
+    include ../breadcrumb.pug
     .container
       .list-group
         each method in local.methods
