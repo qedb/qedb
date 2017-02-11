@@ -12,12 +12,11 @@ html
           input(name='name' type='text' aria-describedby='nameHelp')#name.form-control
           small#nameHelp.form-text.text-muted Enter the English (en-US) name for the category.
         .form-group
-          label(for='parent') Parent
-          input(name='parent' type='text' list='categoryDataList'
-            aria-describedby='parentHelp' autocomplete='off')#name.form-control
-          //- datalist#categoryDataList
-          //-   each category in categories
-          //-     option(value=category.name)= category.id
+          label(for='parentId') Parent
+          select(name='parentId' aria-describedby='parentHelp')#parentId.form-control
+            each category in additional.categoryList
+              if 'name' in category
+                option(value=category.id)= category.subject.translations[0].content
           small#parentHelp.form-text.text-muted Select a parent category (optional).
         button(type='submit').btn.btn-primary Submit
 

@@ -1,3 +1,0 @@
-methods:
-- name: Create category
-  path: /category/create

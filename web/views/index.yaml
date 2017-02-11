@@ -1,5 +1,0 @@
-methods:
-- name: Category index
-  path: /category/
-- name: Create category
-  path: /category/create

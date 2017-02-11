@@ -1,0 +1,2 @@
+additional:
+  categoryList: /category/list?include[subject.descriptor.translations.code]=en_US

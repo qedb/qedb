@@ -2,6 +2,7 @@
 ./*.json
 testlog.txt
 node_modules
+npm-debug.log
 dev-config.yaml
 tool/docker/setup.sql
 web/views/compiled.dart
