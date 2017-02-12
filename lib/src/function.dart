@@ -32,7 +32,7 @@ class CreateOperator {
   String associativity;
 }
 
-Future<db.FunctionTable> _createFunction(Session s, CreateFunction body) async {
+Future<db.FunctionRow> _createFunction(Session s, CreateFunction body) async {
   // Non-generic functions with >0 arguments must have a name (soft constraint).
   if (!body.generic && body.argumentCount > 0 && body.name == null) {
     throw new UnprocessableEntityError(

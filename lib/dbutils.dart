@@ -34,14 +34,14 @@ class Sql {
 }
 
 /// DB data Stream mapper.
-typedef R TableMapper<R extends db.Table>(Row r);
+typedef R RowMapper<R extends db.Row>(Row r);
 
 /// Saves data to correct field in QueryResult.
-typedef void DataSaver<R extends db.Table>(QueryResult result, R record);
+typedef void DataSaver<R extends db.Row>(QueryResult result, R record);
 
-class TableHelper<R extends db.Table> {
+class TableHelper<R extends db.Row> {
   final String tableName, rowFormatter;
-  final TableMapper<R> mapper;
+  final RowMapper<R> mapper;
   final DataSaver<R> saver;
 
   TableHelper(this.tableName, this.rowFormatter, this.mapper, this.saver);

@@ -4,8 +4,8 @@
 
 part of eqpg;
 
-Future<db.RuleTable> _createRule(Session s, int categoryId,
-    int leftExpressionId, int rightExpressionId) async {
+Future<db.RuleRow> _createRule(Session s, int categoryId, int leftExpressionId,
+    int rightExpressionId) async {
   return await ruleHelper.insert(s, {
     'category_id': categoryId,
     'left_expression_id': leftExpressionId,

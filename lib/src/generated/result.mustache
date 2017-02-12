@@ -8,7 +8,7 @@ part of eqpg.dbutils;
 
 class QueryResult {
   {{# tables}}
-  List<db.{{ className }}Table> {{ listName }} = [];
+  List<db.{{ className }}Row> {{ listName }} = [];
   {{/ tables}}
 
   /// Replace all empty lists with null so that they are removed from the

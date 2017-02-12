@@ -9,7 +9,7 @@ class CreateLineage {
   String firstExpression;
 }
 
-Future<db.LineageTable> _createLineage(Session s, CreateLineage body) async {
+Future<db.LineageRow> _createLineage(Session s, CreateLineage body) async {
   // Decode expression.
   final header = _decodeCodecHeader(body.firstExpression);
 

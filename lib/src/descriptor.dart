@@ -25,7 +25,7 @@ class CreateTranslation {
   String content;
 }
 
-Future<db.DescriptorTable> _createDescriptor(
+Future<db.DescriptorRow> _createDescriptor(
     Session s, CreateDescriptor body) async {
   // Require at least one translation.
   if (body.translations.isEmpty) {
@@ -43,12 +43,12 @@ Future<db.DescriptorTable> _createDescriptor(
   return descriptor;
 }
 
-Future<db.SubjectTable> _createSubject(Session s, CreateSubject body) async {
+Future<db.SubjectRow> _createSubject(Session s, CreateSubject body) async {
   // Insert translation.
   return await subjectHelper.insert(s, {'descriptor_id': body.descriptorId});
 }
 
-Future<db.TranslationTable> _createTranslation(
+Future<db.TranslationRow> _createTranslation(
     Session s, int descriptorId, CreateTranslation body) async {
   // Insert translation.
   return await translationHelper.insert(s, {
@@ -58,7 +58,7 @@ Future<db.TranslationTable> _createTranslation(
   });
 }
 
-Future<List<db.TranslationTable>> _listTranslations(Session s,
+Future<List<db.TranslationRow>> _listTranslations(Session s,
     [int descriptorId = -1]) {
   return descriptorId == -1
       ? translationHelper.select(s, {})

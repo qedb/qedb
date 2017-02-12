@@ -23,7 +23,7 @@ SELECT id, argument_count FROM function WHERE category_id IN (
 INTERSECT
 SELECT id, argument_count FROM function WHERE id IN (${functionIds.join(',')})''';
 
-Future<db.DefinitionTable> _createDefinition(
+Future<db.DefinitionRow> _createDefinition(
     Session s, CreateDefinition body) async {
   // Decode expression headers.
   final leftData = _decodeCodecHeader(body.left);

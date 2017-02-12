@@ -9,7 +9,7 @@ ExprCodecData _decodeCodecHeader(String base64Data) =>
     new ExprCodecData.decodeHeader(
         new Uint8List.fromList(BASE64.decode(base64Data)).buffer);
 
-Future<db.ExpressionTable> _createExpression(Session s, Expr expr) async {
+Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
   // Encode expression.
   final codecData = exprCodecEncode(expr);
   final base64 = BASE64.encode(codecData.writeToBuffer().asUint8List());
