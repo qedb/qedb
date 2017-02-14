@@ -10,164 +10,158 @@ Future main() async {
   final baseUrl = 'http://localhost:8080/eqdb/v0/';
   final pkey = new PrimaryKeyEmulator();
 
-  // Descriptors
+  // Descriptor
   await csvtest(baseUrl, 'data/data.0.csv', [
     // Create descriptor.
     route('POST', 'descriptor/create', request: {
       'translations': [
-        {'locale': 'en_US', 'content': column('Translation (en_US)')}
+        {'locale': 'en_US', 'content': col('Translation (en_US)')}
       ]
     }, response: {
-      'descriptors': [
-        {'id': pkey.get('descriptor', column('Translation (en_US)'))}
+      'descriptor': [
+        {'id': pkey.get('descriptor', col('Translation (en_US)'))}
       ],
-      'locales': [
+      'locale': [
         {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'}
       ],
-      'translations': [
+      'translation': [
         {
-          'id': pkey.get('translation', column('Translation (en_US)')),
-          'descriptorId': column('ID'),
+          'id': pkey.get('translation', col('Translation (en_US)')),
+          'descriptorId': col('ID'),
           'localeId': pkey.get('locale', 'en_US'),
-          'content': column('Translation (en_US)')
+          'content': col('Translation (en_US)')
         }
       ]
     }),
 
     // Get descriptor translations.
     route('GET', 'descriptor/{id}/translations/list', url: {
-      'id': column('ID')
+      'id': col('ID')
     }, response: {
-      'translations': [
+      'translation': [
         {
-          'id': pkey.get('translation', column('Translation (en_US)')),
-          'descriptorId': column('ID'),
+          'id': pkey.get('translation', col('Translation (en_US)')),
+          'descriptorId': col('ID'),
           'localeId': pkey.get('locale', 'en_US'),
-          'content': column('Translation (en_US)')
+          'content': col('Translation (en_US)')
         }
       ]
     }),
 
     // Add Dutch translation to descriptor.
     route('POST', 'descriptor/{id}/translations/create', url: {
-      'id': column('ID')
+      'id': col('ID')
     }, request: {
       'locale': 'nl_NL',
-      'content': column('Translation (nl_NL)')
+      'content': col('Translation (nl_NL)')
     }, response: {
-      'locales': [
+      'locale': [
         {'id': pkey.get('locale', 'nl_NL'), 'code': 'nl_NL'}
       ],
-      'translations': [
+      'translation': [
         {
-          'id': pkey.get('translation', column('Translation (nl_NL)')),
-          'descriptorId': column('ID'),
+          'id': pkey.get('translation', col('Translation (nl_NL)')),
+          'descriptorId': col('ID'),
           'localeId': pkey.get('locale', 'nl_NL'),
-          'content': column('Translation (nl_NL)')
+          'content': col('Translation (nl_NL)')
         }
       ]
     }),
 
     // Get descriptor translations again.
     route('GET', 'descriptor/{id}/translations/list', url: {
-      'id': column('ID')
+      'id': col('ID')
     }, response: {
-      'translations': [
+      'translation': [
         {
-          'id': pkey.get('translation', column('Translation (en_US)')),
-          'descriptorId': column('ID'),
+          'id': pkey.get('translation', col('Translation (en_US)')),
+          'descriptorId': col('ID'),
           'localeId': pkey.get('locale', 'en_US'),
-          'content': column('Translation (en_US)')
+          'content': col('Translation (en_US)')
         },
         {
-          'id': pkey.get('translation', column('Translation (nl_NL)')),
-          'descriptorId': column('ID'),
+          'id': pkey.get('translation', col('Translation (nl_NL)')),
+          'descriptorId': col('ID'),
           'localeId': pkey.get('locale', 'nl_NL'),
-          'content': column('Translation (nl_NL)')
+          'content': col('Translation (nl_NL)')
         }
       ]
     }),
 
     // Create subject from descriptor.
-    route('POST', 'subject/create', runIf: column('Subject'), request: {
-      'descriptorId': column('ID')
+    route('POST', 'subject/create', runIf: col('Subject'), request: {
+      'descriptorId': col('ID')
     }, response: {
-      'subjects': [
-        {'id': pkey.get('subject', column('ID')), 'descriptorId': column('ID')}
+      'subject': [
+        {'id': pkey.get('subject', col('ID')), 'descriptorId': col('ID')}
       ]
     })
   ]);
 
-  // Categories
+  // Category
   await csvtest(baseUrl, 'data/data.1.csv', [
+    // Create category.
     route('POST', 'category/create', request: {
-      'parentId':
-          includeIf(not(empty(column('Parent ID'))), column('Parent ID')),
-      'name': {'locale': 'en_US', 'content': column('Name')}
+      'parentId': includeIf(not(empty(col('Parent ID'))), col('Parent ID')),
+      'name': {'locale': 'en_US', 'content': col('Name')}
     }, response: {
-      'subjects': [
+      'subject': [
         {
-          'id': pkey.get('subject', pkey.get('descriptor', column('Name'))),
-          'descriptorId': pkey.get('descriptor', column('Name'))
+          'id': pkey.get('subject', pkey.get('descriptor', col('Name'))),
+          'descriptorId': pkey.get('descriptor', col('Name'))
         }
       ],
-      'categories': [
+      'category': [
         {
-          'id': pkey.get('category', column('Name')),
-          'subjectId':
-              pkey.get('subject', pkey.get('descriptor', column('Name'))),
-          'parents': intlist(column('Parents'))
+          'id': pkey.get('category', col('Name')),
+          'subjectId': pkey.get('subject', pkey.get('descriptor', col('Name'))),
+          'parents': intlist(col('Parents'))
         }
       ]
     })
   ]);
 
-  // Functions
+  // Function
   await csvtest(baseUrl, 'data/data.2.csv', [
+    // Create function.
     route('POST', 'function/create', request: {
-      'categoryId': pkey.get('category', column('Category')),
-      'argumentCount': column('ArgC'),
-      'latexTemplate': column('LaTeX template'),
-      'generic': column('Generic'),
-      'name': includeIf(not(empty(column('Name'))),
-          {'locale': 'en_US', 'content': column('Name')}),
-      'operator': includeIf(not(empty(column('Pre.'))),
-          {'precedenceLevel': column('Pre.'), 'associativity': column('Ass.')})
+      'categoryId': pkey.get('category', col('Category')),
+      'argumentCount': col('ArgC'),
+      'latexTemplate': col('LaTeX template'),
+      'generic': col('Generic'),
+      'name': ifNe('Name', {'locale': 'en_US', 'content': col('Name')}),
+      'operator': ifNe('Pre.',
+          {'precedenceLevel': col('Pre.'), 'associativity': col('Ass.')})
     }, response: {
-      'descriptors': includeIf(
-          not(or(empty(column('Name')),
-              pkey.contains('translation', column('Name')))),
-          [
-            {'id': pkey.get('descriptor', column('Name'))}
-          ]),
-      'translations': includeIf(
-          not(or(empty(column('Name')),
-              pkey.contains('translation', column('Name')))),
-          [
-            {
-              'id': pkey.get('translation', column('Name')),
-              'descriptorId': pkey.get('descriptor', column('Name')),
-              'localeId': pkey.get('locale', 'en_US'),
-              'content': column('Name')
-            }
-          ]),
-      'functions': [
+      'descriptor':
+          ifNor(empty(col('Name')), pkey.contains('translation', col('Name')), [
+        {'id': pkey.get('descriptor', col('Name'))}
+      ]),
+      'translation':
+          ifNor(empty(col('Name')), pkey.contains('translation', col('Name')), [
         {
-          'id': column('ID'),
-          'categoryId': pkey.get('category', column('Category')),
-          'descriptorId': includeIf(not(empty(column('Name'))),
-              pkey.get('descriptor', column('Name'))),
-          'argumentCount': column('ArgC'),
-          'latexTemplate': column('LaTeX template'),
-          'generic': column('Generic')
+          'id': pkey.get('translation', col('Name')),
+          'descriptorId': pkey.get('descriptor', col('Name')),
+          'localeId': pkey.get('locale', 'en_US'),
+          'content': col('Name')
+        }
+      ]),
+      'function': [
+        {
+          'id': col('ID'),
+          'categoryId': pkey.get('category', col('Category')),
+          'descriptorId': ifNe('Name', pkey.get('descriptor', col('Name'))),
+          'argumentCount': col('ArgC'),
+          'latexTemplate': col('LaTeX template'),
+          'generic': col('Generic')
         }
       ],
-      'operators': includeIf(not(empty(column('Pre.'))), [
+      'operator': ifNe('Pre.', [
         {
-          'id': pkey.get('operator', column('ID')),
-          'functionId': column('ID'),
-          'precedenceLevel': column('Pre.'),
-          'associativity': column('Ass.')
+          'id': pkey.get('operator', col('ID')),
+          'functionId': col('ID'),
+          'precedenceLevel': col('Pre.'),
+          'associativity': col('Ass.')
         }
       ])
     })

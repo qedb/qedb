@@ -2,69 +2,55 @@ tables:
 - tableName:  descriptor
   className:  Descriptor
   varName:    descriptor
-  listName:   descriptors
 
 - tableName:  subject
   className:  Subject
   varName:    subject
-  listName:   subjects
 
 - tableName:  locale
   className:  Locale
   varName:    locale
-  listName:   locales
 
 - tableName:  translation
   className:  Translation
   varName:    translation
-  listName:   translations
 
 - tableName:  category
   className:  Category
   varName:    category
-  listName:   categories
 
 - tableName:  function
   className:  Function
   varName:    function
-  listName:   functions
 
 - tableName:  function_subject_tag
   className:  FunctionSubjectTag
   varName:    functionSubjectTag
-  listName:   functionSubjectTags
 
 - tableName:  operator
   className:  Operator
   varName:    operator
-  listName:   operators
 
 - tableName:  expression
   className:  Expression
   varName:    expression
-  listName:   expressions
 
 - tableName:  function_reference
   className:  FunctionReference
   varName:    functionReference
-  listName:   functionReferences
 
 - tableName:  integer_reference
   className:  IntegerReference
   varName:    integerReference
-  listName:   integerReferences
 
 - tableName:  lineage
   className:  Lineage
   varName:    lineage
-  listName:   lineages
 
 - tableName:  rule
   className:  Rule
   varName:    rule
-  listName:   rules
   
 - tableName:  definition
   className:  Definition
   varName:    definition
-  listName:   definitions  

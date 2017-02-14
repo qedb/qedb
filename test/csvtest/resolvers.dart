@@ -76,3 +76,18 @@ class PrimaryKeyEmulator {
             : false;
       };
 }
+
+/// Shorthand for [column].
+ValueResolver col(String name) => column(name);
+
+/// If not empty
+///
+/// Alias for includeIf(not(empty(column([condCol]))), [value]).
+ValueResolver ifNe(String condCol, dynamic value) =>
+    includeIf(not(empty(column(condCol))), value);
+
+/// If not a OR b
+///
+/// Alias for includeIf(not(or([condA], [condB])), [value]).
+ValueResolver ifNor(ValueResolver condA, ValueResolver condB, dynamic value) =>
+    includeIf(not(or(condA, condB)), value);

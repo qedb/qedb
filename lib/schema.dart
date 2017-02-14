@@ -50,6 +50,7 @@ class TranslationRow implements Row {
   final int id;
   final int descriptorId, localeId;
   final String content;
+
   TranslationRow(this.id, this.descriptorId, this.localeId, this.content);
 
   static const mapFormat = '*';

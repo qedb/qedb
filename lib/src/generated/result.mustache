@@ -8,15 +8,15 @@ part of eqpg.dbutils;
 
 class QueryResult {
   {{# tables}}
-  List<db.{{ className }}Row> {{ listName }} = [];
+  List<db.{{ className }}Row> {{ varName }} = [];
   {{/ tables}}
 
   /// Replace all empty lists with null so that they are removed from the
   /// response JSON.
   void finalize() {
     {{# tables}}
-    if ({{ listName }}.isEmpty) {
-      {{ listName }} = null;
+    if ({{ varName }}.isEmpty) {
+      {{ varName }} = null;
     }
     {{/ tables}}
   }

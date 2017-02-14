@@ -11,5 +11,5 @@ final {{ varName }}Helper = new TableHelper<db.{{ className }}Row>(
     '{{ tableName }}',
     db.{{ className }}Row.mapFormat,
     db.{{ className }}Row.map,
-    (result, record) => result.{{ listName }}.add(record));
+    (result, record) => result.{{ varName }}.add(record));
 {{/ tables}}
