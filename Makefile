@@ -13,20 +13,18 @@ stop-database:
 restart-database: stop-database start-database
 
 restart-server:
-	./tool/kill.sh 'dart .*bin/server.dart'
+	./tool/kill-port.sh 8080
 	dart bin/server.dart > /dev/null 2>&1 &
 
 restart-admin-website:
-	./tool/kill.sh 'node web/server.js'
+	./tool/kill-port.sh 8081
 	node web/server.js > /dev/null 2>&1 &
 
 check:
 	./tool/check.sh
 
-generate-openapi-spec: restart-database
+generate-openapi-spec: restart-database restart-server
 	sudo npm install -g api-spec-converter
-	./tool/kill.sh 'dart .*bin/server.dart'
-	dart bin/server.dart
 	mkdir -p doc
 	api-spec-converter http://localhost:8080/discovery/v1/apis/eqdb/v0/rest \
 	  --from google --to swagger_2 > doc/openapi.json

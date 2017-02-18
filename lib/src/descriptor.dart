@@ -4,29 +4,8 @@
 
 part of eqpg;
 
-class CreateDescriptor {
-  @ApiProperty(required: true)
-  List<CreateTranslation> translations;
-
-  CreateDescriptor();
-  CreateDescriptor.fromTranslations(this.translations);
-}
-
-class CreateSubject {
-  @ApiProperty(required: true)
-  int descriptorId;
-}
-
-class CreateTranslation {
-  @ApiProperty(required: true)
-  String locale;
-
-  @ApiProperty(required: true)
-  String content;
-}
-
 Future<db.DescriptorRow> _createDescriptor(
-    Session s, CreateDescriptor body) async {
+    Session s, DescriptorResource body) async {
   // Require at least one translation.
   if (body.translations.isEmpty) {
     throw new UnprocessableEntityError('submit at least one translation');
@@ -43,17 +22,19 @@ Future<db.DescriptorRow> _createDescriptor(
   return descriptor;
 }
 
-Future<db.SubjectRow> _createSubject(Session s, CreateSubject body) async {
-  // Insert translation.
-  return await subjectHelper.insert(s, {'descriptor_id': body.descriptorId});
-}
-
 Future<db.TranslationRow> _createTranslation(
-    Session s, int descriptorId, CreateTranslation body) async {
+    Session s, int descriptorId, TranslationResource body) async {
+  var localeId = s.data.cache.locales.inverse[body.locale.code];
+  if (localeId == null) {
+    // There should NOT be an existing record, but just to be sure, use getId.
+    localeId = await localeHelper.getId(s, {'code': body.locale.code});
+    s.data.cache.locales[localeId] = body.locale.code;
+  }
+
   // Insert translation.
   return await translationHelper.insert(s, {
     'descriptor_id': descriptorId,
-    'locale_id': await localeHelper.getId(s, {'code': body.locale}),
+    'locale_id': localeId,
     'content': body.content
   });
 }
@@ -64,3 +45,6 @@ Future<List<db.TranslationRow>> _listTranslations(Session s,
       ? translationHelper.select(s, {})
       : translationHelper.select(s, {'descriptor_id': descriptorId});
 }
+
+Future<db.SubjectRow> _createSubject(Session s, SubjectResource body) =>
+    subjectHelper.insert(s, {'descriptor_id': body.descriptor.id});

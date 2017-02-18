@@ -6,6 +6,6 @@
 
 cd "${0%/*}"
 
-mustache data.yaml result.mustache > result.dart
+mustache data.yaml session_data.mustache > session_data.dart
 mustache data.yaml helpers.mustache > helpers.dart
 dartfmt -w *.dart

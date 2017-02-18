@@ -4,8 +4,8 @@
 # Use of this source code is governed by an AGPL-3.0-style license
 # that can be found in the LICENSE file.
 
-PATTERN=$1
-SERVER_PID=`pgrep -fo "^$PATTERN$"`
+PORT=$1
+SERVER_PID=`lsof -n -i :$PORT | grep 'LISTEN' | awk '{print $2}'`
 if [ -n "$SERVER_PID" ]
 then
   echo "Killing server PID $SERVER_PID"

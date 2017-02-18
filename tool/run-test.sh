@@ -11,7 +11,7 @@ OBSERVATORY_PORT=8000
 # Restart database and kill the API server if still running.
 ./tool/stop-db.sh
 ./tool/start-db.sh
-./tool/kill.sh 'dart .*bin/server.dart'
+./tool/kill-port.sh 8080
 
 # Empty the log file.
 truncate -s 0 testlog.txt
@@ -50,4 +50,4 @@ fi
 
 # Log will not be removed on error because this script will also be terminated.
 rm testlog.txt
-./tool/kill.sh 'dart .*bin/server.dart'
+./tool/kill-port.sh 8080

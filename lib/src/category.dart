@@ -4,56 +4,56 @@
 
 part of eqpg;
 
-class CreateCategory {
-  @ApiProperty(required: false)
-  int parentId;
+Future<db.CategoryRow> _createCategory(
+    Session s, int parentId, CategoryResource body) async {
+  // Get subject ID directly from request, or resolve first translation provided
+  // in the descriptor.
+  var subjectId = body.subject.id;
+  if (body.subject.id == null) {
+    final translation = body.subject.descriptor.translations.single;
 
-  @ApiProperty(required: true)
-  CreateTranslation name;
-}
-
-Future<db.CategoryRow> _createCategory(Session s, CreateCategory body) async {
-  // Resolve subject ID.
-  final result = await subjectHelper.selectCustom(
-      s,
-      '''
+    // Resolve subject ID.
+    final result = await subjectHelper.selectCustom(
+        s,
+        '''
 SELECT * FROM subject WHERE descriptor_id = (
   SELECT descriptor_id FROM translation
   WHERE content = @content AND locale_id = (
     SELECT id FROM locale WHERE code = @locale))''',
-      {'content': body.name.content, 'locale': body.name.locale});
+        {'content': translation.content, 'locale': translation.locale});
 
-  // If no subject exists, raise an error.
-  if (result.isEmpty) {
-    throw new UnprocessableEntityError(
-        'name could not be identified as subject');
+    // If no subject exists, raise an error.
+    if (result.isEmpty) {
+      throw new UnprocessableEntityError(
+          'subject translation could not be resolved to a subject');
+    }
+
+    subjectId = result.single.id;
   }
 
-  final subject = result.single;
-
   // Check if any function subject tag references this subject.
-  if (await functionSubjectTagHelper.exists(s, {'subject_id': subject.id})) {
+  if (await functionSubjectTagHelper.exists(s, {'subject_id': subjectId})) {
     throw new UnprocessableEntityError(
         'subject already used by function subject tag');
   }
 
-  if (body.parentId != null) {
+  if (parentId > 0) {
     // First check if parent exists.
-    if (await categoryHelper.exists(s, {'id': body.parentId})) {
+    if (await categoryHelper.exists(s, {'id': parentId})) {
       return await categoryHelper.insert(s, {
-        'subject_id': subject.id,
+        'subject_id': subjectId,
         'parents': new Sql.arrayAppend(
             '(SELECT parents FROM category WHERE id = @parent_id)',
             '@parent_id',
             'integer[]',
-            {'parent_id': body.parentId})
+            {'parent_id': parentId})
       });
     } else {
       throw new UnprocessableEntityError(
           'parentId not found in category table');
     }
   } else {
-    return await categoryHelper.insert(s,
-        {'subject_id': subject.id, 'parents': new Sql('ARRAY[]::integer[]')});
+    return await categoryHelper.insert(
+        s, {'subject_id': subjectId, 'parents': new Sql('ARRAY[]::integer[]')});
   }
 }

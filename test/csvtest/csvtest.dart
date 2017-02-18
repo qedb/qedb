@@ -98,8 +98,8 @@ class Row {
 /// API route test.
 CsvTest route(String method, String path,
         {Map<String, ValueResolver> url: const {},
-        Map<String, dynamic> request: const {},
-        Map<String, dynamic> response: const {},
+        dynamic request: const {},
+        dynamic response: const {},
         bool skip: false,
         ValueResolver runIf: resolveTrue}) =>
     (row, baseUrl) async {
@@ -189,6 +189,10 @@ dynamic evaluate(dynamic obj, Row row) {
 void compare(dynamic src, dynamic dst, [String path = '']) {
   if (src is Map) {
     if (dst is Map) {
+      if (dst.length != src.length) {
+        throw new Exception('$path has a different size');
+      }
+
       // Compare all elements.
       for (final key in src.keys) {
         if (!dst.containsKey(key)) {

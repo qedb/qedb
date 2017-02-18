@@ -18,7 +18,7 @@ class CreateFunction {
   bool generic;
 
   @ApiProperty(required: false)
-  CreateTranslation name;
+  TranslationResource name;
 
   @ApiProperty(required: false)
   CreateOperator operator;
@@ -70,7 +70,7 @@ WHERE content = @content AND locale_id = (
       insertParameters['descriptor_id'] = descriptorId;
     } else {
       insertParameters['descriptor_id'] = (await _createDescriptor(
-              s, new CreateDescriptor.fromTranslations([body.name])))
+              s, new DescriptorResource.fromTranslations([body.name])))
           .id;
     }
   }

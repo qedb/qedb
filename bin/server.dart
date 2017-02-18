@@ -68,8 +68,10 @@ Future<Null> main() async {
 
   // Create RPC API handler.
   final ApiServer apiServer = new ApiServer();
+
   final eqdbApi = new EqDB(connectionUri, 2, maxConnections);
-  await eqdbApi.pool.start();
+  await eqdbApi.initialize();
+
   apiServer.addApi(eqdbApi);
   apiServer.enableDiscoveryApi();
 

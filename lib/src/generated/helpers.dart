@@ -10,66 +10,66 @@ final descriptorHelper = new TableHelper<db.DescriptorRow>(
     'descriptor',
     db.DescriptorRow.mapFormat,
     db.DescriptorRow.map,
-    (result, record) => result.descriptor.add(record));
+    (result, record) => result.descriptorTable[record.id] = record);
 final subjectHelper = new TableHelper<db.SubjectRow>(
     'subject',
     db.SubjectRow.mapFormat,
     db.SubjectRow.map,
-    (result, record) => result.subject.add(record));
+    (result, record) => result.subjectTable[record.id] = record);
 final localeHelper = new TableHelper<db.LocaleRow>(
     'locale',
     db.LocaleRow.mapFormat,
     db.LocaleRow.map,
-    (result, record) => result.locale.add(record));
+    (result, record) => result.localeTable[record.id] = record);
 final translationHelper = new TableHelper<db.TranslationRow>(
     'translation',
     db.TranslationRow.mapFormat,
     db.TranslationRow.map,
-    (result, record) => result.translation.add(record));
+    (result, record) => result.translationTable[record.id] = record);
 final categoryHelper = new TableHelper<db.CategoryRow>(
     'category',
     db.CategoryRow.mapFormat,
     db.CategoryRow.map,
-    (result, record) => result.category.add(record));
+    (result, record) => result.categoryTable[record.id] = record);
 final functionHelper = new TableHelper<db.FunctionRow>(
     'function',
     db.FunctionRow.mapFormat,
     db.FunctionRow.map,
-    (result, record) => result.function.add(record));
+    (result, record) => result.functionTable[record.id] = record);
 final functionSubjectTagHelper = new TableHelper<db.FunctionSubjectTagRow>(
     'function_subject_tag',
     db.FunctionSubjectTagRow.mapFormat,
     db.FunctionSubjectTagRow.map,
-    (result, record) => result.functionSubjectTag.add(record));
+    (result, record) => result.functionSubjectTagTable[record.id] = record);
 final operatorHelper = new TableHelper<db.OperatorRow>(
     'operator',
     db.OperatorRow.mapFormat,
     db.OperatorRow.map,
-    (result, record) => result.operator.add(record));
+    (result, record) => result.operatorTable[record.id] = record);
 final expressionHelper = new TableHelper<db.ExpressionRow>(
     'expression',
     db.ExpressionRow.mapFormat,
     db.ExpressionRow.map,
-    (result, record) => result.expression.add(record));
+    (result, record) => result.expressionTable[record.id] = record);
 final functionReferenceHelper = new TableHelper<db.FunctionReferenceRow>(
     'function_reference',
     db.FunctionReferenceRow.mapFormat,
     db.FunctionReferenceRow.map,
-    (result, record) => result.functionReference.add(record));
+    (result, record) => result.functionReferenceTable[record.id] = record);
 final integerReferenceHelper = new TableHelper<db.IntegerReferenceRow>(
     'integer_reference',
     db.IntegerReferenceRow.mapFormat,
     db.IntegerReferenceRow.map,
-    (result, record) => result.integerReference.add(record));
+    (result, record) => result.integerReferenceTable[record.id] = record);
 final lineageHelper = new TableHelper<db.LineageRow>(
     'lineage',
     db.LineageRow.mapFormat,
     db.LineageRow.map,
-    (result, record) => result.lineage.add(record));
+    (result, record) => result.lineageTable[record.id] = record);
 final ruleHelper = new TableHelper<db.RuleRow>('rule', db.RuleRow.mapFormat,
-    db.RuleRow.map, (result, record) => result.rule.add(record));
+    db.RuleRow.map, (result, record) => result.ruleTable[record.id] = record);
 final definitionHelper = new TableHelper<db.DefinitionRow>(
     'definition',
     db.DefinitionRow.mapFormat,
     db.DefinitionRow.map,
-    (result, record) => result.definition.add(record));
+    (result, record) => result.definitionTable[record.id] = record);

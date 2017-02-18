@@ -15,20 +15,17 @@ Future main() async {
     // Create descriptor.
     route('POST', 'descriptor/create', request: {
       'translations': [
-        {'locale': 'en_US', 'content': col('Translation (en_US)')}
+        {
+          'locale': {'code': 'en_US'},
+          'content': col('Translation (en_US)')
+        }
       ]
     }, response: {
-      'descriptor': [
-        {'id': pkey.get('descriptor', col('Translation (en_US)'))}
-      ],
-      'locale': [
-        {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'}
-      ],
-      'translation': [
+      'id': pkey.get('descriptor', col('Translation (en_US)')),
+      'translations': [
         {
           'id': pkey.get('translation', col('Translation (en_US)')),
-          'descriptorId': col('ID'),
-          'localeId': pkey.get('locale', 'en_US'),
+          'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
           'content': col('Translation (en_US)')
         }
       ]
@@ -37,69 +34,53 @@ Future main() async {
     // Get descriptor translations.
     route('GET', 'descriptor/{id}/translations/list', url: {
       'id': col('ID')
-    }, response: {
-      'translation': [
-        {
-          'id': pkey.get('translation', col('Translation (en_US)')),
-          'descriptorId': col('ID'),
-          'localeId': pkey.get('locale', 'en_US'),
-          'content': col('Translation (en_US)')
-        }
-      ]
-    }),
+    }, response: [
+      {
+        'id': pkey.get('translation', col('Translation (en_US)')),
+        'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
+        'content': col('Translation (en_US)')
+      }
+    ]),
 
     // Add Dutch translation to descriptor.
     route('POST', 'descriptor/{id}/translations/create', url: {
       'id': col('ID')
     }, request: {
-      'locale': 'nl_NL',
+      'locale': {'code': 'nl_NL'},
       'content': col('Translation (nl_NL)')
     }, response: {
-      'locale': [
-        {'id': pkey.get('locale', 'nl_NL'), 'code': 'nl_NL'}
-      ],
-      'translation': [
-        {
-          'id': pkey.get('translation', col('Translation (nl_NL)')),
-          'descriptorId': col('ID'),
-          'localeId': pkey.get('locale', 'nl_NL'),
-          'content': col('Translation (nl_NL)')
-        }
-      ]
+      'id': pkey.get('translation', col('Translation (nl_NL)')),
+      'locale': {'id': pkey.get('locale', 'nl_NL'), 'code': 'nl_NL'},
+      'content': col('Translation (nl_NL)')
     }),
 
     // Get descriptor translations again.
     route('GET', 'descriptor/{id}/translations/list', url: {
       'id': col('ID')
-    }, response: {
-      'translation': [
-        {
-          'id': pkey.get('translation', col('Translation (en_US)')),
-          'descriptorId': col('ID'),
-          'localeId': pkey.get('locale', 'en_US'),
-          'content': col('Translation (en_US)')
-        },
-        {
-          'id': pkey.get('translation', col('Translation (nl_NL)')),
-          'descriptorId': col('ID'),
-          'localeId': pkey.get('locale', 'nl_NL'),
-          'content': col('Translation (nl_NL)')
-        }
-      ]
-    }),
+    }, response: [
+      {
+        'id': pkey.get('translation', col('Translation (en_US)')),
+        'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
+        'content': col('Translation (en_US)')
+      },
+      {
+        'id': pkey.get('translation', col('Translation (nl_NL)')),
+        'locale': {'id': pkey.get('locale', 'nl_NL'), 'code': 'nl_NL'},
+        'content': col('Translation (nl_NL)')
+      }
+    ]),
 
     // Create subject from descriptor.
     route('POST', 'subject/create', runIf: col('Subject'), request: {
-      'descriptorId': col('ID')
+      'descriptor': {'id': col('ID')}
     }, response: {
-      'subject': [
-        {'id': pkey.get('subject', col('ID')), 'descriptorId': col('ID')}
-      ]
+      'id': pkey.get('subject', col('ID')),
+      'descriptor': {'id': col('ID')}
     })
   ]);
 
   // Category
-  await csvtest(baseUrl, 'data/data.1.csv', [
+  /*await csvtest(baseUrl, 'data/data.1.csv', [
     // Create category.
     route('POST', 'category/create', request: {
       'parentId': includeIf(not(empty(col('Parent ID'))), col('Parent ID')),
@@ -165,5 +146,53 @@ Future main() async {
         }
       ])
     })
-  ]);
+  ]);*/
+/*
+  // Definition
+  await csvtest(baseUrl, 'data/data.3.csv', [
+  // Create definition.
+  - route:                    definition/create
+    method:                   POST
+    request:
+      categoryId:             column:cID
+      left:                   eqlib:codec:column:Equation left
+      right:                  eqlib:codec:column:Equation right
+    response:
+      rules:
+      - id:                   column:rID
+        categoryId:           column:cID
+        0:leftExpressionId:   eqlib:index:column:Equation left
+        1:rightExpressionId:  eqlib:index:column:Equation right
+      definitions:
+      - id:                   column:ID
+        ruleId:               column:rID
+      # expressions:            accect:anyList
+      # functionReferences:     accect:anyList
+      # integerReferences:      accect:anyList
+    ignore:
+    - expressions
+    - functionReferences
+    - integerReferences
+
+  # Retrieve expression tree for left expression.
+  - route:      expression/{id}/retrieveTree
+    method:     GET
+    url:
+      id:       eqlib:index:column:Equation left
+    response:
+      id:       eqlib:index:column:Equation left
+      rawData:  eqlib:codec:column:Equation left
+    ignore:
+    - reference
+
+  # Retrieve expression tree for right expression.
+  - route:      expression/{id}/retrieveTree
+    method:     GET
+    url:
+      id:       eqlib:index:column:Equation right
+    response:
+      id:       eqlib:index:column:Equation right
+      rawData:  eqlib:codec:column:Equation right
+    ignore:
+    - reference*/
 }

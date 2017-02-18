@@ -15,6 +15,7 @@ import 'package:postgresql/pool.dart';
 import 'package:postgresql/postgresql.dart';
 
 import 'package:eqpg/dbutils.dart';
+import 'package:eqpg/resources.dart';
 import 'package:eqpg/schema.dart' as db;
 
 part 'src/rule.dart';
@@ -33,88 +34,103 @@ final log = new Logger('eqpg');
 class EqDB {
   final Pool pool;
 
+  /// Persistent cache of database data (for some immutable rows).
+  final cache = new DbCache();
+
   EqDB(String dbUri, int minConnections, int maxConnections)
       : pool = new Pool(dbUri,
             minConnections: minConnections, maxConnections: maxConnections);
 
+  /// Initialize [pool] and [cache].
+  Future<Null> initialize() async {
+    await pool.start();
+    final conn = await pool.connect();
+    conn.close();
+  }
+
+  /// Utility to reuse method calling boilerplate.
+  Future<T> _runRequestSession<T>(Future<T> handler(Session s)) {
+    return _runSandboxed<T>((conn) {
+      final data = new SessionData(cache);
+      return handler(new Session(conn, data));
+    }, pool);
+  }
+
   @ApiMethod(path: 'descriptor/create', method: 'POST')
-  Future<QueryResult> createDescriptor(CreateDescriptor body) =>
-      callApiMethod((s) => _createDescriptor(s, body), pool);
+  Future<DescriptorResource> createDescriptor(DescriptorResource body) =>
+      _runRequestSession<DescriptorResource>((s) async =>
+          new DescriptorResource.from(
+              await _createDescriptor(s, body), s.data));
 
   @ApiMethod(path: 'descriptor/{id}/translations/create', method: 'POST')
-  Future<QueryResult> createTranslation(int id, CreateTranslation body) =>
-      callApiMethod((s) => _createTranslation(s, id, body), pool);
+  Future<TranslationResource> createTranslation(
+          int id, TranslationResource body) =>
+      _runRequestSession<TranslationResource>((s) async =>
+          new TranslationResource.from(
+              await _createTranslation(s, id, body), s.data));
 
   @ApiMethod(path: 'descriptor/{id}/translations/list', method: 'GET')
-  Future<QueryResult> listDescriptorTranslations(int id) =>
-      callApiMethod((s) => _listTranslations(s, id), pool);
+  Future<List<TranslationResource>> listDescriptorTranslations(int id) =>
+      _runRequestSession<List<TranslationResource>>((s) async =>
+          (await _listTranslations(s, id))
+              .map((r) => new TranslationResource.from(r, s.data))
+              .toList());
 
   @ApiMethod(path: 'subject/create', method: 'POST')
-  Future<QueryResult> createSubject(CreateSubject body) =>
-      callApiMethod((s) => _createSubject(s, body), pool);
+  Future<SubjectResource> createSubject(SubjectResource body) =>
+      _runRequestSession<SubjectResource>((s) async =>
+          new SubjectResource.from(await _createSubject(s, body), s.data));
 
-  @ApiMethod(path: 'category/create', method: 'POST')
-  Future<QueryResult> createCategory(CreateCategory body) =>
-      callApiMethod((s) => _createCategory(s, body), pool);
+  /*@ApiMethod(path: 'category/create', method: 'POST')
+  Future<SessionData> createCategory(CreateCategory body) =>
+      callApiMethod((s) => _createCategory(s, 0, body), pool);
 
   @ApiMethod(path: 'function/create', method: 'POST')
-  Future<QueryResult> createFunction(CreateFunction body) =>
+  Future<SessionData> createFunction(CreateFunction body) =>
       callApiMethod((s) => _createFunction(s, body), pool);
 
   @ApiMethod(path: 'expression/{id}/retrieveTree', method: 'GET')
   Future<ExpressionTree> retrieveExpressionTree(int id) =>
       new MethodCaller<ExpressionTree>().run(
           (conn) =>
-              _retrieveExpressionTree(new Session(conn, new QueryResult()), id),
+              _retrieveExpressionTree(new Session(conn, new SessionData()), id),
           pool);
 
   @ApiMethod(path: 'definition/create', method: 'POST')
-  Future<QueryResult> createDefinition(CreateDefinition body) =>
+  Future<SessionData> createDefinition(CreateDefinition body) =>
       callApiMethod((s) => _createDefinition(s, body), pool);
 
   @ApiMethod(path: 'lineage/create', method: 'POST')
-  Future<QueryResult> createLineage(CreateLineage body) =>
-      callApiMethod((s) => _createLineage(s, body), pool);
+  Future<SessionData> createLineage(CreateLineage body) =>
+      callApiMethod((s) => _createLineage(s, body), pool);*/
 }
 
 /// Utility to reuse method calling boilerplate.
-class MethodCaller<T> {
-  Future<T> run(Future<T> handler(Connection conn), Pool pool) {
-    final completer = new Completer<T>();
+Future<T> _runSandboxed<T>(Future<T> handler(Connection conn), Pool pool) {
+  final completer = new Completer<T>();
 
-    // Get connection.
-    pool.connect()
-      ..then((conn) {
-        T result;
+  // Get connection.
+  pool.connect()
+    ..then((conn) {
+      T result;
 
-        // Run in a transaction.
-        conn.runInTransaction(() async {
-          result = await handler(conn);
-        })
-          // When the handler inside the transaction is completed:
-          ..then((_) {
-            conn.close();
-            completer.complete(result);
-          })
-          // When an error occurs during the completion of the handler:
-          ..catchError((error, stackTrace) {
-            conn.close();
-            completer.completeError(error, stackTrace);
-          });
+      // Run in a transaction.
+      conn.runInTransaction(() async {
+        result = await handler(conn);
       })
-      // When an error occurs when obtaining a connection from the pool:
-      ..catchError(completer.completeError);
+        // When the handler inside the transaction is completed:
+        ..then((_) {
+          conn.close();
+          completer.complete(result);
+        })
+        // When an error occurs during the completion of the handler:
+        ..catchError((error, stackTrace) {
+          conn.close();
+          completer.completeError(error, stackTrace);
+        });
+    })
+    // When an error occurs when obtaining a connection from the pool:
+    ..catchError(completer.completeError);
 
-    return completer.future;
-  }
-}
-
-/// Utility to reuse method calling boilerplate.
-Future<QueryResult> callApiMethod(Future handler(Session s), Pool pool) {
-  return new MethodCaller<QueryResult>().run((conn) async {
-    final result = new QueryResult();
-    await handler(new Session(conn, result));
-    result.finalize();
-    return result;
-  }, pool);
+  return completer.future;
 }
