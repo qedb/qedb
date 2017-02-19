@@ -4,17 +4,6 @@
 
 part of eqpg;
 
-class CreateDefinition {
-  @ApiProperty(required: true)
-  int categoryId;
-
-  @ApiProperty(required: true)
-  String left;
-
-  @ApiProperty(required: true)
-  String right;
-}
-
 /// Used to determine if an expression is valid under the given category.
 String queryIntersectFunctionIds(List<int> functionIds) => '''
 SELECT id, argument_count FROM function WHERE category_id IN (
@@ -24,10 +13,10 @@ INTERSECT
 SELECT id, argument_count FROM function WHERE id IN (${functionIds.join(',')})''';
 
 Future<db.DefinitionRow> _createDefinition(
-    Session s, CreateDefinition body) async {
+    Session s, DefinitionResource body) async {
   // Decode expression headers.
-  final leftData = _decodeCodecHeader(body.left);
-  final rightData = _decodeCodecHeader(body.right);
+  final leftData = _decodeCodecHeader(body.rule.leftExpression.data);
+  final rightData = _decodeCodecHeader(body.rule.rightExpression.data);
 
   // For now we only accept single byte signed integers in non-evaluated
   // expressions.
@@ -45,7 +34,7 @@ Future<db.DefinitionRow> _createDefinition(
   final allIds = leftData.functionId.toSet()..addAll(rightData.functionId);
   // INTERSECT result
   final intres = await s.conn.query(queryIntersectFunctionIds(allIds.toList()),
-      {'categoryId': body.categoryId}).toList();
+      {'categoryId': body.rule.category.id}).toList();
 
   // Process INTERSECT result into a map.
   final intmap = new Map<int, int>.fromIterable(intres,
@@ -87,7 +76,8 @@ Future<db.DefinitionRow> _createDefinition(
   final rightExpr = await _createExpression(s, rightDecoded);
 
   // Insert rule.
-  final rule = await _createRule(s, body.categoryId, leftExpr.id, rightExpr.id);
+  final rule =
+      await _createRule(s, body.rule.category.id, leftExpr.id, rightExpr.id);
 
   // Insert definition.
   return await definitionHelper.insert(s, {'rule_id': rule.id});

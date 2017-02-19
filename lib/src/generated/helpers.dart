@@ -51,16 +51,6 @@ final expressionHelper = new TableHelper<db.ExpressionRow>(
     db.ExpressionRow.mapFormat,
     db.ExpressionRow.map,
     (result, record) => result.expressionTable[record.id] = record);
-final functionReferenceHelper = new TableHelper<db.FunctionReferenceRow>(
-    'function_reference',
-    db.FunctionReferenceRow.mapFormat,
-    db.FunctionReferenceRow.map,
-    (result, record) => result.functionReferenceTable[record.id] = record);
-final integerReferenceHelper = new TableHelper<db.IntegerReferenceRow>(
-    'integer_reference',
-    db.IntegerReferenceRow.mapFormat,
-    db.IntegerReferenceRow.map,
-    (result, record) => result.integerReferenceTable[record.id] = record);
 final lineageTreeHelper = new TableHelper<db.LineageTreeRow>(
     'lineage_tree',
     db.LineageTreeRow.mapFormat,

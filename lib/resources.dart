@@ -162,21 +162,17 @@ class OperatorResource extends _Resource<db.OperatorRow> {
 /// Expression
 class ExpressionResource extends _Resource<db.ExpressionRow> {
   int id;
-  String data, hash;
+  String data;
+  String hash;
   List<int> functions;
-  ExpressionReference reference;
 
   Map<int, db.ExpressionRow> _getTableMap(data) => data.expressionTable;
 
-  void loadFields(row, data) {}
-}
-
-/// Function reference (used both for function_reference and integer_reference)
-class ExpressionReference {
-  int id;
-  int value;
-  FunctionResource function;
-  List<ExpressionReference> arguments;
+  void loadFields(row, sdata) {
+    data = row.data;
+    hash = row.hash;
+    functions = row.functions;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -186,11 +182,8 @@ class ExpressionReference {
 /// Lineage tree
 class LineageTreeResource extends _Resource<db.LineageTreeRow> {
   int id;
-  List<LineageResource> lineages;
 
   Map<int, db.LineageTreeRow> _getTableMap(data) => data.lineageTreeTable;
-
-  void loadFields(row, data) {}
 }
 
 /// Lineage
@@ -198,12 +191,21 @@ class LineageResource extends _Resource<db.LineageRow> {
   int id;
   int branchIndex;
   LineageTreeResource tree;
+  ExpressionResource firstExpression;
   LineageResource parent;
-  //List<LineageExpressionResource> expressions;
 
   Map<int, db.LineageRow> _getTableMap(data) => data.lineageTable;
 
-  void loadFields(row, data) {}
+  void loadFields(row, data) {
+    branchIndex = row.branchIndex;
+    tree = new LineageTreeResource()..load(row.treeId, data);
+    firstExpression = new ExpressionResource()
+      ..load(row.firstExpressionId, data);
+
+    if (row.parentId != null) {
+      parent = new LineageResource()..load(row.parentId, data);
+    }
+  }
 }
 
 /// Rule
@@ -215,7 +217,12 @@ class RuleResource extends _Resource<db.RuleRow> {
 
   Map<int, db.RuleRow> _getTableMap(data) => data.ruleTable;
 
-  void loadFields(row, data) {}
+  void loadFields(row, data) {
+    category = new CategoryResource()..load(row.categoryId, data);
+    leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
+    rightExpression = new ExpressionResource()
+      ..load(row.rightExpressionId, data);
+  }
 }
 
 /// Definition
@@ -225,5 +232,7 @@ class DefinitionResource extends _Resource<db.DefinitionRow> {
 
   Map<int, db.DefinitionRow> _getTableMap(data) => data.definitionTable;
 
-  void loadFields(row, data) {}
+  void loadFields(row, data) {
+    rule = new RuleResource()..load(row.ruleId, data);
+  }
 }

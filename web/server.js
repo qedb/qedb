@@ -15,9 +15,8 @@ const process = require('process')
 const getRawBody = require('raw-body')
 
 // TODO:
-// - Reduce to only a single resource index page methods files.
+// - Generate index pages from global configuration.
 // - Allow configuration of additional API requests.
-// - Allow usage of additional API requests in main API request.
 
 // Set working directory to web.
 process.chdir('./web')

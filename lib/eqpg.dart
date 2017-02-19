@@ -26,7 +26,6 @@ part 'src/definition.dart';
 part 'src/exceptions.dart';
 part 'src/descriptor.dart';
 part 'src/expression.dart';
-part 'src/expression_tree.dart';
 
 final log = new Logger('eqpg');
 
@@ -101,13 +100,6 @@ class EqDB {
       _runRequestSession<OperatorResource>((s) async => new OperatorResource()
         ..loadRow(await _createOperator(s, body), s.data));
 
-  /*@ApiMethod(path: 'expression/{id}/read', method: 'GET')
-  Future<ExpressionResource> retrieveExpressionTree(int id,
-          {bool getReferenceTree: false}) =>
-      _runRequestSession<ExpressionResource>((s) async =>
-          new ExpressionResource()
-            ..loadRow(await _readExpression(s, id, getReferenceTree), s.data));
-
   @ApiMethod(path: 'definition/create', method: 'POST')
   Future<DefinitionResource> createDefinition(DefinitionResource body) =>
       _runRequestSession<DefinitionResource>((s) async =>
@@ -117,7 +109,7 @@ class EqDB {
   @ApiMethod(path: 'lineage/create', method: 'POST')
   Future<LineageResource> createLineage(LineageResource body) =>
       _runRequestSession<LineageResource>((s) async => new LineageResource()
-        ..loadRow(await _createLineage(s, body), s.data));*/
+        ..loadRow(await _createLineage(s, body), s.data));
 }
 
 /// Utility to reuse method calling boilerplate.

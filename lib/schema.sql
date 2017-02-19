@@ -127,36 +127,36 @@ CREATE TABLE operator (
   associativity     operator_associativity  NOT NULL
 );
 
--- Inline reference to another expression reference.
-CREATE TYPE expression_reference_type AS ENUM ('function', 'symbol', 'integer');
-CREATE TYPE expression_reference AS (
-  key   integer,
-  type  expression_reference_type
-);
-
 -- Expression node
+-- Note: expression references have not been implemented yet to reduce
+-- complexity. The main objective is to make expressions indexable. This could
+-- potentially also be achieved by writing a custom index in C.
 CREATE TABLE expression (
-  id         serial                PRIMARY KEY,
-  reference  expression_reference  NOT NULL UNIQUE,
-  data       bytea                 NOT NULL UNIQUE,
-  hash       bytea                 NOT NULL UNIQUE,
+  id            serial   PRIMARY KEY,
+  --reference_id  integer  NOT NULL UNIQUE REFERENCES expression_reference(id),
+  data          bytea    NOT NULL UNIQUE,
+  hash          bytea    NOT NULL UNIQUE,
 
   -- All function IDs in this expression for fast indexing and searching.
   functions  integer[]             NOT NULL
 );
 CREATE INDEX expression_functions_index on expression USING GIN (functions);
 
--- Function expression reference
-CREATE TABLE function_reference (
-  id           serial                  PRIMARY KEY,
-  function_id  integer                 NOT NULL REFERENCES function(id),
-  arguments    expression_reference[]  NOT NULL CHECK (array_length(arguments, 1) > 0)
+-- Expression reference
+CREATE TYPE expression_reference_type AS ENUM ('function', 'integer');
+CREATE TABLE expression_reference (
+  id         serial                     PRIMARY KEY,
+  value      integer                    NOT NULL,
+  type       expression_reference_type  NOT NULL,
+  arguments  integer[] -- ELEMENT REFERENCES expression_reference(id)
 );
 
--- Integer expression reference
-CREATE TABLE integer_reference (
-  id   serial   PRIMARY KEY,
-  val  integer  NOT NULL
+-- Expression reference argument
+CREATE TABLE expression_reference_argument (
+  id            serial   PRIMARY KEY,
+  parent_id     integer  NOT NULL REFERENCES expression_reference(id),
+  position      integer  NOT NULL CHECK (position >= 0),
+  reference_id  integer  NOT NULL REFERENCES expression_reference(id)
 );
 
 --------------------------------------------------------------------------------
@@ -176,14 +176,6 @@ CREATE TABLE lineage (
   branch_index         integer  NOT NULL DEFAULT 0,
   initial_category_id  integer  NOT NULL REFERENCES category(id),
   first_expression_id  integer  NOT NULL REFERENCES expression(id)
-);
-
--- Lineage category transition
-CREATE TABLE lineage_transition (
-  id           serial   PRIMARY KEY,
-  lineage_id   integer  NOT NULL REFERENCES lineage(id),
-  category_id  integer  NOT NULL REFERENCES lineage(id),
-  start_index  integer  NOT NULL
 );
 
 -- TODO: lineage joints. Joints coud be used in both proof searching and to
@@ -221,6 +213,10 @@ CREATE TABLE function_property_definition (
   definition_id         integer  NOT NULL REFERENCES definition(id),
   function_property_id  integer  NOT NULL REFERENCES function_property(id)
 );
+
+--------------------------------------------------------------------------------
+-- Lineage expressions and rule proofs
+--------------------------------------------------------------------------------
 
 -- Lineage expression
 CREATE TABLE lineage_expression (

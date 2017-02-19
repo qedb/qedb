@@ -23,71 +23,10 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
     return lookupResult.single;
   }
 
-  // Create reference node.
-  db.ExpressionReference reference;
-  if (expr is NumberExpr) {
-    reference = await _createIntegerReference(s, expr);
-  } else if (expr is SymbolExpr) {
-    reference = await _createSymbolReference(s, expr);
-  } else if (expr is FunctionExpr) {
-    reference = await _createFunctionReference(s, expr);
-  }
-  assert(reference != null);
-
   // Create expression node.
   return await expressionHelper.insert(s, {
-    'reference': new Sql('ROW(@reference_key, @reference_type)',
-        {'reference_key': reference.key, 'reference_type': reference.type}),
     'data': new Sql("decode(@data, 'base64')", {'data': base64}),
     'hash': new Sql("digest(decode(@data, 'base64') ,'sha256')"),
     'functions': new Sql('ARRAY[${codecData.functionId.join(',')}]::integer[]')
   });
-}
-
-/// Create expression reference for number expression in integer_reference.
-Future<db.ExpressionReference> _createIntegerReference(
-    Session s, NumberExpr expr) async {
-  log.info('Creating number reference, value = ${expr.value}');
-
-  // Insert reference.
-  final integerReference =
-      await integerReferenceHelper.insert(s, {'val': expr.value.toInt()});
-
-  // Get linking data.
-  return new db.ExpressionReference(integerReference.id, 'integer');
-}
-
-/// Create expression reference for symbol expression in function_reference.
-Future<db.ExpressionReference> _createSymbolReference(
-    Session s, SymbolExpr expr) async {
-  /// Symbol references are compressed into the reference key.
-  return new db.ExpressionReference(expr.id, 'symbol');
-}
-
-/// Create expression reference for function expression in function_reference.
-Future<db.ExpressionReference> _createFunctionReference(
-    Session s, FunctionExpr expr) async {
-  log.info(
-      'Creating function references, functionId: ${expr.id}, argument count: ${expr.args.length}');
-
-  // Create map of query data.
-  final Map<String, dynamic> argsData = {};
-  for (var i = 0; i < expr.args.length; i++) {
-    final arg = expr.args[i];
-    final argExpr = await _createExpression(s, arg);
-    argsData['reference_key_$i'] = argExpr.reference.key;
-    argsData['reference_type_$i'] = argExpr.reference.type;
-  }
-
-  // Insert reference.
-  final argRows = new List<String>.generate(
-          expr.args.length, (i) => 'ROW(@reference_key_$i, @reference_type_$i)')
-      .join(',');
-  final functionReference = await functionReferenceHelper.insert(s, {
-    'function_id': expr.id,
-    'arguments': new Sql("ARRAY[$argRows]::expression_reference[]", argsData)
-  });
-
-  // Get linking data.
-  return new db.ExpressionReference(functionReference.id, 'function');
 }

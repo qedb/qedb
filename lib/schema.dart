@@ -122,61 +122,22 @@ class OperatorRow implements Row {
   static OperatorRow map(pg.Row r) => new OperatorRow(r[0], r[1], r[2], r[3]);
 }
 
-/// Expression reference
-class ExpressionReference {
-  final int key;
-  final String type;
-
-  ExpressionReference(this.key, this.type);
-
-  static ExpressionReference map(List<String> r) =>
-      new ExpressionReference(int.parse(r[0]), r[1]);
-}
-
 /// Expression
 class ExpressionRow implements Row {
   final int id;
-  final ExpressionReference reference;
   final String data, hash;
   final List<int> functions;
 
-  ExpressionRow(this.id, this.reference, this.data, this.hash, this.functions);
+  ExpressionRow(this.id, this.data, this.hash, this.functions);
 
   static final mapFormat = [
     'id',
-    '(reference).key',
-    '(reference).type',
     "encode(data, 'base64')",
     "encode(hash, 'base64')",
     "array_to_string(functions, ',')"
   ].join(',');
-  static ExpressionRow map(pg.Row r) => new ExpressionRow(r[0],
-      new ExpressionReference(r[1], r[2]), r[3], r[4], intsFromString(r[5]));
-}
-
-/// Function reference
-class FunctionReferenceRow implements Row {
-  final int id;
-  final int functionId;
-  final List<ExpressionReference> arguments;
-
-  FunctionReferenceRow(this.id, this.functionId, this.arguments);
-
-  static const mapFormat = "id, function_id, array_to_string(arguments, '')";
-  static FunctionReferenceRow map(pg.Row r) => new FunctionReferenceRow(
-      r[0], r[1], splitPgRowList(r[2]).map(ExpressionReference.map));
-}
-
-/// Integer reference
-class IntegerReferenceRow implements Row {
-  final int id;
-  final int value;
-
-  IntegerReferenceRow(this.id, this.value);
-
-  static const mapFormat = '*';
-  static IntegerReferenceRow map(pg.Row r) =>
-      new IntegerReferenceRow(r[0], r[1]);
+  static ExpressionRow map(pg.Row r) =>
+      new ExpressionRow(r[0], r[1], r[2], intsFromString(r[3]));
 }
 
 //------------------------------------------------------------------------------

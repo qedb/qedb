@@ -1,10 +1,10 @@
-ID,rID,Category,Area,"Equation left",,"Equation right"
-1,1,Algebra,"Basic algebra",?a+?b,=,?b+?a
-2,2,Algebra,"Basic algebra",?a-?b,=,?b-?a
-3,3,Algebra,"Basic algebra",?a+(-?b),=,?a-?b
-4,4,Algebra,"Basic algebra",?a*?b,=,?b*?a
-5,5,Algebra,"Basic algebra",?a*(?b*?c),=,(?a*?b)*?c
-6,6,Algebra,"Basic algebra",?a*?b+?a*?c,=,?a*(?b+?c)
-7,7,Algebra,"Basic algebra",-?a,=,-1*?a
-8,8,Algebra,Calculus,"diff(?fn(?x),?x)",=,"lim(d(?x),0,(?fn(?x+d(?x))-?fn(?x))/d(?x))"
-9,9,Algebra,Calculus,"lim(?a,0,?fn(?b+?a))",=,?fn(?b)
+ID,Category,Area,"Expression left",,"Expression right"
+1,Algebra,"Basic algebra",?a+?b,=,?b+?a
+2,Algebra,"Basic algebra",?a-?b,=,?b-?a
+3,Algebra,"Basic algebra",?a+(-?b),=,?a-?b
+4,Algebra,"Basic algebra",?a*?b,=,?b*?a
+5,Algebra,"Basic algebra",?a*(?b*?c),=,(?a*?b)*?c
+6,Algebra,"Basic algebra",?a*?b+?a*?c,=,?a*(?b+?c)
+7,Algebra,"Basic algebra",-?a,=,-1*?a
+8,Algebra,Calculus,"diff(?fn(?x),?x)",=,"lim(d(?x),0,(?fn(?x+d(?x))-?fn(?x))/d(?x))"
+9,Algebra,Calculus,"lim(?a,0,?fn(?b+?a))",=,?fn(?b)

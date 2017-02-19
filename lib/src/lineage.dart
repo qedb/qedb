@@ -4,14 +4,9 @@
 
 part of eqpg;
 
-class CreateLineage {
-  @ApiProperty(required: true)
-  String firstExpression;
-}
-
-Future<db.LineageRow> _createLineage(Session s, CreateLineage body) async {
+Future<db.LineageRow> _createLineage(Session s, LineageResource body) async {
   // Decode expression.
-  final header = _decodeCodecHeader(body.firstExpression);
+  final header = _decodeCodecHeader(body.firstExpression.data);
 
   // Compute category.
   final queryFindCategory = '''

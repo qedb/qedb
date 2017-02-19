@@ -9,8 +9,12 @@ import 'csvtest/csvtest.dart';
 Future main() async {
   final baseUrl = 'http://localhost:8080/eqdb/v0/';
   final pkey = new PrimaryKeyEmulator();
+  final eqlib = new EqlibHelper();
 
-  // Descriptor
+  // Load function keywords.
+  await eqlib.loadKeywords('data/data.2.csv', 'ID', 'Keyword');
+
+  // Descriptors
   await csvtest(baseUrl, 'data/data.0.csv', [
     // Create descriptor.
     route('POST', 'descriptor/create', request: {
@@ -79,7 +83,7 @@ Future main() async {
     })
   ]);
 
-  // Category
+  // Categories
   await csvtest(baseUrl, 'data/data.1.csv', [
     // Create category.
     route('POST', 'category/create', runIf: empty(col('Parent ID')), request: {
@@ -130,7 +134,7 @@ Future main() async {
         })
   ]);
 
-  // Function
+  // Functions
   await csvtest(baseUrl, 'data/data.2.csv', [
     // Create function.
     route('POST', 'function/create', request: {
@@ -176,52 +180,55 @@ Future main() async {
       'function': {'id': col('ID')}
     })
   ]);
-/*
-  // Definition
+
+  // Definitions
   await csvtest(baseUrl, 'data/data.3.csv', [
-  // Create definition.
-  - route:                    definition/create
-    method:                   POST
-    request:
-      categoryId:             column:cID
-      left:                   eqlib:codec:column:Equation left
-      right:                  eqlib:codec:column:Equation right
-    response:
-      rules:
-      - id:                   column:rID
-        categoryId:           column:cID
-        0:leftExpressionId:   eqlib:index:column:Equation left
-        1:rightExpressionId:  eqlib:index:column:Equation right
-      definitions:
-      - id:                   column:ID
-        ruleId:               column:rID
-      # expressions:            accect:anyList
-      # functionReferences:     accect:anyList
-      # integerReferences:      accect:anyList
-    ignore:
-    - expressions
-    - functionReferences
-    - integerReferences
+    // Create definition.
+    route('POST', 'definition/create', request: {
+      'rule': {
+        'category': {'id': pkey.get('category', col('Category'))},
+        'leftExpression': {'data': eqlib.data(col('Expression left'))},
+        'rightExpression': {'data': eqlib.data(col('Expression right'))}
+      }
+    }, response: {
+      'id': pkey.get('definition', col('ID')),
+      'rule': {
+        'id': pkey.get('rule', col('ID')),
+        'category': {'id': pkey.get('category', col('Category'))},
+        'leftExpression': {
+          'id': pkey.get('expression', col('Expression left')),
+          'data': eqlib.data(col('Expression left')),
+          'hash': eqlib.hash(col('Expression left')),
+          'functions': eqlib.functionIds(col('Expression left'))
+        },
+        'rightExpression': {
+          'id': pkey.get('expression', col('Expression right')),
+          'data': eqlib.data(col('Expression right')),
+          'hash': eqlib.hash(col('Expression right')),
+          'functions': eqlib.functionIds(col('Expression right'))
+        }
+      }
+    })
+  ]);
 
-  # Retrieve expression tree for left expression.
-  - route:      expression/{id}/retrieveTree
-    method:     GET
-    url:
-      id:       eqlib:index:column:Equation left
-    response:
-      id:       eqlib:index:column:Equation left
-      rawData:  eqlib:codec:column:Equation left
-    ignore:
-    - reference
-
-  # Retrieve expression tree for right expression.
-  - route:      expression/{id}/retrieveTree
-    method:     GET
-    url:
-      id:       eqlib:index:column:Equation right
-    response:
-      id:       eqlib:index:column:Equation right
-      rawData:  eqlib:codec:column:Equation right
-    ignore:
-    - reference*/
+  // Lineages
+  await csvtest(baseUrl, 'data/data.4.csv', [
+    // Create lineage.
+    route('POST', 'lineage/create',
+        runIf: not(empty(col('Initial'))),
+        request: {
+          'firstExpression': {'data': eqlib.data(col('Initial'))}
+        },
+        response: {
+          'id': pkey.get('lineage', col('Initial')),
+          'branchIndex': 0,
+          'tree': {'id': pkey.get('tree', col('Initial'))},
+          'firstExpression': {
+            'id': pkey.get('expression', col('Initial')),
+            'data': eqlib.data(col('Initial')),
+            'hash': eqlib.hash(col('Initial')),
+            'functions': eqlib.functionIds(col('Initial'))
+          }
+        })
+  ]);
 }

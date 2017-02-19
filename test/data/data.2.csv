@@ -1,4 +1,4 @@
-ID,Category,Subject,Name,Keywords,"Keyword type",ArgC,"LaTeX template",Generic,Pre.,Ass.,Comments
+ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Pre.,Ass.,Comments
 1,Algebra,"Basic algebra",Add,add,word,2,$(a)+$(b),FALSE,1,ltr,
 2,Algebra,"Basic algebra",Subtract,subtract,word,2,$(a)-$(b),FALSE,1,ltr,
 3,Algebra,"Basic algebra",Multiply,multiply,word,2,$(a)\cdot$(b),FALSE,2,ltr,
@@ -18,6 +18,6 @@ ID,Category,Subject,Name,Keywords,"Keyword type",ArgC,"LaTeX template",Generic,P
 17,Algebra,Calculus,,x,symbol,0,{x},TRUE,,,
 18,Algebra,Calculus,,y,symbol,0,{y},TRUE,,,
 19,Algebra,Calculus,Function,fn,abbreviation,1,{f},TRUE,,,"Name not already in descriptor table"
-20,Algebra,Calculus,Delta,delta,word,1,\Delta$(a),FALSE,,,"Name not already in descriptor table"
+20,Algebra,Calculus,Delta,d,word,1,\Delta$(a),FALSE,,,"Name not already in descriptor table"
 21,Algebra,Calculus,Limit,lim,abbreviation,3,\lim_{$a\to$b}$(c),FALSE,,,"Name not already in descriptor table"
 22,Algebra,Calculus,Differential,diff,abbreviation,2,\frac{\partial}{\partial$(b)}$(a),FALSE,,,"Name not already in descriptor table"

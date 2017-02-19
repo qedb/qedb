@@ -35,14 +35,6 @@ tables:
   className:  Expression
   varName:    expression
 
-- tableName:  function_reference
-  className:  FunctionReference
-  varName:    functionReference
-
-- tableName:  integer_reference
-  className:  IntegerReference
-  varName:    integerReference
-
 - tableName:  lineage_tree
   className:  LineageTree
   varName:    lineageTree
