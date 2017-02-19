@@ -59,50 +59,65 @@ class EqDB {
   @ApiMethod(path: 'descriptor/create', method: 'POST')
   Future<DescriptorResource> createDescriptor(DescriptorResource body) =>
       _runRequestSession<DescriptorResource>((s) async =>
-          new DescriptorResource.from(
-              await _createDescriptor(s, body), s.data));
+          new DescriptorResource()
+            ..load((await _createDescriptor(s, body)).id, s.data));
 
   @ApiMethod(path: 'descriptor/{id}/translations/create', method: 'POST')
   Future<TranslationResource> createTranslation(
           int id, TranslationResource body) =>
       _runRequestSession<TranslationResource>((s) async =>
-          new TranslationResource.from(
-              await _createTranslation(s, id, body), s.data));
+          new TranslationResource()
+            ..loadRow(await _createTranslation(s, id, body), s.data));
 
   @ApiMethod(path: 'descriptor/{id}/translations/list', method: 'GET')
   Future<List<TranslationResource>> listDescriptorTranslations(int id) =>
       _runRequestSession<List<TranslationResource>>((s) async =>
           (await _listTranslations(s, id))
-              .map((r) => new TranslationResource.from(r, s.data))
+              .map((r) => new TranslationResource()..loadRow(r, s.data))
               .toList());
 
   @ApiMethod(path: 'subject/create', method: 'POST')
   Future<SubjectResource> createSubject(SubjectResource body) =>
-      _runRequestSession<SubjectResource>((s) async =>
-          new SubjectResource.from(await _createSubject(s, body), s.data));
+      _runRequestSession<SubjectResource>((s) async => new SubjectResource()
+        ..loadRow(await _createSubject(s, body), s.data));
 
-  /*@ApiMethod(path: 'category/create', method: 'POST')
-  Future<SessionData> createCategory(CreateCategory body) =>
-      callApiMethod((s) => _createCategory(s, 0, body), pool);
+  @ApiMethod(path: 'category/create', method: 'POST')
+  Future<CategoryResource> createCategory(CategoryResource body) =>
+      _runRequestSession<CategoryResource>((s) async => new CategoryResource()
+        ..loadRow(await _createCategory(s, 0, body), s.data));
+
+  @ApiMethod(path: 'category/{id}/category/create', method: 'POST')
+  Future<CategoryResource> createSubCategory(int id, CategoryResource body) =>
+      _runRequestSession<CategoryResource>((s) async => new CategoryResource()
+        ..loadRow(await _createCategory(s, id, body), s.data));
 
   @ApiMethod(path: 'function/create', method: 'POST')
-  Future<SessionData> createFunction(CreateFunction body) =>
-      callApiMethod((s) => _createFunction(s, body), pool);
+  Future<FunctionResource> createFunction(FunctionResource body) =>
+      _runRequestSession<FunctionResource>((s) async => new FunctionResource()
+        ..loadRow(await _createFunction(s, body), s.data));
 
-  @ApiMethod(path: 'expression/{id}/retrieveTree', method: 'GET')
-  Future<ExpressionTree> retrieveExpressionTree(int id) =>
-      new MethodCaller<ExpressionTree>().run(
-          (conn) =>
-              _retrieveExpressionTree(new Session(conn, new SessionData()), id),
-          pool);
+  @ApiMethod(path: 'operator/create', method: 'POST')
+  Future<OperatorResource> createOperator(OperatorResource body) =>
+      _runRequestSession<OperatorResource>((s) async => new OperatorResource()
+        ..loadRow(await _createOperator(s, body), s.data));
+
+  /*@ApiMethod(path: 'expression/{id}/read', method: 'GET')
+  Future<ExpressionResource> retrieveExpressionTree(int id,
+          {bool getReferenceTree: false}) =>
+      _runRequestSession<ExpressionResource>((s) async =>
+          new ExpressionResource()
+            ..loadRow(await _readExpression(s, id, getReferenceTree), s.data));
 
   @ApiMethod(path: 'definition/create', method: 'POST')
-  Future<SessionData> createDefinition(CreateDefinition body) =>
-      callApiMethod((s) => _createDefinition(s, body), pool);
+  Future<DefinitionResource> createDefinition(DefinitionResource body) =>
+      _runRequestSession<DefinitionResource>((s) async =>
+          new DefinitionResource()
+            ..loadRow(await _createDefinition(s, body), s.data));
 
   @ApiMethod(path: 'lineage/create', method: 'POST')
-  Future<SessionData> createLineage(CreateLineage body) =>
-      callApiMethod((s) => _createLineage(s, body), pool);*/
+  Future<LineageResource> createLineage(LineageResource body) =>
+      _runRequestSession<LineageResource>((s) async => new LineageResource()
+        ..loadRow(await _createLineage(s, body), s.data));*/
 }
 
 /// Utility to reuse method calling boilerplate.

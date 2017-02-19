@@ -19,6 +19,7 @@ abstract class Row {
 /// Descriptor
 class DescriptorRow implements Row {
   final int id;
+
   DescriptorRow(this.id);
 
   static const mapFormat = '*';
@@ -29,6 +30,7 @@ class DescriptorRow implements Row {
 class SubjectRow implements Row {
   final int id;
   final int descriptorId;
+
   SubjectRow(this.id, this.descriptorId);
 
   static const mapFormat = '*';
@@ -39,6 +41,7 @@ class SubjectRow implements Row {
 class LocaleRow implements Row {
   final int id;
   final String code;
+
   LocaleRow(this.id, this.code);
 
   static const mapFormat = '*';
@@ -67,6 +70,7 @@ class CategoryRow implements Row {
   final int id;
   final int subjectId;
   final List<int> parents;
+
   CategoryRow(this.id, this.subjectId, this.parents);
 
   static const mapFormat = "id, subject_id, array_to_string(parents, ',')";
@@ -79,11 +83,12 @@ class FunctionRow implements Row {
   final int id;
   final int categoryId;
   final int descriptorId;
+  final bool generic;
   final int argumentCount;
   final String latexTemplate;
-  final bool generic;
-  FunctionRow(this.id, this.categoryId, this.descriptorId, this.argumentCount,
-      this.latexTemplate, this.generic);
+
+  FunctionRow(this.id, this.categoryId, this.descriptorId, this.generic,
+      this.argumentCount, this.latexTemplate);
 
   static const mapFormat = '*';
   static FunctionRow map(pg.Row r) =>
@@ -95,6 +100,7 @@ class FunctionSubjectTagRow implements Row {
   final int id;
   final int functionId;
   final int subjectId;
+
   FunctionSubjectTagRow(this.id, this.functionId, this.subjectId);
 
   static const mapFormat = '*';
@@ -108,6 +114,7 @@ class OperatorRow implements Row {
   final int functionId;
   final int precedenceLevel;
   final String associativity;
+
   OperatorRow(
       this.id, this.functionId, this.precedenceLevel, this.associativity);
 
@@ -121,6 +128,7 @@ class ExpressionReference {
   final String type;
 
   ExpressionReference(this.key, this.type);
+
   static ExpressionReference map(List<String> r) =>
       new ExpressionReference(int.parse(r[0]), r[1]);
 }
@@ -131,6 +139,7 @@ class ExpressionRow implements Row {
   final ExpressionReference reference;
   final String data, hash;
   final List<int> functions;
+
   ExpressionRow(this.id, this.reference, this.data, this.hash, this.functions);
 
   static final mapFormat = [
@@ -150,6 +159,7 @@ class FunctionReferenceRow implements Row {
   final int id;
   final int functionId;
   final List<ExpressionReference> arguments;
+
   FunctionReferenceRow(this.id, this.functionId, this.arguments);
 
   static const mapFormat = "id, function_id, array_to_string(arguments, '')";
@@ -161,6 +171,7 @@ class FunctionReferenceRow implements Row {
 class IntegerReferenceRow implements Row {
   final int id;
   final int value;
+
   IntegerReferenceRow(this.id, this.value);
 
   static const mapFormat = '*';
@@ -172,10 +183,21 @@ class IntegerReferenceRow implements Row {
 // Lineages
 //------------------------------------------------------------------------------
 
+/// Lineage tree
+class LineageTreeRow implements Row {
+  final int id;
+
+  LineageTreeRow(this.id);
+
+  static const mapFormat = '*';
+  static LineageTreeRow map(pg.Row r) => new LineageTreeRow(r[0]);
+}
+
 /// Lineage
 class LineageRow implements Row {
   final int id;
   final int treeId, parentId, branchIndex, initialCategoryId, firstExpressionId;
+
   LineageRow(this.id, this.treeId, this.parentId, this.branchIndex,
       this.initialCategoryId, this.firstExpressionId);
 
@@ -190,6 +212,7 @@ class RuleRow implements Row {
   final int categoryId;
   final int leftExpressionId;
   final int rightExpressionId;
+
   RuleRow(
       this.id, this.categoryId, this.leftExpressionId, this.rightExpressionId);
 
@@ -201,6 +224,7 @@ class RuleRow implements Row {
 class DefinitionRow implements Row {
   final int id;
   final int ruleId;
+
   DefinitionRow(this.id, this.ruleId);
 
   static const mapFormat = '*';

@@ -66,9 +66,9 @@ CREATE TABLE function (
   id              serial    PRIMARY KEY,
   category_id     integer   NOT NULL REFERENCES category(id),
   descriptor_id   integer   UNIQUE REFERENCES descriptor(id),
+  generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2),
   argument_count  smallint  NOT NULL CHECK (argument_count >= 0),
-  latex_template  text      NOT NULL CHECK (NOT latex_template = ''),
-  generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2)
+  latex_template  text      NOT NULL CHECK (NOT latex_template = '')
 );
 CREATE INDEX function_category_id_index ON function(category_id);
 

@@ -43,6 +43,10 @@ tables:
   className:  IntegerReference
   varName:    integerReference
 
+- tableName:  lineage_tree
+  className:  LineageTree
+  varName:    lineageTree
+
 - tableName:  lineage
   className:  Lineage
   varName:    lineage

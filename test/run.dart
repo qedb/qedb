@@ -80,73 +80,102 @@ Future main() async {
   ]);
 
   // Category
-  /*await csvtest(baseUrl, 'data/data.1.csv', [
+  await csvtest(baseUrl, 'data/data.1.csv', [
     // Create category.
-    route('POST', 'category/create', request: {
-      'parentId': includeIf(not(empty(col('Parent ID'))), col('Parent ID')),
-      'name': {'locale': 'en_US', 'content': col('Name')}
+    route('POST', 'category/create', runIf: empty(col('Parent ID')), request: {
+      'subject': {
+        'descriptor': {
+          'translations': [
+            {
+              'locale': {'code': 'en_US'},
+              'content': col('Name')
+            }
+          ]
+        }
+      }
     }, response: {
-      'subject': [
-        {
-          'id': pkey.get('subject', pkey.get('descriptor', col('Name'))),
-          'descriptorId': pkey.get('descriptor', col('Name'))
-        }
-      ],
-      'category': [
-        {
+      'id': pkey.get('category', col('Name')),
+      'subject': {
+        'id': pkey.get('subject', pkey.get('descriptor', col('Name'))),
+        'descriptor': 'any:map'
+      },
+      'parents': []
+    }),
+
+    // Create sub-category.
+    route('POST', 'category/{id}/category/create',
+        runIf: not(empty(col('Parent ID'))),
+        url: {
+          'id': col('Parent ID')
+        },
+        request: {
+          'subject': {
+            'descriptor': {
+              'translations': [
+                {
+                  'locale': {'code': 'en_US'},
+                  'content': col('Name')
+                }
+              ]
+            }
+          }
+        },
+        response: {
           'id': pkey.get('category', col('Name')),
-          'subjectId': pkey.get('subject', pkey.get('descriptor', col('Name'))),
+          'subject': {
+            'id': pkey.get('subject', pkey.get('descriptor', col('Name'))),
+            'descriptor': 'any:map'
+          },
           'parents': intlist(col('Parents'))
-        }
-      ]
-    })
+        })
   ]);
 
   // Function
   await csvtest(baseUrl, 'data/data.2.csv', [
     // Create function.
     route('POST', 'function/create', request: {
-      'categoryId': pkey.get('category', col('Category')),
-      'argumentCount': col('ArgC'),
-      'latexTemplate': col('LaTeX template'),
+      'category': {'id': pkey.get('category', col('Category'))},
+      'descriptor': ifNe('Name', {
+        'translations': [
+          {
+            'locale': {'code': 'en_US'},
+            'content': col('Name')
+          }
+        ]
+      }),
       'generic': col('Generic'),
-      'name': ifNe('Name', {'locale': 'en_US', 'content': col('Name')}),
-      'operator': ifNe('Pre.',
-          {'precedenceLevel': col('Pre.'), 'associativity': col('Ass.')})
+      'argumentCount': col('ArgC'),
+      'latexTemplate': col('LaTeX template')
     }, response: {
-      'descriptor':
-          ifNor(empty(col('Name')), pkey.contains('translation', col('Name')), [
-        {'id': pkey.get('descriptor', col('Name'))}
-      ]),
-      'translation':
-          ifNor(empty(col('Name')), pkey.contains('translation', col('Name')), [
-        {
-          'id': pkey.get('translation', col('Name')),
-          'descriptorId': pkey.get('descriptor', col('Name')),
-          'localeId': pkey.get('locale', 'en_US'),
-          'content': col('Name')
-        }
-      ]),
-      'function': [
-        {
-          'id': col('ID'),
-          'categoryId': pkey.get('category', col('Category')),
-          'descriptorId': ifNe('Name', pkey.get('descriptor', col('Name'))),
-          'argumentCount': col('ArgC'),
-          'latexTemplate': col('LaTeX template'),
-          'generic': col('Generic')
-        }
-      ],
-      'operator': ifNe('Pre.', [
-        {
-          'id': pkey.get('operator', col('ID')),
-          'functionId': col('ID'),
-          'precedenceLevel': col('Pre.'),
-          'associativity': col('Ass.')
-        }
-      ])
+      'id': col('ID'),
+      'category': {'id': pkey.get('category', col('Category'))},
+      'descriptor': ifNe('Name', {
+        'id': pkey.get('descriptor', col('Name')),
+        'translations': [
+          {
+            'id': pkey.get('translation', col('Name')),
+            'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
+            'content': col('Name')
+          }
+        ]
+      }),
+      'generic': col('Generic'),
+      'argumentCount': col('ArgC'),
+      'latexTemplate': col('LaTeX template')
+    }),
+
+    // Create operator.
+    route('POST', 'operator/create', runIf: not(empty(col('Pre.'))), request: {
+      'precedenceLevel': col('Pre.'),
+      'associativity': col('Ass.'),
+      'function': {'id': col('ID')}
+    }, response: {
+      'id': pkey.get('operator', col('ID')),
+      'precedenceLevel': col('Pre.'),
+      'associativity': col('Ass.'),
+      'function': {'id': col('ID')}
     })
-  ]);*/
+  ]);
 /*
   // Definition
   await csvtest(baseUrl, 'data/data.3.csv', [

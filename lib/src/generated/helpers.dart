@@ -61,6 +61,11 @@ final integerReferenceHelper = new TableHelper<db.IntegerReferenceRow>(
     db.IntegerReferenceRow.mapFormat,
     db.IntegerReferenceRow.map,
     (result, record) => result.integerReferenceTable[record.id] = record);
+final lineageTreeHelper = new TableHelper<db.LineageTreeRow>(
+    'lineage_tree',
+    db.LineageTreeRow.mapFormat,
+    db.LineageTreeRow.map,
+    (result, record) => result.lineageTreeTable[record.id] = record);
 final lineageHelper = new TableHelper<db.LineageRow>(
     'lineage',
     db.LineageRow.mapFormat,

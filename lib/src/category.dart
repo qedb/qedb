@@ -18,9 +18,11 @@ Future<db.CategoryRow> _createCategory(
         '''
 SELECT * FROM subject WHERE descriptor_id = (
   SELECT descriptor_id FROM translation
-  WHERE content = @content AND locale_id = (
-    SELECT id FROM locale WHERE code = @locale))''',
-        {'content': translation.content, 'locale': translation.locale});
+  WHERE content = @content AND locale_id = @locale_id)''',
+        {
+          'content': translation.content,
+          'locale_id': translation.locale.getId(s.data)
+        });
 
     // If no subject exists, raise an error.
     if (result.isEmpty) {

@@ -130,8 +130,8 @@ RETURNING $rowFormatter'''
   }
 
   /// Process custom select statement.
-  Future<List<R>> selectCustom(
-      Session s, String sql, Map<String, dynamic> parameters) async {
+  Future<List<R>> selectCustom(Session s, String sql,
+      [Map<String, dynamic> parameters = const {}]) async {
     log.info('$sql, $parameters');
     final result = await s.conn.query(sql, parameters).map(mapper).toList();
     result.forEach((record) => saver(s.data, record));
