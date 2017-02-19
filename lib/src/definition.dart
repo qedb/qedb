@@ -21,11 +21,11 @@ Future<db.DefinitionRow> _createDefinition(
   // For now we only accept single byte signed integers in non-evaluated
   // expressions.
   if (leftData.float64Count > 0) {
-    throw new BadRequestError('rejected left expression')
+    throw new UnprocessableEntityError('rejected left expression')
       ..errors.add(new RpcErrorDetail(
           reason: 'left expression contains floating point numbers'));
   } else if (rightData.float64Count > 0) {
-    throw new BadRequestError('rejected right expression')
+    throw new UnprocessableEntityError('rejected right expression')
       ..errors.add(new RpcErrorDetail(
           reason: 'right expression contains floating point numbers'));
   }
