@@ -79,11 +79,11 @@ class LocaleResource extends _Resource<db.LocaleRow> {
 
   void load(targetId, data) {
     id = targetId;
-    code = data.cache.locales[targetId];
+    code = data.cache.localeIdToCode[targetId];
   }
 
   int getId(SessionData data) =>
-      id != null ? id : data.cache.locales.inverse[code];
+      id != null ? id : data.cache.localeCodeToId[code];
 }
 
 /// Translation

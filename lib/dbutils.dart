@@ -8,7 +8,6 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 import 'package:postgresql/postgresql.dart';
-import 'package:quiver/collection.dart';
 
 import 'package:eqpg/schema.dart' as db;
 
@@ -20,13 +19,15 @@ final log = new Logger('dbutils');
 /// Specialized cache for some append-only tables (locale).
 class DbCache {
   /// Map of <localeId, localeCode>.
-  final locales = new BiMap<int, String>();
+  final localeIdToCode = new Map<int, String>();
+  final localeCodeToId = new Map<String, int>();
 
   Future<Null> initialize(Connection conn) async {
     /// Load existing locales.
     final result = conn.query('SELECT id, code FROM locale');
     await for (final row in result) {
-      locales[row[0]] = row[1];
+      localeIdToCode[row[0]] = row[1];
+      localeCodeToId[row[1]] = row[0];
     }
   }
 }

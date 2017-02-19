@@ -58,11 +58,13 @@ Future<db.DescriptorRow> _createDescriptor(
 
 Future<db.TranslationRow> _createTranslation(
     Session s, int descriptorId, TranslationResource body) async {
-  var localeId = s.data.cache.locales.inverse[body.locale.code];
+  var localeId = s.data.cache.localeCodeToId[body.locale.code];
   if (localeId == null) {
+    // Create locale record.
     // There should NOT be an existing record, but just to be sure, use getId.
     localeId = await localeHelper.getId(s, {'code': body.locale.code});
-    s.data.cache.locales[localeId] = body.locale.code;
+    s.data.cache.localeIdToCode[localeId] = body.locale.code;
+    s.data.cache.localeCodeToId[body.locale.code] = localeId;
   }
 
   // Insert translation.
