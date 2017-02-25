@@ -176,37 +176,8 @@ class ExpressionResource extends _Resource<db.ExpressionRow> {
 }
 
 //------------------------------------------------------------------------------
-// Lineages
+// Rules and definitions
 //------------------------------------------------------------------------------
-
-/// Lineage tree
-class LineageTreeResource extends _Resource<db.LineageTreeRow> {
-  int id;
-
-  Map<int, db.LineageTreeRow> _getTableMap(data) => data.lineageTreeTable;
-}
-
-/// Lineage
-class LineageResource extends _Resource<db.LineageRow> {
-  int id;
-  int branchIndex;
-  LineageTreeResource tree;
-  ExpressionResource firstExpression;
-  LineageResource parent;
-
-  Map<int, db.LineageRow> _getTableMap(data) => data.lineageTable;
-
-  void loadFields(row, data) {
-    branchIndex = row.branchIndex;
-    tree = new LineageTreeResource()..load(row.treeId, data);
-    firstExpression = new ExpressionResource()
-      ..load(row.firstExpressionId, data);
-
-    if (row.parentId != null) {
-      parent = new LineageResource()..load(row.parentId, data);
-    }
-  }
-}
 
 /// Rule
 class RuleResource extends _Resource<db.RuleRow> {
@@ -235,4 +206,30 @@ class DefinitionResource extends _Resource<db.DefinitionRow> {
   void loadFields(row, data) {
     rule = new RuleResource()..load(row.ruleId, data);
   }
+}
+
+//------------------------------------------------------------------------------
+// Expression lineages
+//------------------------------------------------------------------------------
+
+/// Expression lineage
+class ExpressionLineageResource extends _Resource<db.ExpressionLineageRow> {
+  int id;
+  List<LineageExpressionResource> expressions;
+
+  Map<int, db.ExpressionLineageRow> _getTableMap(data) =>
+      data.expressionLineageTable;
+}
+
+/// Expression lineage expression
+class LineageExpressionResource extends _Resource<db.LineageExpressionRow> {
+  int id;
+  ExpressionLineageResource lineage;
+  CategoryResource category;
+  RuleResource rule;
+  ExpressionResource expression;
+  int sequence, substitutionPosition;
+
+  Map<int, db.LineageExpressionRow> _getTableMap(data) =>
+      data.lineageExpressionTable;
 }

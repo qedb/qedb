@@ -35,13 +35,13 @@ tables:
   className:  Expression
   varName:    expression
 
-- tableName:  lineage_tree
-  className:  LineageTree
-  varName:    lineageTree
+- tableName:  expression_lineage
+  className:  ExpressionLineage
+  varName:    expressionLineage
 
-- tableName:  lineage
-  className:  Lineage
-  varName:    lineage
+- tableName:  lineage_expression
+  className:  LineageExpression
+  varName:    lineageExpression
 
 - tableName:  rule
   className:  Rule

@@ -1,3 +1,7 @@
+-- Copyright (c) 2017, Herman Bergwerf. All rights reserved.
+-- Use of this source code is governed by an AGPL-3.0-style license
+-- that can be found in the LICENSE file.
+
 --------------------------------------------------------------------------------
 -- Naming conventions:
 -- + Do not use reserved keywords (SQL standard)
@@ -133,54 +137,18 @@ CREATE TABLE operator (
 -- potentially also be achieved by writing a custom index in C.
 CREATE TABLE expression (
   id            serial   PRIMARY KEY,
-  --reference_id  integer  NOT NULL UNIQUE REFERENCES expression_reference(id),
   data          bytea    NOT NULL UNIQUE,
   hash          bytea    NOT NULL UNIQUE,
 
   -- All function IDs in this expression for fast indexing and searching.
+  -- TODO: remove this?
   functions  integer[]             NOT NULL
 );
 CREATE INDEX expression_functions_index on expression USING GIN (functions);
 
--- Expression reference
-CREATE TYPE expression_reference_type AS ENUM ('function', 'integer');
-CREATE TABLE expression_reference (
-  id         serial                     PRIMARY KEY,
-  value      integer                    NOT NULL,
-  type       expression_reference_type  NOT NULL,
-  arguments  integer[] -- ELEMENT REFERENCES expression_reference(id)
-);
-
--- Expression reference argument
-CREATE TABLE expression_reference_argument (
-  id            serial   PRIMARY KEY,
-  parent_id     integer  NOT NULL REFERENCES expression_reference(id),
-  position      integer  NOT NULL CHECK (position >= 0),
-  reference_id  integer  NOT NULL REFERENCES expression_reference(id)
-);
-
 --------------------------------------------------------------------------------
--- Lineages
+-- Rules and definitions
 --------------------------------------------------------------------------------
-
--- Lineage tree
-CREATE TABLE lineage_tree (
-  id  serial PRIMARY KEY
-);
-
--- Lineage
-CREATE TABLE lineage (
-  id                   serial   PRIMARY KEY,
-  tree_id              integer  NOT NULL REFERENCES lineage_tree(id),
-  parent_id            integer           REFERENCES lineage(id) DEFAULT NULL,
-  branch_index         integer  NOT NULL DEFAULT 0,
-  initial_category_id  integer  NOT NULL REFERENCES category(id),
-  first_expression_id  integer  NOT NULL REFERENCES expression(id)
-);
-
--- TODO: lineage joints. Joints coud be used in both proof searching and to
--- join connecting lineages so that further derivations can be started from a
--- commpon point (a joint could initiate a new lineage?).
 
 -- Rule (equation of two expression)
 CREATE TABLE rule (
@@ -197,110 +165,92 @@ CREATE TABLE definition (
   id       serial   PRIMARY KEY,
   rule_id  integer  NOT NULL UNIQUE REFERENCES rule(id)
 
-  -- TODO: definition subject, theoretical definition/empirical definition
-);
-
--- Function property naming
-CREATE TABLE function_property (
-  id             serial   PRIMARY KEY,
-  descriptor_id  integer  NOT NULL REFERENCES descriptor(id)
-);
-
--- Function property definition
-CREATE TABLE function_property_definition (
-  id                    serial   PRIMARY KEY,
-  function_id           integer  NOT NULL REFERENCES function(id),
-  definition_id         integer  NOT NULL REFERENCES definition(id),
-  function_property_id  integer  NOT NULL REFERENCES function_property(id)
+  -- TODO:
+  -- + Definition title
+  -- + Theoretical definition (mathematical property of functions)
+  -- + Empirical definition (physics)
 );
 
 --------------------------------------------------------------------------------
--- Lineage expressions and rule proofs
+-- Expression lineages
 --------------------------------------------------------------------------------
+
+-- Expression lineage
+CREATE TABLE expression_lineage (
+  id  serial  PRIMARY KEY
+);
 
 -- Lineage expression
 CREATE TABLE lineage_expression (
   id                     serial    PRIMARY KEY,
-  lineage_id             integer   NOT NULL REFERENCES lineage(id),
-  lineage_index          integer   NOT NULL CHECK (lineage_index > 0),
+  lineage_id             integer   NOT NULL REFERENCES expression_lineage(id),
+  category_id            integer   NOT NULL REFERENCES category(id),
   rule_id                integer   NOT NULL REFERENCES rule(id),
   expression_id          integer   NOT NULL REFERENCES expression(id),
+  sequence               integer   NOT NULL CHECK (sequence > 0),
   substitution_position  smallint  NOT NULL CHECK (substitution_position >= 0),
 
-  -- Including a summed weight is controversial because it is not final. If a
-  -- shorter rule proof is proposed later all weights have to be updated.
-  --weightsum              integer   NOT NULL,
-
-  UNIQUE (lineage_id, lineage_index)
-);
-
--- Node in a rule proof path node
-CREATE TYPE rule_proof_node_direction AS ENUM ('ascend', 'descend');
-CREATE TYPE rule_proof_node AS (
-  lineage_id   integer,
-  direction    rule_proof_node_direction
-);
-
--- A rule proof by path searching.
-CREATE TABLE rule_proof (
-  id          serial             PRIMARY KEY,
-  rule_id     integer            NOT NULL REFERENCES rule(id),
-  left_id     integer            NOT NULL REFERENCES lineage_expression(id),
-  right_id    integer            NOT NULL REFERENCES lineage_expression(id),
-  proof_path  rule_proof_node[]  NOT NULL UNIQUE,
-
-  UNIQUE (left_id, right_id, proof_path)
-);
-
--- Rule translocation
-CREATE TABLE translocate (
-  id                 serial   PRIMARY KEY,
-  rule_id            integer  NOT NULL REFERENCES rule(id),
-  in_expression_id   integer  NOT NULL REFERENCES expression(id),
-  out_expression_id  integer  NOT NULL REFERENCES expression(id),
-  tree_id            integer  NOT NULL REFERENCES lineage_tree(id)
+  UNIQUE (lineage_id, sequence)
 );
 
 --------------------------------------------------------------------------------
--- Empirical values and expression evaluation
+-- Equation lineage
 --------------------------------------------------------------------------------
 
--- Empirical value reference source
-CREATE TABLE empirical_reference (
-  id   serial  PRIMARY KEY,
-  doi  text    NOT NULL UNIQUE
+-- Equation lineage
+CREATE TYPE equation_initialization AS ENUM ('rule', 'arbitrary');
+CREATE TABLE equation_lineage (
+  id       serial                   PRIMARY KEY,
+  type     equation_initialization  NOT NULL,
+  rule_id  integer                  REFERENCES rule(id)
 );
 
--- Empirical value (e.g. speed of light, or Avogadro's number)
-CREATE TABLE empirical_value (
+CREATE TABLE equation_envelope (
+  id           serial   PRIMARY KEY,
+  template_id  integer  NOT NULL REFERENCES expression(id),
+  envelope_id  integer  NOT NULL REFERENCES expression(id)
+);
+
+-- Equation lineage expression lineage pairs
+CREATE TABLE lineage_equation (
+  id           serial   PRIMARY KEY,
+  lineage_id   integer  NOT NULL REFERENCES equation_lineage(id),
+  left_id      integer  NOT NULL REFERENCES expression_lineage(id),
+  right_id     integer  NOT NULL REFERENCES expression_lineage(id),
+  envelope_id  integer  REFERENCES equation_envelope(id),
+  sequence     integer  NOT NULL CHECK (sequence > 0),
+
+  UNIQUE (lineage_id, sequence)
+);
+
+--------------------------------------------------------------------------------
+-- Equation page
+--------------------------------------------------------------------------------
+
+CREATE TABLE page (
   id             serial   PRIMARY KEY,
-  expression_id  integer  REFERENCES expression(id),
-  reference_id   integer  REFERENCES empirical_reference(id),
-  val            numeric  NOT NULL UNIQUE
+  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id)
 );
 
--- Pre-computed, theoretical value (e.g. Pi, or Phi, or e)
--- Stored as 64bit floating point because that is the limit of computation.
--- Theoretical values are considered exact and their digits beyond 64bit are
--- not interesting.
-CREATE TABLE theoretical_value (
-  id             serial            PRIMARY KEY,
-  expression_id  integer           REFERENCES expression(id),
-  val            double precision  NOT NULL UNIQUE
+CREATE TABLE page_definition (
+  id             serial   PRIMARY KEY,
+  page_id        integer  NOT NULL REFERENCES page(id),
+  definition_id  integer  NOT NULL REFERENCES definition(id),
+  sequence       integer  NOT NULL CHECK (sequence > 0)
 );
 
-CREATE TYPE evaluation_parameter_type as ENUM ('empirical', 'theoretical', 'evaluated');
-CREATE TYPE evaluation_parameter AS (
-  ref   integer,
-  type  evaluation_parameter_type
+CREATE TABLE page_equation_lineage (
+  id          serial   PRIMARY KEY,
+  page_id     integer  NOT NULL REFERENCES page(id),
+  lineage_id  integer  NOT NULL REFERENCES equation_lineage(id),
+  sequence    integer  NOT NULL CHECK (sequence > 0)
 );
 
--- Expression evaluation
-CREATE TABLE evaluation (
-  id             serial                  PRIMARY KEY,
-  expression_id  integer                 NOT NULL REFERENCES expression(id),
-  params         evaluation_parameter[]  NOT NULL,
-  result         double precision        NOT NULL
+CREATE TABLE page_illustration (
+  id        serial   PRIMARY KEY,
+  page_id   integer  NOT NULL REFERENCES page(id),
+  sequence  integer  NOT NULL CHECK (sequence > 0),
+  data      jsonb
 );
 
 --------------------------------------------------------------------------------

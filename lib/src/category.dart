@@ -59,3 +59,22 @@ SELECT * FROM subject WHERE descriptor_id = (
         s, {'subject_id': subjectId, 'parents': new Sql('ARRAY[]::integer[]')});
   }
 }
+
+Future<List<db.CategoryRow>> _listCategories(Session s,
+    {String locale: ''}) async {
+  final categories = await categoryHelper.select(s, {});
+
+  if (locale.isNotEmpty && categories.isNotEmpty) {
+    // Select all subjects.
+    final subjectIds = new List<int>.generate(
+        categories.length, (i) => categories[i].subjectId);
+    final subjects = await subjectHelper.selectIn(s, {'id': subjectIds});
+
+    // Select all translations.
+    final descriptorIds = new List<int>.generate(
+        subjects.length, (i) => subjects[i].descriptorId);
+    await translationHelper.selectIn(s, {'descriptor_id': descriptorIds});
+  }
+
+  return categories;
+}

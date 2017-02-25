@@ -49,12 +49,14 @@ const templateUtils = {
 function finishRequest (response, method, path, body, templateData) {
   // Note that it is OK to pass body: null, it will be ignored.
   // (see paramsHaveRequestBody() in request source in lib/helpers.js)
+  console.log(JSON.stringify(body))
   request({
     method: method,
     baseUrl: apiBase,
     url: path,
     json: true,
-  body: body}, (error, apiResponse, apiBody) => {
+    body: body
+  }, (error, apiResponse, apiBody) => {
     // If the response is an error with message:
     // No method found matching HTTP method...
     // Then do not forward the status code.
@@ -64,11 +66,35 @@ function finishRequest (response, method, path, body, templateData) {
     }
 
     // Add API request and response body to template data.
-    templateData['request'] = body
-    templateData['data'] = apiBody
+    templateData['request'] = body || {}
+    templateData['data'] = apiBody || {}
 
-    // Render page.
-    response.end(pugCache[path](templateData))
+    var additional = templateData['additional'] || {}
+    var additionalKeys = Object.keys(additional)
+    var addCount = additionalKeys.length
+    var addData = {}
+
+    if (addCount == 0) {
+      templateData['additional'] = addData
+      response.end(pugCache[path](templateData))
+    } else {
+      // Retrieve additional resources.
+      additionalKeys.forEach((key) => {
+        request({
+          method: 'GET',
+          baseUrl: apiBase,
+          url: additional[key],
+          json: true
+        }, (error, addResponse, addBody) => {
+          addData[key] = addBody
+          addCount--
+          if (addCount == 0) {
+            templateData['additional'] = addData
+            response.end(pugCache[path](templateData))
+          }
+        })
+      })
+    }
   })
 }
 
@@ -91,9 +117,9 @@ const requestHandler = (request, response) => {
 
     // Initial template data.
     const templateData = {
-      'global': config.templateConstants,
-      'path': path.split('/').slice(1),
-      'utils': templateUtils
+      global: config.templateConstants,
+      path: path.split('/').slice(1),
+      utils: templateUtils
     }
 
     // Find HTML template.
@@ -111,7 +137,7 @@ const requestHandler = (request, response) => {
       response.statusCode = 404
       response.end(notFound(templateData))
     } else {
-      // Find YAML data file.
+      // Find template configuration file.
       if (!(path in yamlCache)) {
         const yamlFile = `views${path}.yaml`
         if (fs.existsSync(yamlFile)) {
@@ -121,17 +147,15 @@ const requestHandler = (request, response) => {
         }
       }
 
-      // Add YAML data to template data.
-      templateData['local'] = yamlCache[path]
-      if (templateData['local'] === false) {
-        templateData['local'] = {}
-      }
+      // Add additional data to template data (will be loaded later).
+      templateData['additional'] = yamlCache[path]['additional']
 
       // If this is a POST request, then parse the body.
       if (request.method == 'POST') {
         getRawBody(request, (error, string) => {
-          const data = qs.parse(string)
-          finishRequest(response, request.method, path, data, templateData)
+          const data = qs.parse(string.toString('utf8'))
+          finishRequest(
+            response, request.method, path, data, templateData)
         })
       } else {
         finishRequest(response, request.method, path, null, templateData)

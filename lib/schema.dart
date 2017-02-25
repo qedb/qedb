@@ -141,31 +141,8 @@ class ExpressionRow implements Row {
 }
 
 //------------------------------------------------------------------------------
-// Lineages
+// Rules and definitions
 //------------------------------------------------------------------------------
-
-/// Lineage tree
-class LineageTreeRow implements Row {
-  final int id;
-
-  LineageTreeRow(this.id);
-
-  static const mapFormat = '*';
-  static LineageTreeRow map(pg.Row r) => new LineageTreeRow(r[0]);
-}
-
-/// Lineage
-class LineageRow implements Row {
-  final int id;
-  final int treeId, parentId, branchIndex, initialCategoryId, firstExpressionId;
-
-  LineageRow(this.id, this.treeId, this.parentId, this.branchIndex,
-      this.initialCategoryId, this.firstExpressionId);
-
-  static const mapFormat = '*';
-  static LineageRow map(pg.Row r) =>
-      new LineageRow(r[0], r[1], r[2], r[3], r[4], r[5]);
-}
 
 /// Rule
 class RuleRow implements Row {
@@ -190,4 +167,36 @@ class DefinitionRow implements Row {
 
   static const mapFormat = '*';
   static DefinitionRow map(pg.Row r) => new DefinitionRow(r[0], r[1]);
+}
+
+//------------------------------------------------------------------------------
+// Expression lineages
+//------------------------------------------------------------------------------
+
+/// Expression lineage
+class ExpressionLineageRow implements Row {
+  final int id;
+
+  ExpressionLineageRow(this.id);
+
+  static const mapFormat = '*';
+  static ExpressionLineageRow map(pg.Row r) => new ExpressionLineageRow(r[0]);
+}
+
+/// Expression lineage expression
+class LineageExpressionRow implements Row {
+  final int id,
+      lineageId,
+      categoryId,
+      ruleId,
+      expressionId,
+      sequence,
+      substitutionPosition;
+
+  LineageExpressionRow(this.id, this.lineageId, this.categoryId, this.ruleId,
+      this.expressionId, this.sequence, this.substitutionPosition);
+
+  static const mapFormat = '*';
+  static LineageExpressionRow map(pg.Row r) =>
+      new LineageExpressionRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
 }

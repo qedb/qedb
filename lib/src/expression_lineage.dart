@@ -4,9 +4,21 @@
 
 part of eqpg;
 
-Future<db.LineageRow> _createLineage(Session s, LineageResource body) async {
+Future<db.ExpressionLineageRow> _createExpressionLineage(
+    Session s, ExpressionLineageResource body) async {
+  final lineage = await expressionLineageHelper.insert(s, {});
+
+  /*for (final expression in body.expressions) {
+    await _createLineageExpression(s, expression);
+  }*/
+
+  return lineage;
+}
+
+/*Future<db.LineageExpressionRow> _createLineageExpression(
+    Session s, LineageExpressionResource body) async {
   // Decode expression.
-  final header = _decodeCodecHeader(body.firstExpression.data);
+  final header = _decodeCodecHeader(body.expression.data);
 
   // Compute category.
   final queryFindCategory = '''
@@ -23,14 +35,4 @@ SELECT DISTINCT id FROM tmp WHERE id NOT IN (SELECT unnest FROM tmp)''';
 
   // Insert expression.
   final expression = await _createExpression(s, exprCodecDecode(header));
-
-  // Insert lineage.
-  const queryInsertLineage = '''
-WITH tree_id AS (
-  INSERT INTO lineage_tree VALUES (DEFAULT) RETURNING id
-) INSERT INTO lineage (tree_id, initial_category_id, first_expression_id)
-SELECT id, @category_id, @expression_id FROM tree_id
-RETURNING *''';
-  return lineageHelper.insertCustom(s, queryInsertLineage,
-      {'category_id': parentCategory.first, 'expression_id': expression.id});
-}
+}*/

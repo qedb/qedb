@@ -19,13 +19,13 @@ import 'package:eqpg/resources.dart';
 import 'package:eqpg/schema.dart' as db;
 
 part 'src/rule.dart';
-part 'src/lineage.dart';
 part 'src/category.dart';
 part 'src/function.dart';
 part 'src/definition.dart';
 part 'src/exceptions.dart';
 part 'src/descriptor.dart';
 part 'src/expression.dart';
+part 'src/expression_lineage.dart';
 
 final log = new Logger('eqpg');
 
@@ -85,6 +85,13 @@ class EqDB {
       _runRequestSession<CategoryResource>((s) async => new CategoryResource()
         ..loadRow(await _createCategory(s, 0, body), s.data));
 
+  @ApiMethod(path: 'category/list', method: 'GET')
+  Future<List<CategoryResource>> listCategories({String locale: ''}) =>
+      _runRequestSession<List<CategoryResource>>((s) async =>
+          (await _listCategories(s, locale: locale))
+              .map((r) => new CategoryResource()..loadRow(r, s.data))
+              .toList());
+
   @ApiMethod(path: 'category/{id}/category/create', method: 'POST')
   Future<CategoryResource> createSubCategory(int id, CategoryResource body) =>
       _runRequestSession<CategoryResource>((s) async => new CategoryResource()
@@ -106,10 +113,12 @@ class EqDB {
           new DefinitionResource()
             ..loadRow(await _createDefinition(s, body), s.data));
 
-  @ApiMethod(path: 'lineage/create', method: 'POST')
-  Future<LineageResource> createLineage(LineageResource body) =>
-      _runRequestSession<LineageResource>((s) async => new LineageResource()
-        ..loadRow(await _createLineage(s, body), s.data));
+  @ApiMethod(path: 'expressionLineage/create', method: 'POST')
+  Future<ExpressionLineageResource> createLineage(
+          ExpressionLineageResource body) =>
+      _runRequestSession<ExpressionLineageResource>((s) async =>
+          new ExpressionLineageResource()
+            ..loadRow(await _createExpressionLineage(s, body), s.data));
 }
 
 /// Utility to reuse method calling boilerplate.

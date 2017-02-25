@@ -9,5 +9,6 @@ html
         h1.display-3 EqDB admin
     .container
       .list-group
-        each method in local.methods
-          a(href=method.path).list-group-item.justify-content-between.list-group-item-action= method.name
+        each resourceMethods, resource in global.resources
+          each methodName, methodRoute in resourceMethods
+            a(href=resource + '/' + methodRoute).list-group-item.justify-content-between.list-group-item-action= methodName

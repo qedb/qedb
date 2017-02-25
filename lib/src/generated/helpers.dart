@@ -51,16 +51,16 @@ final expressionHelper = new TableHelper<db.ExpressionRow>(
     db.ExpressionRow.mapFormat,
     db.ExpressionRow.map,
     (result, record) => result.expressionTable[record.id] = record);
-final lineageTreeHelper = new TableHelper<db.LineageTreeRow>(
-    'lineage_tree',
-    db.LineageTreeRow.mapFormat,
-    db.LineageTreeRow.map,
-    (result, record) => result.lineageTreeTable[record.id] = record);
-final lineageHelper = new TableHelper<db.LineageRow>(
-    'lineage',
-    db.LineageRow.mapFormat,
-    db.LineageRow.map,
-    (result, record) => result.lineageTable[record.id] = record);
+final expressionLineageHelper = new TableHelper<db.ExpressionLineageRow>(
+    'expression_lineage',
+    db.ExpressionLineageRow.mapFormat,
+    db.ExpressionLineageRow.map,
+    (result, record) => result.expressionLineageTable[record.id] = record);
+final lineageExpressionHelper = new TableHelper<db.LineageExpressionRow>(
+    'lineage_expression',
+    db.LineageExpressionRow.mapFormat,
+    db.LineageExpressionRow.map,
+    (result, record) => result.lineageExpressionTable[record.id] = record);
 final ruleHelper = new TableHelper<db.RuleRow>('rule', db.RuleRow.mapFormat,
     db.RuleRow.map, (result, record) => result.ruleTable[record.id] = record);
 final definitionHelper = new TableHelper<db.DefinitionRow>(

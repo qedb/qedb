@@ -6,8 +6,8 @@ templateConstants:
     src: https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css
     sha: sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ
 
-resources:
-- category:
-  - index:   Category index
-  - create:  Create category
-  - list:    List categories
+  resources:
+    category:
+      index:   Category index
+      create:  Create category
+      list:    List categories

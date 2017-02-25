@@ -210,25 +210,4 @@ Future main() async {
       }
     })
   ]);
-
-  // Lineages
-  await csvtest(baseUrl, 'data/data.4.csv', [
-    // Create lineage.
-    route('POST', 'lineage/create',
-        runIf: not(empty(col('Initial'))),
-        request: {
-          'firstExpression': {'data': eqlib.data(col('Initial'))}
-        },
-        response: {
-          'id': pkey.get('lineage', col('Initial')),
-          'branchIndex': 0,
-          'tree': {'id': pkey.get('tree', col('Initial'))},
-          'firstExpression': {
-            'id': pkey.get('expression', col('Initial')),
-            'data': eqlib.data(col('Initial')),
-            'hash': eqlib.hash(col('Initial')),
-            'functions': eqlib.functionIds(col('Initial'))
-          }
-        })
-  ]);
 }

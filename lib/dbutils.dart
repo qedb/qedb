@@ -118,12 +118,35 @@ RETURNING $rowFormatter'''
       return '${keys[i]} = $format';
     }).join(' AND ');
 
-    // Return mapped results.
+    // Generate SQL.
     final sql = conditions.isNotEmpty
         ? 'SELECT $rowFormatter FROM $tableName WHERE $conditions'
         : 'SELECT $rowFormatter FROM $tableName';
     log.info('$sql, $parameters');
+
+    // Retrieve result.
     final result = await s.conn.query(sql, parameters).map(mapper).toList();
+    if (save) {
+      result.forEach((record) => saver(s.data, record));
+    }
+    return result;
+  }
+
+  /// Select a record using `field IN (...)`.
+  /// If you want to select all records use [select].
+  Future<List<R>> selectIn(Session s, Map<String, List<dynamic>> parameters,
+      {bool save: true}) async {
+    final keys = parameters.keys.toList();
+    final conditions = new List<String>.generate(keys.length, (i) {
+      return '${keys[i]} IN (${parameters[keys[i]].join(',')})';
+    }).join(' AND ');
+
+    // Generate SQL.
+    final sql = 'SELECT $rowFormatter FROM $tableName WHERE $conditions';
+    log.info('$sql');
+
+    // Retrieve result.
+    final result = await s.conn.query(sql, {}).map(mapper).toList();
     if (save) {
       result.forEach((record) => saver(s.data, record));
     }
