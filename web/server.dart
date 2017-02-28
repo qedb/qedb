@@ -5,24 +5,24 @@
 import 'dart:io';
 import 'dart:async';
 
-import 'package:rpc/rpc.dart';
 import 'package:eqpg/eqpg.dart';
 import 'package:eqpg/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_handlers/server_logging_handlers.dart';
 
-import 'package:shelf_rpc/shelf_rpc.dart' as shelf_rpc;
 import 'package:shelf/shelf.dart' as shelf;
-import 'package:shelf/shelf_io.dart' as shelf_io;
-import 'package:shelf_route/shelf_route.dart' as shelf_route;
+import 'package:shelf/shelf_io.dart' as io;
+import 'package:shelf_route/shelf_route.dart' as route;
+
+import 'all_pages.dart';
 
 Future<Null> main() async {
   final log = new Logger('server');
   final conf = new EnvConfig('EQPG_', 'dev-config.yaml');
 
   // Read some configuration values.
-  final logFile = conf.string('API_LOG');
-  final srvPort = conf.integer('API_PORT', 8080);
+  final logFile = conf.string('WEB_LOG');
+  final srvPort = conf.integer('WEB_PORT', 8080);
   final dbHost = conf.string('DB_HOST', '0.0.0.0');
   final dbPort = conf.integer('DB_PORT', 5432);
   final dbName = conf.string('DB_NAME', 'eqdb');
@@ -31,9 +31,6 @@ Future<Null> main() async {
   final minConnections = conf.integer('DB_MIN_CONNECTIONS', 2);
   final maxConnections = conf.integer('DB_MAX_CONNECTIONS', 100);
   final connectionUri = 'postgres://$dbUser:$dbPass@$dbHost:$dbPort/$dbName';
-
-  // Log everything
-  Logger.root.level = Level.ALL;
 
   // Setup file based logging.
   if (logFile.isNotEmpty) {
@@ -45,25 +42,22 @@ Future<Null> main() async {
     Logger.root.onRecord.listen(new LogPrintHandler());
   }
 
-  // Create RPC API handler.
-  final ApiServer apiServer = new ApiServer();
-
+  // Create database API instance.
   final eqapi = new EqDB(connectionUri, minConnections, maxConnections);
   await eqapi.initialize();
 
-  apiServer.addApi(eqapi);
-  apiServer.enableDiscoveryApi();
+  // Create router.
+  final router = route.router();
+  routeAllPages(router, eqapi);
 
-  // Create a Shelf handler.
-  final apiHandler = shelf_rpc.createRpcHandler(apiServer);
-  final apiRouter = shelf_route.router();
-  apiRouter.add('', null, apiHandler, exactMatch: false);
+  // Create shelf handler.
   final handler = const shelf.Pipeline()
       .addMiddleware(shelf.logRequests(
           logger: (msg, isError) => isError ? log.severe(msg) : log.info(msg)))
-      .addHandler(apiRouter.handler);
+      .addHandler(router.handler);
 
-  final server = await shelf_io.serve(handler, '0.0.0.0', srvPort);
+  // Start server.
+  final server = await io.serve(handler, '0.0.0.0', srvPort);
   log.info('Listening at port ${server.port}.');
 
   // Gracefully handle SIGINT signals.

@@ -1,8 +1,0 @@
-nav.breadcrumb
-  a(href='/').breadcrumb-item Index
-  each item, i in path
-    if i < path.length - 1
-      a(href= '/' + path.slice(0, i - 1).join('/') + '/').breadcrumb-item= utils.ucfirst(item)
-    else
-      span.breadcrumb-item.active= utils.ucfirst(item)
-
