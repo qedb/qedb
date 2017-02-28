@@ -16,6 +16,7 @@ class PageData {
   dynamic request;
   dynamic data;
   List<String> path;
+  Map<String, Object> pathParameters;
 
   PageData(this.constants);
 }

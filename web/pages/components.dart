@@ -21,10 +21,12 @@ List defaultHead(PageData data) => [
 dynamic breadcrumb(PageData data) => nav('.breadcrumb', [
       a('.breadcrumb-item', 'Index', href: '/'),
       new List.generate(data.path.length, (i) {
-        if (i == data.path.length - 1) {
-          return span('.breadcrumb-item.active', data.path[i]);
+        final numberRegex = new RegExp(r'^[0-9]+$');
+        final pathDir = data.path[i];
+        if (i == data.path.length - 1 || numberRegex.hasMatch(pathDir)) {
+          return span('.breadcrumb-item.active', pathDir);
         } else {
-          return a('.breadcrumb-item', data.path[i],
+          return a('.breadcrumb-item', pathDir,
               href: '/' + data.path.sublist(0, i + 1).join('/'));
         }
       })

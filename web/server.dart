@@ -48,7 +48,8 @@ Future<Null> main() async {
 
   // Create router.
   final router = route.router();
-  routeAllPages(router, eqapi);
+  routeAllPages(
+      conf.string('API_BASE', 'http://localhost:8080/eqdb/v0/'), router, eqapi);
 
   // Create shelf handler.
   final handler = const shelf.Pipeline()

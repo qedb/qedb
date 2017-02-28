@@ -44,6 +44,7 @@ class EqDB {
   Future<Null> initialize() async {
     await pool.start();
     final conn = await pool.connect();
+    await cache.initialize(conn);
     conn.close();
   }
 
@@ -74,6 +75,12 @@ class EqDB {
           (await _listTranslations(s, id))
               .map((r) => new TranslationResource()..loadRow(r, s.data))
               .toList());
+
+  @ApiMethod(path: 'descriptor/{id}/read', method: 'GET')
+  Future<DescriptorResource> readDescriptor(int id) async =>
+      new DescriptorResource()
+        ..id = id
+        ..translations = await listDescriptorTranslations(id);
 
   @ApiMethod(path: 'subject/create', method: 'POST')
   Future<SubjectResource> createSubject(SubjectResource body) =>

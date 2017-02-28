@@ -24,7 +24,7 @@ final createDescriptorPage = new AdminPage(
                         href: '/descriptor/', role: 'button'),
                     ' ',
                     a('.btn.btn-secondary', 'Go to created descriptor',
-                        href: '/descriptor/${data.data['id']}/view',
+                        href: '/descriptor/${data.data['id']}/read',
                         role: 'button'),
                     ' ',
                     a('.btn.btn-secondary', 'Create another descriptor',
@@ -53,3 +53,31 @@ final createDescriptorPage = new AdminPage(
         }
       ]
     });
+
+final readDescriptorPage = new AdminPage(template: (data) {
+  var translationNr = 0;
+  return html([
+    head(
+        [title('Descriptor #${data.pathParameters['id']}'), defaultHead(data)]),
+    body([
+      breadcrumb(data),
+      div('.container', [
+        h3('Descriptor #${data.pathParameters['id']}'),
+        br(),
+        h4('Translations'),
+        table('.table', [
+          thead([
+            tr([th('#'), th('Content'), th('Locale')])
+          ]),
+          tbody(data.data['translations'].map((translation) {
+            return tr([
+              th((++translationNr).toString(), scope: 'row'),
+              td(translation['content']),
+              td(code(translation['locale']['code']))
+            ]);
+          }).toList())
+        ])
+      ])
+    ])
+  ]);
+});

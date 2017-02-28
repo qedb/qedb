@@ -6,7 +6,7 @@ import '../htgen/htgen.dart';
 import '../admin_page.dart';
 import 'components.dart';
 
-final categoryCreate = new AdminPage(
+final createCategoryPage = new AdminPage(
     template: (data) {
       return html([
         head([

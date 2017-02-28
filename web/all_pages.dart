@@ -11,16 +11,17 @@ import 'package:shelf_route/shelf_route.dart';
 
 import 'package:http/http.dart' as http;
 
-import 'views/home.dart';
-import 'views/descriptor.dart';
-import 'views/category.dart';
+import 'pages/home.dart';
+import 'pages/descriptor.dart';
+import 'pages/category.dart';
 import 'admin_page.dart';
 
 /// All pages.
 Map<String, AdminPage> pages = {
   '/': homePage,
-  '/category/create': categoryCreate,
-  '/descriptor/create': createDescriptorPage
+  '/descriptor/create': createDescriptorPage,
+  '/descriptor/{id}/read': readDescriptorPage,
+  '/category/create': createCategoryPage
 };
 
 /// Requests constants.
@@ -31,7 +32,7 @@ final Map<String, String> requestConstants = {
       'sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ'
 };
 
-void routeAllPages(Router router, EqDB eqapi) {
+void routeAllPages(String apiBase, Router router, EqDB eqapi) {
   final faviconData = new File('web/favicon.ico').readAsBytesSync();
   router.get('/favicon.ico', (_) {
     return new Response.ok(faviconData,
@@ -44,6 +45,7 @@ void routeAllPages(Router router, EqDB eqapi) {
       final data = new PageData(requestConstants);
       data.path = request.requestedUri.path.split('/');
       data.path.removeWhere((str) => str.isEmpty);
+      data.pathParameters = getPathParameters(request);
 
       if (request.method == 'POST' && page.postFormat != null) {
         // Decode form data.
@@ -53,7 +55,7 @@ void routeAllPages(Router router, EqDB eqapi) {
         data.request = encodePostData(page.postFormat, uri.queryParameters);
 
         // Get API response.
-        final response = await http.post('http://localhost:8080/eqdb/v0/$path',
+        final response = await http.post('$apiBase$path',
             headers: {'Content-Type': 'application/json'},
             body: JSON.encode(data.request));
         data.data = JSON.decode(response.body);
@@ -62,6 +64,13 @@ void routeAllPages(Router router, EqDB eqapi) {
         return new Response.ok(page.template(data),
             headers: {'Content-Type': 'text/html'});
       } else {
+        // Do GET request if no postFormat is specified.
+        if (page.postFormat == null) {
+          final response =
+              await http.get('$apiBase${request.requestedUri.path}');
+          data.data = JSON.decode(response.body);
+        }
+
         return new Response.ok(page.template(data),
             headers: {'Content-Type': 'text/html'});
       }
