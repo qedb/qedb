@@ -28,22 +28,23 @@ final breadcrumbAvailableLinks = [];
 /// Path breadcrumb.
 dynamic breadcrumb(PageData data) {
   return nav('.breadcrumb', [
-    a('.breadcrumb-item', 'Index', href: '/'),
+    a('Index', href: '/'),
+    span(' / '),
     new List.generate(data.path.length, (i) {
       final numberRegex = new RegExp(r'^[0-9]+$');
       final pathDir = data.path[i];
 
       if (i == data.path.length - 1) {
-        return span('.breadcrumb-item.active', pathDir);
+        return span(pathDir);
       } else {
         final suffixCommand = numberRegex.hasMatch(pathDir) ? 'read' : 'list';
         final href = '/${data.path.sublist(0, i + 1).join('/')}/$suffixCommand';
         final hrefPattern = href.replaceAll(new RegExp('[0-9]+'), '{id}');
 
         if (breadcrumbAvailableLinks.contains(hrefPattern)) {
-          return a('.breadcrumb-item', pathDir, href: href);
+          return [a(pathDir, href: href), ' / '];
         } else {
-          return span('.breadcrumb-item.active', pathDir);
+          return '$pathDir / ';
         }
       }
     })

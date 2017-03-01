@@ -23,12 +23,10 @@ final homePage = new AdminPage(template: (data) {
         div('.container', [h1('.display-3', 'EqDB admin')])
       ]),
       div('.container', [
-        div('.list-group', [
+        ul('.list-group', [
           allMethods
-              .map((method) => a(
-                  '.list-group-item.justify-content-between.list-group-item-action',
-                  method.last,
-                  href: '/${method.first}'))
+              .map((method) => li(
+                  '.list-group-item', a(method.last, href: '/${method.first}')))
               .toList()
         ])
       ])
