@@ -3,12 +3,14 @@
 // that can be found in the LICENSE file.
 
 import '../htgen/htgen.dart';
-import '../admin_page.dart';
+import '../common.dart';
 import 'components.dart';
 
 final allMethods = [
+  ['locale/create', 'Create locale'],
   ['descriptor/create', 'Create descriptor'],
-  ['category/create', 'Create category']
+  ['category/create', 'Create category'],
+  ['descriptor/list', 'List descriptors']
 ];
 
 final homePage = new AdminPage(template: (data) {

@@ -39,6 +39,22 @@ abstract class _Resource<T extends db.Row> {
 // Descriptors and translations
 //------------------------------------------------------------------------------
 
+/// Locale
+class LocaleResource extends _Resource<db.LocaleRow> {
+  int id;
+  String code;
+
+  Map<int, db.LocaleRow> _getTableMap(data) => data.localeTable;
+
+  void load(targetId, data) {
+    id = targetId;
+    code = data.cache.localeIdToCode[targetId];
+  }
+
+  int getId(SessionData data) =>
+      id != null ? id : data.cache.localeCodeToId[code];
+}
+
 /// Descriptor
 class DescriptorResource extends _Resource<db.DescriptorRow> {
   int id;
@@ -68,22 +84,6 @@ class SubjectResource extends _Resource<db.SubjectRow> {
   void loadFields(row, data) {
     descriptor = new DescriptorResource()..load(row.descriptorId, data);
   }
-}
-
-/// Locale
-class LocaleResource extends _Resource<db.LocaleRow> {
-  int id;
-  String code;
-
-  Map<int, db.LocaleRow> _getTableMap(data) => data.localeTable;
-
-  void load(targetId, data) {
-    id = targetId;
-    code = data.cache.localeIdToCode[targetId];
-  }
-
-  int getId(SessionData data) =>
-      id != null ? id : data.cache.localeCodeToId[code];
 }
 
 /// Translation

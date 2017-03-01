@@ -16,6 +16,17 @@ abstract class Row {
 // Descriptors and translations
 //------------------------------------------------------------------------------
 
+/// Locale
+class LocaleRow implements Row {
+  final int id;
+  final String code;
+
+  LocaleRow(this.id, this.code);
+
+  static const mapFormat = '*';
+  static LocaleRow map(pg.Row r) => new LocaleRow(r[0], r[1]);
+}
+
 /// Descriptor
 class DescriptorRow implements Row {
   final int id;
@@ -35,17 +46,6 @@ class SubjectRow implements Row {
 
   static const mapFormat = '*';
   static SubjectRow map(pg.Row r) => new SubjectRow(r[0], r[1]);
-}
-
-/// Locale
-class LocaleRow implements Row {
-  final int id;
-  final String code;
-
-  LocaleRow(this.id, this.code);
-
-  static const mapFormat = '*';
-  static LocaleRow map(pg.Row r) => new LocaleRow(r[0], r[1]);
 }
 
 /// Translation

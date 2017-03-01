@@ -12,10 +12,21 @@ Future main() async {
   final eqlib = new EqlibHelper();
 
   // Load function keywords.
-  await eqlib.loadKeywords('data/data.2.csv', 'ID', 'Keyword');
+  await eqlib.loadKeywords('data/data.3.csv', 'ID', 'Keyword');
+
+  // Locales
+  await csvtest(baseUrl, 'data/data.0.csv', [
+    // Create locales.
+    route('POST', 'locale/create', request: {
+      'code': col('Locale')
+    }, response: {
+      'id': pkey.get('locale', col('Locale')),
+      'code': col('Locale')
+    })
+  ]);
 
   // Descriptors
-  await csvtest(baseUrl, 'data/data.0.csv', [
+  await csvtest(baseUrl, 'data/data.1.csv', [
     // Create descriptor.
     route('POST', 'descriptor/create', request: {
       'translations': [
@@ -84,7 +95,7 @@ Future main() async {
   ]);
 
   // Categories
-  await csvtest(baseUrl, 'data/data.1.csv', [
+  await csvtest(baseUrl, 'data/data.2.csv', [
     // Create category.
     route('POST', 'category/create', runIf: empty(col('Parent ID')), request: {
       'subject': {
@@ -135,7 +146,7 @@ Future main() async {
   ]);
 
   // Functions
-  await csvtest(baseUrl, 'data/data.2.csv', [
+  await csvtest(baseUrl, 'data/data.3.csv', [
     // Create function.
     route('POST', 'function/create', request: {
       'category': {'id': pkey.get('category', col('Category'))},
@@ -182,7 +193,7 @@ Future main() async {
   ]);
 
   // Definitions
-  await csvtest(baseUrl, 'data/data.3.csv', [
+  await csvtest(baseUrl, 'data/data.4.csv', [
     // Create definition.
     route('POST', 'definition/create', request: {
       'rule': {

@@ -1,10 +1,23 @@
-ID,Category,Area,"Expression left",,"Expression right"
-1,Algebra,"Basic algebra",?a+?b,=,?b+?a
-2,Algebra,"Basic algebra",?a-?b,=,?b-?a
-3,Algebra,"Basic algebra",?a+(-?b),=,?a-?b
-4,Algebra,"Basic algebra",?a*?b,=,?b*?a
-5,Algebra,"Basic algebra",?a*(?b*?c),=,(?a*?b)*?c
-6,Algebra,"Basic algebra",?a*?b+?a*?c,=,?a*(?b+?c)
-7,Algebra,"Basic algebra",-?a,=,-1*?a
-8,Algebra,Calculus,"diff(?fn(?x),?x)",=,"lim(d(?x),0,(?fn(?x+d(?x))-?fn(?x))/d(?x))"
-9,Algebra,Calculus,"lim(?a,0,?fn(?b+?a))",=,?fn(?b)
+ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Pre.,Ass.,Comments
+1,Algebra,"Basic algebra",Add,add,word,2,$(a)+$(b),FALSE,1,ltr,
+2,Algebra,"Basic algebra",Subtract,subtract,word,2,$(a)-$(b),FALSE,1,ltr,
+3,Algebra,"Basic algebra",Multiply,multiply,word,2,$(a)\cdot$(b),FALSE,2,ltr,
+4,Algebra,"Basic algebra",Divide,divide,word,2,\frac{$a}{$b},FALSE,2,ltr,
+5,Algebra,"Basic algebra",Power,power,word,2,$!(a)^{$b},FALSE,3,rtl,
+6,Algebra,"Basic algebra",Negate,negate,word,1,-$(a),FALSE,4,rtl,
+7,Algebra,"Basic algebra",,a,symbol,0,{a},TRUE,,,
+8,Algebra,"Basic algebra",,b,symbol,0,{b},TRUE,,,
+9,Algebra,"Basic algebra",,c,symbol,0,{c},TRUE,,,
+10,Algebra,"Vector algebra",,e1,symbol,0,\hat{i},FALSE,,,
+11,Algebra,"Vector algebra",,e2,symbol,0,\hat{j},FALSE,,,
+12,Algebra,"Vector algebra",,e3,symbol,0,\hat{k},FALSE,,,
+13,Algebra,Trigonometry,Radius,r,symbol,0,{r},FALSE,,,
+14,Algebra,Trigonometry,Theta,theta,word,0,{\theta},FALSE,,,
+15,Algebra,Trigonometry,Sine,sin,abbreviation,1,\sin{$(a)},FALSE,,,
+16,Algebra,Trigonometry,Cosine,cos,abbreviation,1,\cos{$(a)},FALSE,,,
+17,Algebra,Calculus,,x,symbol,0,{x},TRUE,,,
+18,Algebra,Calculus,,y,symbol,0,{y},TRUE,,,
+19,Algebra,Calculus,Function,fn,abbreviation,1,{f},TRUE,,,"Name not already in descriptor table"
+20,Algebra,Calculus,Delta,d,word,1,\Delta$(a),FALSE,,,"Name not already in descriptor table"
+21,Algebra,Calculus,Limit,lim,abbreviation,3,\lim_{$a\to$b}$(c),FALSE,,,"Name not already in descriptor table"
+22,Algebra,Calculus,Differential,diff,abbreviation,2,\frac{\partial}{\partial$(b)}$(a),FALSE,,,"Name not already in descriptor table"

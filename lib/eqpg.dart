@@ -18,13 +18,17 @@ import 'package:eqpg/dbutils.dart';
 import 'package:eqpg/resources.dart';
 import 'package:eqpg/schema.dart' as db;
 
-part 'src/rule.dart';
+part 'src/exceptions.dart';
+
+part 'src/locale.dart';
+part 'src/descriptor.dart';
+part 'src/subject.dart';
+part 'src/translation.dart';
 part 'src/category.dart';
 part 'src/function.dart';
-part 'src/definition.dart';
-part 'src/exceptions.dart';
-part 'src/descriptor.dart';
 part 'src/expression.dart';
+part 'src/rule.dart';
+part 'src/definition.dart';
 part 'src/expression_lineage.dart';
 
 final log = new Logger('eqpg');
@@ -56,6 +60,14 @@ class EqDB {
     }, pool);
   }
 
+  @ApiMethod(path: 'locale/create', method: 'POST')
+  Future<LocaleResource> createLocale(LocaleResource body) =>
+      _runRequestSession<LocaleResource>((s) async => new LocaleResource()
+        ..load((await _createLocale(s, body)).id, s.data));
+
+  @ApiMethod(path: 'locale/list', method: 'GET')
+  List<LocaleResource> listLocales() => _listLocales(cache);
+
   @ApiMethod(path: 'descriptor/create', method: 'POST')
   Future<DescriptorResource> createDescriptor(DescriptorResource body) =>
       _runRequestSession<DescriptorResource>((s) async =>
@@ -74,6 +86,14 @@ class EqDB {
       _runRequestSession<List<TranslationResource>>((s) async =>
           (await _listTranslations(s, id))
               .map((r) => new TranslationResource()..loadRow(r, s.data))
+              .toList());
+
+  @ApiMethod(path: 'descriptor/list', method: 'GET')
+  Future<List<DescriptorResource>> listDescriptors(
+          {String locale: 'en_US'}) async =>
+      _runRequestSession<List<DescriptorResource>>((s) async =>
+          (await _listDescriptors(s, locale: locale))
+              .map((r) => new DescriptorResource()..load(r.id, s.data))
               .toList());
 
   @ApiMethod(path: 'descriptor/{id}/read', method: 'GET')

@@ -56,31 +56,20 @@ Future<db.DescriptorRow> _createDescriptor(
   }
 }
 
-Future<db.TranslationRow> _createTranslation(
-    Session s, int descriptorId, TranslationResource body) async {
-  var localeId = s.data.cache.localeCodeToId[body.locale.code];
-  if (localeId == null) {
-    // Create locale record.
-    // There should NOT be an existing record, but just to be sure, use getId.
-    localeId = await localeHelper.getId(s, {'code': body.locale.code});
-    s.data.cache.localeIdToCode[localeId] = body.locale.code;
-    s.data.cache.localeCodeToId[body.locale.code] = localeId;
+Future<List<db.DescriptorRow>> _listDescriptors(Session s,
+    {String locale: ''}) async {
+  final descriptors = await descriptorHelper.select(s, {});
+  final localeId = s.data.cache.localeCodeToId[locale];
+
+  if (localeId != null && descriptors.isNotEmpty) {
+    // Select all translations.
+    final descriptorIds =
+        new List<int>.generate(descriptors.length, (i) => descriptors[i].id);
+    await translationHelper.selectIn(s, {
+      'descriptor_id': descriptorIds,
+      'locale_id': [localeId]
+    });
   }
 
-  // Insert translation.
-  return await translationHelper.insert(s, {
-    'descriptor_id': descriptorId,
-    'locale_id': localeId,
-    'content': body.content
-  });
+  return descriptors;
 }
-
-Future<List<db.TranslationRow>> _listTranslations(Session s,
-    [int descriptorId = -1]) {
-  return descriptorId == -1
-      ? translationHelper.select(s, {})
-      : translationHelper.select(s, {'descriptor_id': descriptorId});
-}
-
-Future<db.SubjectRow> _createSubject(Session s, SubjectResource body) =>
-    subjectHelper.insert(s, {'descriptor_id': body.descriptor.id});

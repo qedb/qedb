@@ -15,6 +15,13 @@ CREATE EXTENSION pgcrypto;
 -- Descriptors and translations
 --------------------------------------------------------------------------------
 
+-- Locale
+CREATE TABLE locale (
+  id    serial  PRIMARY KEY,
+  code  text    NOT NULL UNIQUE
+    CHECK (code ~ '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$') -- Match validate ISO locale code format.
+);
+
 -- Descriptor
 -- Should NOT contain separate records for abbreviations or acronyms.
 CREATE TABLE descriptor (
@@ -27,13 +34,6 @@ CREATE TABLE descriptor (
 CREATE TABLE subject (
   id             serial   PRIMARY KEY,
   descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id)
-);
-
--- Locale
-CREATE TABLE locale (
-  id    serial  PRIMARY KEY,
-  code  text    NOT NULL UNIQUE
-    CHECK (code ~ '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$') -- Match validate ISO locale code format.
 );
 
 -- Translation of a descriptor
