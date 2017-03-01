@@ -18,8 +18,6 @@ import 'package:eqpg/dbutils.dart';
 import 'package:eqpg/resources.dart';
 import 'package:eqpg/schema.dart' as db;
 
-part 'src/exceptions.dart';
-
 part 'src/locale.dart';
 part 'src/descriptor.dart';
 part 'src/subject.dart';
@@ -32,6 +30,11 @@ part 'src/definition.dart';
 part 'src/expression_lineage.dart';
 
 final log = new Logger('eqpg');
+
+class UnprocessableEntityError extends RpcError {
+  UnprocessableEntityError(String message)
+      : super(422, 'Unprocessable Entity', message);
+}
 
 @ApiClass(name: 'eqdb', version: 'v0', description: 'EqDB read/write API')
 class EqDB {

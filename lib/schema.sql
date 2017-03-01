@@ -131,19 +131,26 @@ CREATE TABLE operator (
   associativity     operator_associativity  NOT NULL
 );
 
+CREATE TYPE expression_type AS ENUM ('integer', 'function', 'generic');
+
 -- Expression node
 -- Note: expression references have not been implemented yet to reduce
 -- complexity. The main objective is to make expressions indexable. This could
 -- potentially also be achieved by writing a custom index in C.
 CREATE TABLE expression (
-  id            serial   PRIMARY KEY,
-  data          bytea    NOT NULL UNIQUE,
-  hash          bytea    NOT NULL UNIQUE,
+  id         serial     PRIMARY KEY,
+  data       bytea      NOT NULL UNIQUE,
+  hash       bytea      NOT NULL UNIQUE,
 
   -- All function IDs in this expression for fast indexing and searching.
-  -- TODO: remove this?
-  functions  integer[]             NOT NULL
+  functions  integer[]  NOT NULL,
+
+  -- Node information.
+  node_type       expression_type  NOT NULL,
+  node_value      integer          NOT NULL,
+  node_arguments  integer[]        NOT NULL -- ELEMENT REFERENCES expression(id)
 );
+
 CREATE INDEX expression_functions_index on expression USING GIN (functions);
 
 --------------------------------------------------------------------------------
