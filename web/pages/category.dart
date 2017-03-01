@@ -11,10 +11,12 @@ final createCategoryPage = new AdminPage(
       return createResourceTemplate(data, 'category', inputs: (data) {
         return [
           input(type: 'hidden', name: 'locale', value: 'en_US'),
-          label('Name', _for: 'content'),
-          input('#content.form-control', type: 'text', name: 'content'),
-          small('#nameHelp.form-text.text-muted',
-              'Enter the English (en-US) name for the category.')
+          div('.form-group', [
+            label('Name', _for: 'content'),
+            input('#content.form-control', type: 'text', name: 'content'),
+            small('#nameHelp.form-text.text-muted',
+                'Enter the English (en-US) name for the category.')
+          ])
         ];
       });
     },

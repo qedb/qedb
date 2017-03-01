@@ -5,7 +5,6 @@
 import '../htgen/htgen.dart';
 import '../common.dart';
 import 'templates.dart';
-import 'components.dart';
 
 final createDescriptorPage = new AdminPage(
     template: (data) {
@@ -21,7 +20,7 @@ final createDescriptorPage = new AdminPage(
         return [
           div('.alert.alert-success', 'Successfully created descriptor',
               role: 'alert'),
-          a('.btn.btn-primary', 'Return to descriptors overview',
+          a('.btn.btn-primary', 'Go to descriptors overview',
               href: '/descriptor/list', role: 'button'),
           ' ',
           a('.btn.btn-secondary', 'Go to created descriptor',
@@ -51,9 +50,10 @@ final listDescriptorsPage = new AdminPage(template: (data) {
       breadcrumb(data),
       div('.container', [
         h3('All descriptors'),
+        br(),
         table('.table', [
           thead([
-            tr([th('#'), th('Translation')])
+            tr([th('ID'), th('Translation')])
           ]),
           tbody(data.data.map((descriptor) {
             return tr([
@@ -61,7 +61,7 @@ final listDescriptorsPage = new AdminPage(template: (data) {
                   a(descriptor.id.toString(),
                       href: '/descriptor/${descriptor.id}/read'),
                   scope: 'row'),
-              td(descriptor.translations[0].content)
+              td(safe(() => descriptor.translations[0].content, ''))
             ]);
           }).toList())
         ]),

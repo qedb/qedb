@@ -107,6 +107,13 @@ class EqDB {
       _runRequestSession<SubjectResource>((s) async => new SubjectResource()
         ..loadRow(await _createSubject(s, body), s.data));
 
+  @ApiMethod(path: 'subject/list', method: 'GET')
+  Future<List<SubjectResource>> listSubjects({String locale: 'en_US'}) =>
+      _runRequestSession<List<SubjectResource>>((s) async =>
+          (await _listSubjects(s, locale: locale))
+              .map((r) => new SubjectResource()..load(r.id, s.data))
+              .toList());
+
   @ApiMethod(path: 'category/create', method: 'POST')
   Future<CategoryResource> createCategory(CategoryResource body) =>
       _runRequestSession<CategoryResource>((s) async => new CategoryResource()

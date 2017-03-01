@@ -15,9 +15,11 @@ import 'package:http/http.dart' as http;
 import 'pages/home.dart';
 import 'pages/locale.dart';
 import 'pages/descriptor.dart';
+import 'pages/subject.dart';
 import 'pages/translation.dart';
-import 'pages/components.dart';
 import 'pages/category.dart';
+
+import 'pages/templates.dart';
 import 'common.dart';
 
 /// All pages.
@@ -28,6 +30,8 @@ Map<String, AdminPage> pages = {
   '/descriptor/list': listDescriptorsPage,
   '/descriptor/{id}/read': readDescriptorPage,
   '/descriptor/{id}/translations/create': createTranslationPage,
+  '/subject/create': createSubjectPage,
+  '/subject/list': listSubjectsPage,
   '/category/create': createCategoryPage
 };
 

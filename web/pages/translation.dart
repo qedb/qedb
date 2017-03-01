@@ -5,7 +5,6 @@
 import '../htgen/htgen.dart';
 import '../common.dart';
 import 'templates.dart';
-import 'components.dart';
 
 final createTranslationPage = new AdminPage(
     template: (data) {

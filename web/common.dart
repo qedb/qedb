@@ -25,6 +25,14 @@ class PageData {
   PageData(this.constants);
 }
 
+dynamic safe(Function fn, [dynamic fallback = null]) {
+  try {
+    return fn();
+  } catch (e) {
+    return fallback;
+  }
+}
+
 String ucfirst(String str) => str[0].toUpperCase() + str.substring(1);
 
 String prettyPrintErrorMessage(String message) {

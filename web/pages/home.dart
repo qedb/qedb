@@ -4,13 +4,15 @@
 
 import '../htgen/htgen.dart';
 import '../common.dart';
-import 'components.dart';
+import 'templates.dart';
 
 final allMethods = [
   ['locale/create', 'Create locale'],
   ['descriptor/create', 'Create descriptor'],
+  ['subject/create', 'Create subject'],
   ['category/create', 'Create category'],
-  ['descriptor/list', 'List descriptors']
+  ['descriptor/list', 'List descriptors'],
+  ['subject/list', 'List subjects']
 ];
 
 final homePage = new AdminPage(template: (data) {
