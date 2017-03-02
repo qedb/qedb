@@ -84,42 +84,6 @@ CREATE TABLE function_subject_tag (
   subject_id   integer  NOT NULL REFERENCES subject(id)
 );
 
-CREATE TYPE keyword_type AS ENUM (
-  -- [a-z]+ form of an English translation of the function name descriptor
-  -- No upper caps allowed! If the original name contains spaces, dashes or
-  -- other complex symbols, you should consider to NOT create a 'word' keyword.
-  'word',
-  
-  -- Short form of the function name descriptor
-  'acronym',
-  'abbreviation',
-  
-  -- Related to the function LaTeX template
-  -- ([a-z]+ form of the function symbol)
-  'symbol'
-);
-
--- Keywords ([a-z]+ sequences that identify the function)
--- TODO: more general keywords (vector, circle, algebra)
-CREATE TABLE keyword (
-  id     serial        PRIMARY KEY,
-  value  text          NOT NULL CHECK (value ~ '^[a-z]+$'),
-  type   keyword_type  NOT NULL,
-
-  -- Equal values with different types are allowed.
-  UNIQUE (value, type)
-);
-
--- Function keyword join
-CREATE TABLE function_keyword (
-  id           serial   PRIMARY KEY,
-  function_id  integer  NOT NULL REFERENCES function(id),
-  keyword_id   integer  NOT NULL REFERENCES keyword(id),
-
-  -- Do not repeat keywords.
-  UNIQUE (function_id, keyword_id)
-);
-
 -- Operator evaluation (relevant for printing parentheses)
 CREATE TYPE operator_associativity AS ENUM ('ltr', 'rtl');
 
