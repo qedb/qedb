@@ -4,7 +4,7 @@
 
 part of eqpg;
 
-Future<db.FunctionRow> _createFunction(Session s, FunctionResource body) async {
+Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
   // Non-generic functions with >0 arguments must have a name (soft constraint).
   if (!body.generic && body.argumentCount > 0 && body.descriptor == null) {
     throw new UnprocessableEntityError(
@@ -27,14 +27,14 @@ Future<db.FunctionRow> _createFunction(Session s, FunctionResource body) async {
     } else {
       // Create descriptor.
       insertParameters['descriptor_id'] =
-          (await _createDescriptor(s, body.descriptor)).id;
+          (await createDescriptor(s, body.descriptor)).id;
     }
   }
 
   return await functionHelper.insert(s, insertParameters);
 }
 
-Future<db.OperatorRow> _createOperator(Session s, OperatorResource body) {
+Future<db.OperatorRow> createOperator(Session s, OperatorResource body) {
   return operatorHelper.insert(s, {
     'function_id': body.function.id,
     'precedence_level': body.precedenceLevel,

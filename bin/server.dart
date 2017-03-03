@@ -6,7 +6,7 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:rpc/rpc.dart';
-import 'package:eqpg/eqpg.dart';
+import 'package:eqpg/api.dart';
 import 'package:eqpg/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_handlers/server_logging_handlers.dart';

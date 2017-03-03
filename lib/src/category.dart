@@ -4,7 +4,7 @@
 
 part of eqpg;
 
-Future<db.CategoryRow> _createCategory(
+Future<db.CategoryRow> createCategory(
     Session s, int parentId, CategoryResource body) async {
   // Get subject ID directly from request, or resolve first translation provided
   // in the descriptor.
@@ -60,25 +60,20 @@ SELECT * FROM subject WHERE descriptor_id = (
   }
 }
 
-Future<List<db.CategoryRow>> _listCategories(Session s,
-    {String locale: ''}) async {
+Future<List<db.CategoryRow>> listCategories(
+    Session s, List<String> locales) async {
   final categories = await categoryHelper.select(s, {});
-  final localeId = s.data.cache.localeCodeToId[locale];
 
-  if (localeId != null && categories.isNotEmpty) {
-    // Select all subjects.
-    final subjectIds = new List<int>.generate(
-        categories.length, (i) => categories[i].subjectId);
-    final subjects = await subjectHelper.selectIn(s, {'id': subjectIds});
+  // Select all subjects.
+  final subjectIds = categoryHelper.ids(categories, (row) => row.subjectId);
+  final subjects = await subjectHelper.selectIn(s, {'id': subjectIds});
 
-    // Select all translations.
-    final descriptorIds = new List<int>.generate(
-        subjects.length, (i) => subjects[i].descriptorId);
-    await translationHelper.selectIn(s, {
-      'descriptor_id': descriptorIds,
-      'locale_id': [localeId]
-    });
-  }
+  // Select all translations.
+  final descriptorIds = subjectHelper.ids(subjects, (row) => row.descriptorId);
+  await translationHelper.selectIn(s, {
+    'descriptor_id': descriptorIds,
+    'locale_id': getLocaleIds(s.data.cache, locales)
+  });
 
   return categories;
 }

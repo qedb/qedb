@@ -21,7 +21,18 @@ final homePage = new AdminPage(template: (data) {
     head([title('EqDB admin'), defaultHead(data)]),
     body([
       div('.jumbotron', [
-        div('.container', [h1('.display-3', 'EqDB admin')])
+        div('.container', style: 'text-align: center;', c: [
+          svg(logoSvgContent,
+              style: 'max-width: 20em; vertical-align: middle;',
+              xmlns: 'http://www.w3.org/2000/svg',
+              viewBox: '0 0 31 16'),
+          span('.display-4', 'Admin',
+              style: buildStyle({
+                'vertical-align': 'middle',
+                'padding-left': '.3em',
+                'font-family': "'Roboto'"
+              }))
+        ])
       ]),
       div('.container', [
         ul('.list-group', [

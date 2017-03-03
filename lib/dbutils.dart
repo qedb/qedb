@@ -182,4 +182,16 @@ RETURNING $rowFormatter'''
       return (await insert(s, parameters)).id;
     }
   }
+
+  /// Typed version of [getIds].
+  List<int> ids(List<R> list, [int getFn(R row) = _defaultGetIdListGetFn]) =>
+      getIds<R>(list, getFn);
 }
+
+/// Get ID's from the given [list] of Rows.
+List<int> getIds<T extends db.Row>(List<T> list,
+    [int getFn(T row) = _defaultGetIdListGetFn]) {
+  return new List<int>.generate(list.length, (i) => getFn(list[i]));
+}
+
+int _defaultGetIdListGetFn(db.Row row) => row.id;

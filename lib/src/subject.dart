@@ -4,30 +4,26 @@
 
 part of eqpg;
 
-Future<db.SubjectRow> _createSubject(Session s, SubjectResource body) async {
+Future<db.SubjectRow> createSubject(Session s, SubjectResource body) async {
   if (body.descriptor.id != null) {
     return subjectHelper.insert(s, {'descriptor_id': body.descriptor.id});
   } else {
     return subjectHelper.insert(
-        s, {'descriptor_id': (await _createDescriptor(s, body.descriptor)).id});
+        s, {'descriptor_id': (await createDescriptor(s, body.descriptor)).id});
   }
 }
 
-Future<List<db.SubjectRow>> _listSubjects(Session s,
-    {String locale: ''}) async {
-  final descriptors = await descriptorHelper.selectCustom(s,
-      'SELECT * FROM descriptor WHERE id IN (SELECT descriptor_id FROM subject)');
-  final localeId = s.data.cache.localeCodeToId[locale];
+Future<List<db.SubjectRow>> listSubjects(
+    Session s, List<String> locales) async {
+  final subjects = await subjectHelper.select(s, {});
+  final descriptors = await descriptorHelper.selectIn(
+      s, {'id': subjectHelper.ids(subjects, (row) => row.descriptorId)});
 
-  if (localeId != null && descriptors.isNotEmpty) {
-    // Select all translations.
-    final descriptorIds =
-        new List<int>.generate(descriptors.length, (i) => descriptors[i].id);
-    await translationHelper.selectIn(s, {
-      'descriptor_id': descriptorIds,
-      'locale_id': [localeId]
-    });
-  }
+  // Select all translations.
+  await translationHelper.selectIn(s, {
+    'descriptor_id': getIds(descriptors),
+    'locale_id': getLocaleIds(s.data.cache, locales)
+  });
 
-  return await subjectHelper.select(s, {});
+  return subjects;
 }

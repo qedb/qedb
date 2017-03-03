@@ -4,7 +4,7 @@
 
 part of eqpg;
 
-Future<db.DescriptorRow> _createDescriptor(
+Future<db.DescriptorRow> createDescriptor(
     Session s, DescriptorResource body) async {
   // You must submit at least one translation.
   if (body.translations.isEmpty) {
@@ -29,7 +29,7 @@ Future<db.DescriptorRow> _createDescriptor(
 
     // Insert translations.
     for (final translation in body.translations) {
-      await _createTranslation(s, descriptor.id, translation);
+      await createTranslation(s, descriptor.id, translation);
     }
 
     return descriptor;
@@ -45,7 +45,7 @@ Future<db.DescriptorRow> _createDescriptor(
                   r2.localeId == r1.locale.getId(s.data) &&
                   r2.content == r1.content)
               .isEmpty)) {
-        await _createTranslation(s, descriptorId, translation);
+        await createTranslation(s, descriptorId, translation);
       }
 
       return new db.DescriptorRow(descriptorId);
@@ -56,20 +56,15 @@ Future<db.DescriptorRow> _createDescriptor(
   }
 }
 
-Future<List<db.DescriptorRow>> _listDescriptors(Session s,
-    {String locale: ''}) async {
+Future<List<db.DescriptorRow>> listDescriptors(
+    Session s, List<String> locales) async {
   final descriptors = await descriptorHelper.select(s, {});
-  final localeId = s.data.cache.localeCodeToId[locale];
 
-  if (localeId != null && descriptors.isNotEmpty) {
-    // Select all translations.
-    final descriptorIds =
-        new List<int>.generate(descriptors.length, (i) => descriptors[i].id);
-    await translationHelper.selectIn(s, {
-      'descriptor_id': descriptorIds,
-      'locale_id': [localeId]
-    });
-  }
+  // Select all translations.
+  await translationHelper.selectIn(s, {
+    'descriptor_id': getIds(descriptors),
+    'locale_id': getLocaleIds(s.data.cache, locales)
+  });
 
   return descriptors;
 }

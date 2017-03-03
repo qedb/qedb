@@ -117,6 +117,13 @@ class ElementBuilder {
   }
 }
 
+/// Helper for writing style attributes.
+String buildStyle(Map<String, dynamic> props) {
+  final k = props.keys.toList();
+  return new List<String>.generate(
+      k.length, (i) => '${k[i]}:${props[k[i]].toString()};').join();
+}
+
 // Some element builders for regular elements.
 // Yeah, this is pure pollution of the global namespace.
 
@@ -154,6 +161,7 @@ final select = _getElementBuilder('select');
 final small = _getElementBuilder('small');
 final span = _getElementBuilder('span');
 final style = _getElementBuilder('style');
+final svg = _getElementBuilder('svg');
 final table = _getElementBuilder('table');
 final tbody = _getElementBuilder('tbody');
 final td = _getElementBuilder('td');

@@ -5,7 +5,6 @@
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:eqpg/eqpg.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_route/shelf_route.dart';
 import 'package:json_object/json_object.dart';
@@ -44,7 +43,7 @@ final Map<String, String> requestConstants = {
       'sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ'
 };
 
-void routeAllPages(String apiBase, Router router, EqDB eqapi) {
+void routeAllPages(String apiBase, Router router) {
   // Make sure breadcrumb only points to existing pages.
   breadcrumbAvailableLinks.addAll(pages.keys);
 

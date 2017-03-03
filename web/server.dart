@@ -5,7 +5,6 @@
 import 'dart:io';
 import 'dart:async';
 
-import 'package:eqpg/eqpg.dart';
 import 'package:eqpg/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_handlers/server_logging_handlers.dart';
@@ -23,14 +22,6 @@ Future<Null> main() async {
   // Read some configuration values.
   final logFile = conf.string('WEB_LOG');
   final srvPort = conf.integer('WEB_PORT', 8080);
-  final dbHost = conf.string('DB_HOST', '0.0.0.0');
-  final dbPort = conf.integer('DB_PORT', 5432);
-  final dbName = conf.string('DB_NAME', 'eqdb');
-  final dbUser = conf.string('DB_USER', 'eqpg');
-  final dbPass = conf.string('DB_PASS', 'unconfigured');
-  final minConnections = conf.integer('DB_MIN_CONNECTIONS', 2);
-  final maxConnections = conf.integer('DB_MAX_CONNECTIONS', 100);
-  final connectionUri = 'postgres://$dbUser:$dbPass@$dbHost:$dbPort/$dbName';
 
   // Setup file based logging.
   if (logFile.isNotEmpty) {
@@ -42,14 +33,10 @@ Future<Null> main() async {
     Logger.root.onRecord.listen(new LogPrintHandler());
   }
 
-  // Create database API instance.
-  final eqapi = new EqDB(connectionUri, minConnections, maxConnections);
-  await eqapi.initialize();
-
   // Create router.
   final router = route.router();
   routeAllPages(
-      conf.string('API_BASE', 'http://localhost:8080/eqdb/v0/'), router, eqapi);
+      conf.string('API_BASE', 'http://localhost:8080/eqdb/v0/'), router);
 
   // Create shelf handler.
   final handler = const shelf.Pipeline()
@@ -64,7 +51,6 @@ Future<Null> main() async {
   // Gracefully handle SIGINT signals.
   ProcessSignal.SIGINT.watch().listen((signal) async {
     log.info('Received $signal, terminating...');
-    await eqapi.pool.stop();
     await server.close();
     exit(0);
   });

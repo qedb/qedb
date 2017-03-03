@@ -4,7 +4,7 @@
 
 part of eqpg;
 
-Future<db.ExpressionLineageRow> _createExpressionLineage(
+Future<db.ExpressionLineageRow> createExpressionLineage(
     Session s, ExpressionLineageResource body) async {
   final lineage = await expressionLineageHelper.insert(s, {});
 
