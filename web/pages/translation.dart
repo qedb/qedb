@@ -22,8 +22,6 @@ final createTranslationPage = new AdminPage(
         ];
       }, success: (data) {
         return [
-          div('.alert.alert-success', 'Successfully added translation',
-              role: 'alert'),
           a('.btn.btn-primary', 'Return to descriptor',
               href: '/descriptor/${data.pathParameters['id']}/read',
               role: 'button')

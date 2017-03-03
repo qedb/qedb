@@ -18,8 +18,6 @@ final createDescriptorPage = new AdminPage(
         ];
       }, success: (data) {
         return [
-          div('.alert.alert-success', 'Successfully created descriptor',
-              role: 'alert'),
           a('.btn.btn-primary', 'Go to descriptors overview',
               href: '/descriptor/list', role: 'button'),
           ' ',
@@ -44,31 +42,14 @@ final createDescriptorPage = new AdminPage(
     });
 
 final listDescriptorsPage = new AdminPage(template: (data) {
-  return html([
-    head([title('All descriptors'), defaultHead(data)]),
-    body([
-      breadcrumb(data),
-      div('.container', [
-        h3('All descriptors'),
-        br(),
-        table('.table', [
-          thead([
-            tr([th('ID'), th('Translation')])
-          ]),
-          tbody(data.data.map((descriptor) {
-            return tr([
-              th(
-                  a(descriptor.id.toString(),
-                      href: '/descriptor/${descriptor.id}/read'),
-                  scope: 'row'),
-              td(safe(() => descriptor.translations[0].content, ''))
-            ]);
-          }).toList())
-        ]),
-        br()
-      ])
-    ])
-  ]);
+  return listResourceTemplate(data, 'descriptor', 'descriptors',
+      tableHead: [th('ID'), th('Translation')], row: (descriptor) {
+    return [
+      th(a(descriptor.id.toString(), href: '/descriptor/${descriptor.id}/read'),
+          scope: 'row'),
+      td(safe(() => descriptor.translations[0].content, ''))
+    ];
+  });
 });
 
 final readDescriptorPage = new AdminPage(template: (data) {

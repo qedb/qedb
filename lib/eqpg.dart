@@ -123,7 +123,7 @@ class EqDB {
         ..loadRow(await _createCategory(s, 0, body), s.data));
 
   @ApiMethod(path: 'category/list', method: 'GET')
-  Future<List<CategoryResource>> listCategories({String locale: ''}) =>
+  Future<List<CategoryResource>> listCategories({String locale: 'en_US'}) =>
       _runRequestSession<List<CategoryResource>>((s) async =>
           (await _listCategories(s, locale: locale))
               .map((r) => new CategoryResource()..loadRow(r, s.data))

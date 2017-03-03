@@ -32,7 +32,8 @@ Map<String, AdminPage> pages = {
   '/descriptor/{id}/translations/create': createTranslationPage,
   '/subject/create': createSubjectPage,
   '/subject/list': listSubjectsPage,
-  '/category/create': createCategoryPage
+  '/category/create': createCategoryPage,
+  '/category/list': listCategoriesPage
 };
 
 /// Requests constants.

@@ -18,8 +18,6 @@ final createSubjectPage = new AdminPage(
         ];
       }, success: (data) {
         return [
-          div('.alert.alert-success', 'Successfully created subject',
-              role: 'alert'),
           a('.btn.btn-primary', 'Go to subjects overview',
               href: '/subject/list', role: 'button')
         ];
@@ -40,30 +38,16 @@ final createSubjectPage = new AdminPage(
     });
 
 final listSubjectsPage = new AdminPage(template: (data) {
-  return html([
-    head([title('All subjects'), defaultHead(data)]),
-    body([
-      breadcrumb(data),
-      div('.container', [
-        h3('All subjects'),
-        br(),
-        table('.table', [
-          thead([
-            tr([th('ID'), th('Descriptor ID'), th('Translation')])
-          ]),
-          tbody(data.data.map((subject) {
-            return tr([
-              th(subject.id.toString()),
-              td(
-                  a(subject.descriptor.id.toString(),
-                      href: '/descriptor/${subject.descriptor.id}/read'),
-                  scope: 'row'),
-              td(safe(() => subject.descriptor.translations[0].content, ''))
-            ]);
-          }).toList())
-        ]),
-        br()
-      ])
-    ])
-  ]);
+  return listResourceTemplate(data, 'subject', 'subjects',
+      tableHead: [th('ID'), th('Descriptor ID'), th('Translation')],
+      row: (subject) {
+    return [
+      th(subject.id.toString()),
+      td(
+          a(subject.descriptor.id.toString(),
+              href: '/descriptor/${subject.descriptor.id}/read'),
+          scope: 'row'),
+      td(safe(() => subject.descriptor.translations[0].content, ''))
+    ];
+  });
 });

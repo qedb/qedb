@@ -28,7 +28,7 @@ final breadcrumbAvailableLinks = [];
 /// Path breadcrumb.
 dynamic breadcrumb(PageData data) {
   return nav('.breadcrumb', [
-    a('Index', href: '/'),
+    a('db', href: '/'),
     span(' / '),
     new List.generate(data.path.length, (i) {
       final numberRegex = new RegExp(r'^[0-9]+$');
@@ -63,31 +63,63 @@ dynamic localeSelect(PageData data, [String name = 'locale']) =>
     ]);
 
 String createResourceTemplate(PageData data, String name,
-        {InlineHtmlBuilder inputs,
-        InlineHtmlBuilder success,
-        List headAppend: const []}) =>
-    html([
-      head([title('Create $name'), defaultHead(data), headAppend]),
-      body([
-        breadcrumb(data),
-        div('.container', [
-          h3('Create $name'),
-          br(),
-          safe(() => data.data.id != null, false)
-              ? success(data)
-              : [
-                  safe(() => data.data.error != null, false)
-                      ? [
-                          div('.alert.alert-warning',
-                              '${prettyPrintErrorMessage(data.data.error.message)} <strong>(${data.data.error.code})</strong>',
-                              role: 'alert')
-                        ]
-                      : [],
-                  form(method: 'POST', c: [
-                    inputs(data),
-                    button('.btn.btn-primary', 'Submit', type: 'submit')
-                  ])
-                ]
-        ])
+    {InlineHtmlBuilder inputs,
+    InlineHtmlBuilder success,
+    List headAppend: const []}) {
+  return html([
+    head([title('Create $name'), defaultHead(data), headAppend]),
+    body([
+      breadcrumb(data),
+      div('.container', [
+        h3('Create $name'),
+        br(),
+        safe(() => data.data.id != null, false)
+            ? [
+                div('.alert.alert-success', 'Successfully created descriptor',
+                    role: 'alert'),
+                success(data)
+              ]
+            : [
+                safe(() => data.data.error != null, false)
+                    ? [
+                        div('.alert.alert-warning',
+                            '${prettyPrintErrorMessage(data.data.error.message)} <strong>(${data.data.error.code})</strong>',
+                            role: 'alert')
+                      ]
+                    : [],
+                form(method: 'POST', c: [
+                  inputs(data),
+                  button('.btn.btn-primary', 'Submit', type: 'submit')
+                ])
+              ]
       ])
-    ]);
+    ])
+  ]);
+}
+
+typedef dynamic HtmlTableRowBuilder(dynamic data);
+
+String listResourceTemplate(
+    PageData data, String nameSingular, String namePlural,
+    {List tableHead, HtmlTableRowBuilder row}) {
+  return html([
+    head([title('All $namePlural'), defaultHead(data)]),
+    body([
+      breadcrumb(data),
+      div('.container', [
+        h3('All $namePlural'),
+        br(),
+        p(a('.btn.btn-primary', 'Create new $nameSingular',
+            href: '/$nameSingular/create')),
+        br(),
+        table('.table', [
+          thead([tr(tableHead)]),
+          tbody(data.data.map((resource) {
+            return tr(row(resource));
+          }).toList())
+        ]),
+        br()
+      ])
+    ])
+  ]);
+}

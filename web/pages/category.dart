@@ -11,20 +11,57 @@ final createCategoryPage = new AdminPage(
       return createResourceTemplate(data, 'category', inputs: (data) {
         return [
           input(type: 'hidden', name: 'locale', value: 'en_US'),
+          localeSelect(data),
           div('.form-group', [
-            label('Name', _for: 'content'),
-            input('#content.form-control', type: 'text', name: 'content'),
-            small('#nameHelp.form-text.text-muted',
-                'Enter the English (en-US) name for the category.')
+            label('Subject', _for: 'subject'),
+            input('#subject.form-control', type: 'text', name: 'subject')
           ])
+        ];
+      }, success: (data) {
+        return [
+          a('.btn.btn-primary', 'Go to category overview',
+              href: '/category/list', role: 'button'),
+          ' ',
+          a('.btn.btn-secondary', 'Go to created category',
+              href: '/category/${data.data.id}/read', role: 'button')
         ];
       });
     },
     postFormat: {
       'subject': {
         'descriptor': {
-          'locale': {'code': 'locale'},
-          'content': 'content'
+          'translations': [
+            {
+              'locale': {'code': 'locale'},
+              'content': 'subject'
+            }
+          ]
         }
       }
+    },
+    additional: {
+      'locales': 'locale/list'
     });
+
+final listCategoriesPage = new AdminPage(template: (data) {
+  return listResourceTemplate(data, 'category', 'categories',
+      tableHead: [th('ID'), th('Subject'), th('Parent')], row: (category) {
+    return [
+      th(category.id.toString()),
+      td(
+        safe(() {
+          return a(category.subject.descriptor.translations[0].content,
+              href: '/descriptor/${category.subject.descriptor.id}/read',
+              scope: 'row');
+        }, ''),
+      ),
+      td(
+        safe(() {
+          final parent =
+              data.data.where((c) => c.id == category.parents.first).single;
+          return parent.subject.descriptor.translations[0].content;
+        }, ''),
+      )
+    ];
+  });
+});

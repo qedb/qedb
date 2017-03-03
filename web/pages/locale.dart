@@ -17,8 +17,6 @@ final createLocalePage = new AdminPage(
         ];
       }, success: (data) {
         return [
-          div('.alert.alert-success', 'Successfully created locale',
-              role: 'alert'),
           a('.btn.btn-primary', 'Return to locale overview',
               href: '/locale/list', role: 'button'),
         ];

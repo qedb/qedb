@@ -12,7 +12,8 @@ final allMethods = [
   ['subject/create', 'Create subject'],
   ['category/create', 'Create category'],
   ['descriptor/list', 'List descriptors'],
-  ['subject/list', 'List subjects']
+  ['subject/list', 'List subjects'],
+  ['category/list', 'List categories']
 ];
 
 final homePage = new AdminPage(template: (data) {
