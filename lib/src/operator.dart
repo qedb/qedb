@@ -4,24 +4,12 @@
 
 part of eqpg;
 
-Future<db.OperatorRow> createOperator(Session s, OperatorResource body) async {
-  final operatorRow = await operatorHelper.insert(s, {
+Future<db.OperatorRow> createOperator(Session s, OperatorResource body) {
+  return operatorHelper.insert(s, {
     'function_id': body.function.id,
     'precedence_level': body.precedenceLevel,
     'associativity': body.associativity,
-    'unicode_character': body.unicodeCharacter
+    'unicode_character': body.unicodeCharacter,
+    'latex_command': body.latexCommand
   });
-
-  // Create operator commands.
-  for (final command in body.latexCommands) {
-    await createOperatorCommand(s, operatorRow.id, command);
-  }
-
-  return operatorRow;
-}
-
-Future<db.OperatorLaTeXCommandRow> createOperatorCommand(
-    Session s, int operatorId, String command) {
-  return operatorLaTeXCommandHelper
-      .insert(s, {'operator_id': operatorId, 'command': command});
 }

@@ -114,26 +114,14 @@ class OperatorRow implements Row {
   final int precedenceLevel;
   final String associativity;
   final String unicodeCharacter;
+  final String latexCommand;
 
   OperatorRow(this.id, this.functionId, this.precedenceLevel,
-      this.associativity, this.unicodeCharacter);
+      this.associativity, this.unicodeCharacter, this.latexCommand);
 
   static const mapFormat = '*';
   static OperatorRow map(pg.Row r) =>
-      new OperatorRow(r[0], r[1], r[2], r[3], r[4]);
-}
-
-/// Operator LaTeX command
-class OperatorLaTeXCommandRow implements Row {
-  final int id;
-  final int operatorId;
-  final String command;
-
-  OperatorLaTeXCommandRow(this.id, this.operatorId, this.command);
-
-  static const mapFormat = '*';
-  static OperatorLaTeXCommandRow map(pg.Row r) =>
-      new OperatorLaTeXCommandRow(r[0], r[1], r[2]);
+      new OperatorRow(r[0], r[1], r[2], r[3], r[4], r[5]);
 }
 
 /// Function LaTeX template

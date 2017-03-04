@@ -2,9 +2,9 @@ ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Pr
 1,Algebra,"Basic algebra",Add,add,word,2,,FALSE,1,ltr,+,,
 2,Algebra,"Basic algebra",Subtract,subtract,word,2,,FALSE,1,ltr,-,,
 3,Algebra,"Basic algebra",Multiply,multiply,word,2,,FALSE,2,ltr,*,cdot,
-4,Algebra,"Basic algebra",Divide,divide,word,2,\frac{$a}{$b},FALSE,2,ltr,/,,
+4,Algebra,"Basic algebra",Divide,divide,word,2,\frac{$a}{$b},FALSE,2,ltr,/,div,
 5,Algebra,"Basic algebra",Power,power,word,2,,FALSE,3,rtl,^,,
-6,Algebra,"Basic algebra",Negate,negate,word,1,,FALSE,4,rtl,,,
+6,Algebra,"Basic algebra",Negate,negate,word,1,,FALSE,,,,,"Special parser implementation"
 7,Algebra,"Basic algebra",,a,symbol,0,a,TRUE,,,,,
 8,Algebra,"Basic algebra",,b,symbol,0,b,TRUE,,,,,
 9,Algebra,"Basic algebra",,c,symbol,0,c,TRUE,,,,,

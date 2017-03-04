@@ -152,8 +152,8 @@ class OperatorResource extends _Resource<db.OperatorRow> {
   int id;
   int precedenceLevel;
   String unicodeCharacter;
+  String latexCommand;
   FunctionResource function;
-  List<String> latexCommands;
 
   @ApiProperty(values: const {'rtl': 'right-to-left', 'ltr': 'left-to-right'})
   String associativity;
@@ -164,13 +164,8 @@ class OperatorResource extends _Resource<db.OperatorRow> {
     precedenceLevel = row.precedenceLevel;
     associativity = row.associativity;
     unicodeCharacter = row.unicodeCharacter;
+    latexCommand = row.latexCommand;
     function = new FunctionResource()..load(row.functionId, data);
-
-    // Extract commands from session data.
-    latexCommands = data.operatorLaTeXCommandTable.values
-        .where((row) => row.operatorId == id)
-        .map((row) => row.command)
-        .toList();
   }
 }
 

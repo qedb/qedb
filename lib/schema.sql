@@ -92,13 +92,8 @@ CREATE TABLE operator (
   function_id        integer                 NOT NULL UNIQUE REFERENCES function(id),
   precedence_level   smallint                NOT NULL CHECK (precedence_level > 0),
   associativity      operator_associativity  NOT NULL,
-  unicode_character  char(1)                 NOT NULL UNIQUE
-);
-
-CREATE TABLE operator_latex_command (
-  id           serial   PRIMARY KEY,
-  operator_id  integer  NOT NULL REFERENCES operator(id),
-  command      text     NOT NULL UNIQUE CHECK (command ~ E'^[A-Za-z][a-z]*$')
+  unicode_character  char(1)                 NOT NULL UNIQUE,
+  latex_command      text                    UNIQUE CHECK (latex_command ~ E'^[A-Za-z][a-z]*$')
 );
 
 CREATE TABLE function_latex_template (

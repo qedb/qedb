@@ -185,14 +185,14 @@ Future main() async {
       'associativity': col('Ass.'),
       'function': {'id': col('ID')},
       'unicodeCharacter': col('Char(1)'),
-      'latexCommands': ifNeElse('Command', [col('Command')], [])
+      'latexCommand': ifNe('Command', col('Command'))
     }, response: {
       'id': pkey.get('operator', col('ID')),
       'precedenceLevel': col('Pre.'),
       'associativity': col('Ass.'),
       'function': {'id': col('ID')},
       'unicodeCharacter': col('Char(1)'),
-      'latexCommands': ifNeElse('Command', [col('Command')], [])
+      'latexCommand': ifNe('Command', col('Command'))
     })
   ]);
 
