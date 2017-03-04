@@ -16,7 +16,7 @@ Future<db.CategoryRow> createCategory(
     final result = await subjectHelper.selectCustom(
         s,
         '''
-SELECT * FROM subject WHERE descriptor_id = (
+descriptor_id = (
   SELECT descriptor_id FROM translation
   WHERE content = @content AND locale_id = @locale_id)''',
         {
@@ -60,9 +60,30 @@ SELECT * FROM subject WHERE descriptor_id = (
   }
 }
 
-Future<List<db.CategoryRow>> listCategories(
-    Session s, List<String> locales) async {
-  final categories = await categoryHelper.select(s, {});
+Future<db.CategoryRow> readCategory(
+    Session s, int id, List<String> locales) async {
+  final category = await categoryHelper.selectOne(s, {'id': id});
+  final subject = await subjectHelper.selectOne(s, {'id': category.subjectId});
+  await translationHelper.selectIn(s, {
+    'descriptor_id': [subject.descriptorId],
+    'locale_id': getLocaleIds(s.data.cache, locales)
+  });
+  return category;
+}
+
+Future<List<db.CategoryRow>> listCategories(Session s, List<String> locales,
+    [int parentId = -1]) async {
+  final categories = parentId == -1
+      ? await categoryHelper.select(s, {})
+      : await categoryHelper.selectCustom(
+          s,
+          '''parents = array_append(
+            (SELECT parents FROM category WHERE id = @parent_id), @parent_id)''',
+          {'parent_id': parentId});
+
+  if (categories.isEmpty) {
+    return [];
+  }
 
   // Select all subjects.
   final subjectIds = categoryHelper.ids(categories, (row) => row.subjectId);

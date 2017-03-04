@@ -55,12 +55,11 @@ final listDescriptorsPage = new AdminPage(template: (data) {
 final readDescriptorPage = new AdminPage(template: (data) {
   var translationNr = 0;
   return html([
-    head(
-        [title('Descriptor #${data.pathParameters['id']}'), defaultHead(data)]),
+    head([title('Descriptor #${data.data.id}'), defaultHead(data)]),
     body([
       breadcrumb(data),
       div('.container', [
-        h3('Descriptor #${data.pathParameters['id']}'),
+        h3('Descriptor #${data.data.id}'),
         br(),
         h4('Translations'),
         table('.table', [
@@ -77,8 +76,7 @@ final readDescriptorPage = new AdminPage(template: (data) {
         ]),
         br(),
         a('.btn.btn-secondary', 'Add translation',
-            href:
-                '/descriptor/${data.pathParameters['id']}/translations/create',
+            href: '/descriptor/${data.data.id}/translation/create',
             role: 'button')
       ])
     ])

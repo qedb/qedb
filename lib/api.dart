@@ -16,6 +16,7 @@ import 'package:eqpg/resources.dart';
 import 'package:eqpg/eqpg.dart' as api;
 
 final log = new Logger('eqpg');
+const defaultLocale = 'en_US';
 
 @ApiClass(name: 'eqdb', version: 'v0', description: 'EqDB read/write API')
 class EqDB {
@@ -58,14 +59,14 @@ class EqDB {
           new DescriptorResource()
             ..load((await api.createDescriptor(s, body)).id, s.data));
 
-  @ApiMethod(path: 'descriptor/{id}/translations/create', method: 'POST')
+  @ApiMethod(path: 'descriptor/{id}/translation/create', method: 'POST')
   Future<TranslationResource> createTranslation(
           int id, TranslationResource body) =>
       _runRequestSession<TranslationResource>((s) async =>
           new TranslationResource()
             ..loadRow(await api.createTranslation(s, id, body), s.data));
 
-  @ApiMethod(path: 'descriptor/{id}/translations/list', method: 'GET')
+  @ApiMethod(path: 'descriptor/{id}/translation/list', method: 'GET')
   Future<List<TranslationResource>> listDescriptorTranslations(int id) =>
       _runRequestSession<List<TranslationResource>>((s) async =>
           (await api.listTranslations(s, id))
@@ -74,7 +75,7 @@ class EqDB {
 
   @ApiMethod(path: 'descriptor/list', method: 'GET')
   Future<List<DescriptorResource>> listDescriptors(
-          {String locale: 'en_US'}) async =>
+          {String locale: defaultLocale}) async =>
       _runRequestSession<List<DescriptorResource>>((s) async =>
           (await api.listDescriptors(s, [locale]))
               .map((r) => new DescriptorResource()..load(r.id, s.data))
@@ -92,7 +93,7 @@ class EqDB {
         ..loadRow(await api.createSubject(s, body), s.data));
 
   @ApiMethod(path: 'subject/list', method: 'GET')
-  Future<List<SubjectResource>> listSubjects({String locale: 'en_US'}) =>
+  Future<List<SubjectResource>> listSubjects({String locale: defaultLocale}) =>
       _runRequestSession<List<SubjectResource>>((s) async =>
           (await api.listSubjects(s, [locale]))
               .map((r) => new SubjectResource()..load(r.id, s.data))
@@ -103,8 +104,15 @@ class EqDB {
       _runRequestSession<CategoryResource>((s) async => new CategoryResource()
         ..loadRow(await api.createCategory(s, 0, body), s.data));
 
+  @ApiMethod(path: 'category/{id}/read', method: 'GET')
+  Future<CategoryResource> readCategory(int id,
+          {String locale: defaultLocale}) =>
+      _runRequestSession<CategoryResource>((s) async => new CategoryResource()
+        ..loadRow(await api.readCategory(s, id, [locale]), s.data));
+
   @ApiMethod(path: 'category/list', method: 'GET')
-  Future<List<CategoryResource>> listCategories({String locale: 'en_US'}) =>
+  Future<List<CategoryResource>> listCategories(
+          {String locale: defaultLocale}) =>
       _runRequestSession<List<CategoryResource>>((s) async =>
           (await api.listCategories(s, [locale]))
               .map((r) => new CategoryResource()..loadRow(r, s.data))
@@ -114,6 +122,14 @@ class EqDB {
   Future<CategoryResource> createSubCategory(int id, CategoryResource body) =>
       _runRequestSession<CategoryResource>((s) async => new CategoryResource()
         ..loadRow(await api.createCategory(s, id, body), s.data));
+
+  @ApiMethod(path: 'category/{id}/category/list', method: 'GET')
+  Future<List<CategoryResource>> listSubCategories(int id,
+          {String locale: defaultLocale}) =>
+      _runRequestSession<List<CategoryResource>>((s) async =>
+          (await api.listCategories(s, [locale], id))
+              .map((r) => new CategoryResource()..loadRow(r, s.data))
+              .toList());
 
   @ApiMethod(path: 'function/create', method: 'POST')
   Future<FunctionResource> createFunction(FunctionResource body) =>

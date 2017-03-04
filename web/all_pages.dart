@@ -28,11 +28,14 @@ Map<String, AdminPage> pages = {
   '/descriptor/create': createDescriptorPage,
   '/descriptor/list': listDescriptorsPage,
   '/descriptor/{id}/read': readDescriptorPage,
-  '/descriptor/{id}/translations/create': createTranslationPage,
+  '/descriptor/{id}/translation/create': createTranslationPage,
   '/subject/create': createSubjectPage,
   '/subject/list': listSubjectsPage,
   '/category/create': createCategoryPage,
-  '/category/list': listCategoriesPage
+  '/category/list': listCategoriesPage,
+  '/category/{id}/read': readCategoryPage,
+  '/category/{id}/category/create': createCategoryPage,
+  '/category/{id}/category/list': listSubCategoriesPage
 };
 
 /// Requests constants.

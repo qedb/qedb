@@ -47,7 +47,7 @@ Future main() async {
     }),
 
     // Get descriptor translations.
-    route('GET', 'descriptor/{id}/translations/list', url: {
+    route('GET', 'descriptor/{id}/translation/list', url: {
       'id': col('ID')
     }, response: [
       {
@@ -58,7 +58,7 @@ Future main() async {
     ]),
 
     // Add Dutch translation to descriptor.
-    route('POST', 'descriptor/{id}/translations/create', url: {
+    route('POST', 'descriptor/{id}/translation/create', url: {
       'id': col('ID')
     }, request: {
       'locale': {'code': 'nl_NL'},
@@ -70,7 +70,7 @@ Future main() async {
     }),
 
     // Get descriptor translations again.
-    route('GET', 'descriptor/{id}/translations/list', url: {
+    route('GET', 'descriptor/{id}/translation/list', url: {
       'id': col('ID')
     }, response: [
       {
@@ -117,7 +117,7 @@ Future main() async {
       'parents': []
     }),
 
-    // Create sub-category.
+    // Create subcategory.
     route('POST', 'category/{id}/category/create',
         runIf: not(empty(col('Parent ID'))),
         url: {

@@ -107,16 +107,26 @@ typedef dynamic HtmlTableRowBuilder(dynamic data);
 
 String listResourceTemplate(
     PageData data, String nameSingular, String namePlural,
-    {List tableHead, HtmlTableRowBuilder row}) {
+    {String customTitle = '',
+    String customCreateButton = '',
+    List tableHead,
+    HtmlTableRowBuilder row}) {
   return html([
-    head([title('All $namePlural'), defaultHead(data)]),
+    head([
+      title('', customTitle.isEmpty ? 'All $namePlural' : customTitle),
+      defaultHead(data)
+    ]),
     body([
       breadcrumb(data),
       div('.container', [
-        h3('All $namePlural'),
+        h3('', customTitle.isEmpty ? 'All $namePlural' : customTitle),
         br(),
-        p(a('.btn.btn-primary', 'Create new $nameSingular',
-            href: '/$nameSingular/create')),
+        p(a(
+            '.btn.btn-primary',
+            customCreateButton.isEmpty
+                ? 'Create new $nameSingular'
+                : customCreateButton,
+            href: 'create')),
         br(),
         table('.table', [
           thead([tr(tableHead)]),

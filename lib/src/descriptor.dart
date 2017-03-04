@@ -18,8 +18,8 @@ Future<db.DescriptorRow> createDescriptor(
     return ['(', t.locale.getId(s.data), ',', encodeString(t.content), ')']
         .join();
   });
-  final existingTranslations = await translationHelper.selectCustom(s,
-      'SELECT * FROM translation WHERE (locale_id, content) IN (${translations.join(',')})');
+  final existingTranslations = await translationHelper.selectCustom(
+      s, '(locale_id, content) IN (${translations.join(',')})');
 
   // If none of the specified translations is in the database, we can create
   // a new descriptor record.
