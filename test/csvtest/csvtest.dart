@@ -267,9 +267,11 @@ ValueResolver accept(AcceptType type) =>
 class _RemoveMe {}
 
 /// Only include this item if the given value is not empty.
-ValueResolver includeIf(ValueResolver condition, dynamic value) => (row) {
+ValueResolver includeIf(ValueResolver condition, dynamic value,
+        [dynamic fallback]) =>
+    (row) {
       if (condition(row) == false) {
-        return new _RemoveMe();
+        return fallback == null ? new _RemoveMe() : evaluate(fallback, row);
       } else {
         return evaluate(value, row);
       }

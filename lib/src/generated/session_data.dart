@@ -18,6 +18,8 @@ class SessionData {
   Map<int, db.FunctionRow> functionTable = {};
   Map<int, db.FunctionSubjectTagRow> functionSubjectTagTable = {};
   Map<int, db.OperatorRow> operatorTable = {};
+  Map<int, db.OperatorLaTeXCommandRow> operatorLaTeXCommandTable = {};
+  Map<int, db.FunctionLaTeXTemplateRow> functionLaTeXTemplateTable = {};
   Map<int, db.ExpressionRow> expressionTable = {};
   Map<int, db.ExpressionLineageRow> expressionLineageTable = {};
   Map<int, db.LineageExpressionRow> lineageExpressionTable = {};

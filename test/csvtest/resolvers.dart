@@ -57,6 +57,10 @@ ValueResolver ifNe(String condCol, dynamic value) =>
 ValueResolver ifNor(ValueResolver condA, ValueResolver condB, dynamic value) =>
     includeIf(not(or(condA, condB)), value);
 
+/// If not empty, include A, else include B.
+ValueResolver ifNeElse(String condCol, dynamic value, dynamic fallback) =>
+    includeIf(not(empty(col(condCol))), value, fallback);
+
 /// Primary key emulator.
 class PrimaryKeyEmulator {
   final db = new Map<String, List<int>>();

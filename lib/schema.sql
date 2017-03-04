@@ -71,8 +71,7 @@ CREATE TABLE function (
   category_id     integer   NOT NULL REFERENCES category(id),
   descriptor_id   integer   UNIQUE REFERENCES descriptor(id),
   generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2),
-  argument_count  smallint  NOT NULL CHECK (argument_count >= 0),
-  latex_template  text      NOT NULL CHECK (NOT latex_template = '')
+  argument_count  smallint  NOT NULL CHECK (argument_count >= 0)
 );
 CREATE INDEX function_category_id_index ON function(category_id);
 
@@ -89,10 +88,26 @@ CREATE TYPE operator_associativity AS ENUM ('ltr', 'rtl');
 
 -- Operator properties
 CREATE TABLE operator (
-  id                serial                  PRIMARY KEY,
-  function_id       integer                 NOT NULL UNIQUE REFERENCES function(id),
-  precedence_level  smallint                NOT NULL CHECK (precedence_level > 0),
-  associativity     operator_associativity  NOT NULL
+  id                 serial                  PRIMARY KEY,
+  function_id        integer                 NOT NULL UNIQUE REFERENCES function(id),
+  precedence_level   smallint                NOT NULL CHECK (precedence_level > 0),
+  associativity      operator_associativity  NOT NULL,
+  unicode_character  char(1)                 NOT NULL UNIQUE
+);
+
+CREATE TABLE operator_latex_command (
+  id           serial   PRIMARY KEY,
+  operator_id  integer  NOT NULL REFERENCES operator(id),
+  command      text     NOT NULL UNIQUE CHECK (command ~ E'^[A-Za-z][a-z]*$')
+);
+
+CREATE TABLE function_latex_template (
+  id           serial   PRIMARY KEY,
+  function_id  integer  NOT NULL REFERENCES function(id),
+  priority     integer  NOT NULL CHECK (priority > 0),
+  template     text     NOT NULL UNIQUE,
+
+  UNIQUE (function_id, priority)
 );
 
 CREATE TYPE expression_type AS ENUM ('integer', 'function', 'generic');

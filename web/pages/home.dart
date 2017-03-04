@@ -20,7 +20,7 @@ final homePage = new AdminPage(template: (data) {
   return html([
     head([title('EqDB admin'), defaultHead(data)]),
     body([
-      div('.jumbotron', [
+      div('.jumbotron', style: 'background: linear-gradient(#ccc, #fff);', c: [
         div('.container', style: 'text-align: center;', c: [
           svg(logoSvgContent,
               style: 'max-width: 20em; vertical-align: middle;',

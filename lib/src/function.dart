@@ -15,7 +15,6 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
   final insertParameters = {
     'category_id': body.category.id,
     'argument_count': body.argumentCount,
-    'latex_template': body.latexTemplate,
     'generic': body.generic
   };
 
@@ -31,13 +30,20 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
     }
   }
 
-  return await functionHelper.insert(s, insertParameters);
+  final functionRow = await functionHelper.insert(s, insertParameters);
+
+  // Insert LaTeX templates.
+  var templatePriority = 0;
+  for (final template in body.latexTemplates) {
+    await createFunctionTemplate(
+        s, functionRow.id, ++templatePriority, template);
+  }
+
+  return functionRow;
 }
 
-Future<db.OperatorRow> createOperator(Session s, OperatorResource body) {
-  return operatorHelper.insert(s, {
-    'function_id': body.function.id,
-    'precedence_level': body.precedenceLevel,
-    'associativity': body.associativity
-  });
+Future<db.FunctionLaTeXTemplateRow> createFunctionTemplate(
+    Session s, int functionId, int priority, String template) {
+  return functionLaTeXTemplateHelper.insert(s,
+      {'function_id': functionId, 'priority': priority, 'template': template});
 }

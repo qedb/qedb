@@ -160,7 +160,7 @@ Future main() async {
       }),
       'generic': col('Generic'),
       'argumentCount': col('ArgC'),
-      'latexTemplate': col('LaTeX template')
+      'latexTemplates': ifNeElse('LaTeX template', [col('LaTeX template')], [])
     }, response: {
       'id': col('ID'),
       'category': {'id': pkey.get('category', col('Category'))},
@@ -176,19 +176,23 @@ Future main() async {
       }),
       'generic': col('Generic'),
       'argumentCount': col('ArgC'),
-      'latexTemplate': col('LaTeX template')
+      'latexTemplates': ifNeElse('LaTeX template', [col('LaTeX template')], [])
     }),
 
     // Create operator.
     route('POST', 'operator/create', runIf: not(empty(col('Pre.'))), request: {
       'precedenceLevel': col('Pre.'),
       'associativity': col('Ass.'),
-      'function': {'id': col('ID')}
+      'function': {'id': col('ID')},
+      'unicodeCharacter': col('Char(1)'),
+      'latexCommands': ifNeElse('Command', [col('Command')], [])
     }, response: {
       'id': pkey.get('operator', col('ID')),
       'precedenceLevel': col('Pre.'),
       'associativity': col('Ass.'),
-      'function': {'id': col('ID')}
+      'function': {'id': col('ID')},
+      'unicodeCharacter': col('Char(1)'),
+      'latexCommands': ifNeElse('Command', [col('Command')], [])
     })
   ]);
 

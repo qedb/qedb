@@ -22,6 +22,7 @@ part 'src/subject.dart';
 part 'src/translation.dart';
 part 'src/category.dart';
 part 'src/function.dart';
+part 'src/operator.dart';
 part 'src/expression.dart';
 part 'src/rule.dart';
 part 'src/definition.dart';
