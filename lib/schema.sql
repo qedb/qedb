@@ -86,7 +86,9 @@ CREATE TABLE function (
   -- category (does not apply to functions in child categories).
   UNIQUE (category_id, latex_template)
 );
+
 CREATE INDEX function_category_id_index ON function(category_id);
+CREATE INDEX function_keyword_index ON function(keyword);
 
 -- Function subject tag
 -- The referenced subject can not already be used by a category.
