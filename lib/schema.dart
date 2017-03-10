@@ -85,13 +85,15 @@ class FunctionRow implements Row {
   final int descriptorId;
   final bool generic;
   final int argumentCount;
+  final String keyword;
+  final String latexTemplate;
 
   FunctionRow(this.id, this.categoryId, this.descriptorId, this.generic,
-      this.argumentCount);
+      this.argumentCount, this.keyword, this.latexTemplate);
 
   static const mapFormat = '*';
   static FunctionRow map(pg.Row r) =>
-      new FunctionRow(r[0], r[1], r[2], r[3], r[4]);
+      new FunctionRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
 }
 
 /// Function subject tag
@@ -113,30 +115,14 @@ class OperatorRow implements Row {
   final int functionId;
   final int precedenceLevel;
   final String associativity;
-  final String unicodeCharacter;
-  final String latexCommand;
+  final String character;
 
   OperatorRow(this.id, this.functionId, this.precedenceLevel,
-      this.associativity, this.unicodeCharacter, this.latexCommand);
+      this.associativity, this.character);
 
   static const mapFormat = '*';
   static OperatorRow map(pg.Row r) =>
-      new OperatorRow(r[0], r[1], r[2], r[3], r[4], r[5]);
-}
-
-/// Function LaTeX template
-class FunctionLaTeXTemplateRow implements Row {
-  final int id;
-  final int functionId;
-  final int priority;
-  final String template;
-
-  FunctionLaTeXTemplateRow(
-      this.id, this.functionId, this.priority, this.template);
-
-  static const mapFormat = '*';
-  static FunctionLaTeXTemplateRow map(pg.Row r) =>
-      new FunctionLaTeXTemplateRow(r[0], r[1], r[2], r[3]);
+      new OperatorRow(r[0], r[1], r[2], r[3], r[4]);
 }
 
 /// Expression

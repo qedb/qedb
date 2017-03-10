@@ -46,13 +46,6 @@ final operatorHelper = new TableHelper<db.OperatorRow>(
     db.OperatorRow.mapFormat,
     db.OperatorRow.map,
     (result, record) => result.operatorTable[record.id] = record);
-final functionLaTeXTemplateHelper =
-    new TableHelper<db.FunctionLaTeXTemplateRow>(
-        'function_latex_template',
-        db.FunctionLaTeXTemplateRow.mapFormat,
-        db.FunctionLaTeXTemplateRow.map,
-        (result, record) =>
-            result.functionLaTeXTemplateTable[record.id] = record);
 final expressionHelper = new TableHelper<db.ExpressionRow>(
     'expression',
     db.ExpressionRow.mapFormat,

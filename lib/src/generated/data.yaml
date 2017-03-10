@@ -31,10 +31,6 @@ tables:
   className:  Operator
   varName:    operator
 
-- tableName:  function_latex_template
-  className:  FunctionLaTeXTemplate
-  varName:    functionLaTeXTemplate
-
 - tableName:  expression
   className:  Expression
   varName:    expression

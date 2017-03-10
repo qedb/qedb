@@ -71,7 +71,20 @@ CREATE TABLE function (
   category_id     integer   NOT NULL REFERENCES category(id),
   descriptor_id   integer   UNIQUE REFERENCES descriptor(id),
   generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2),
-  argument_count  smallint  NOT NULL CHECK (argument_count >= 0)
+  argument_count  smallint  NOT NULL CHECK (argument_count >= 0),
+
+  -- It is not feasible to make unique keywords. It is not required to configure
+  -- a keyword. Operator functions do not have keywords. Exotic functions might
+  -- not use a keyword (instead the descriptor could be used for lookup).
+  keyword         text      CHECK (keyword ~ E'^[a-z0-9]+(?:.[a-z0-9]+)*$'),
+
+  -- LaTeX template may be empty. Operator information, the keyword, or the
+  -- descriptor can also be used to print this function.
+  latex_template  text,
+
+  -- At least do not repeat the same LaTeX template within the same direct
+  -- category (does not apply to functions in child categories).
+  UNIQUE (category_id, latex_template)
 );
 CREATE INDEX function_category_id_index ON function(category_id);
 
@@ -92,17 +105,7 @@ CREATE TABLE operator (
   function_id        integer                 NOT NULL UNIQUE REFERENCES function(id),
   precedence_level   smallint                NOT NULL CHECK (precedence_level > 0),
   associativity      operator_associativity  NOT NULL,
-  unicode_character  char(1)                 NOT NULL UNIQUE,
-  latex_command      text                    UNIQUE CHECK (latex_command ~ E'^[A-Za-z][a-z]*$')
-);
-
-CREATE TABLE function_latex_template (
-  id           serial   PRIMARY KEY,
-  function_id  integer  NOT NULL REFERENCES function(id),
-  priority     integer  NOT NULL CHECK (priority > 0),
-  template     text     NOT NULL UNIQUE,
-
-  UNIQUE (function_id, priority)
+  character          char(1)                 NOT NULL UNIQUE
 );
 
 CREATE TYPE expression_type AS ENUM ('integer', 'function', 'generic');
@@ -208,8 +211,14 @@ CREATE TABLE lineage_equation (
 -- Equation page
 --------------------------------------------------------------------------------
 
+CREATE TABLE page_draft (
+  id    serial  PRIMARY KEY,
+  data  jsonb   NOT NULL
+);
+
 CREATE TABLE page (
   id             serial   PRIMARY KEY,
+  draft_id       integer  NOT NULL REFERENCES page_draft(id),
   descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id)
 );
 

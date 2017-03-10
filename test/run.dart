@@ -160,7 +160,8 @@ Future main() async {
       }),
       'generic': col('Generic'),
       'argumentCount': col('ArgC'),
-      'latexTemplates': ifNeElse('LaTeX template', [col('LaTeX template')], [])
+      'keyword': ifNe('Keyword', col('Keyword')),
+      'latexTemplate': ifNe('LaTeX template', col('LaTeX template'))
     }, response: {
       'id': col('ID'),
       'category': {'id': pkey.get('category', col('Category'))},
@@ -176,7 +177,8 @@ Future main() async {
       }),
       'generic': col('Generic'),
       'argumentCount': col('ArgC'),
-      'latexTemplates': ifNeElse('LaTeX template', [col('LaTeX template')], [])
+      'keyword': ifNe('Keyword', col('Keyword')),
+      'latexTemplate': ifNe('LaTeX template', col('LaTeX template'))
     }),
 
     // Create operator.
@@ -184,15 +186,13 @@ Future main() async {
       'precedenceLevel': col('Pre.'),
       'associativity': col('Ass.'),
       'function': {'id': col('ID')},
-      'unicodeCharacter': col('Char(1)'),
-      'latexCommand': ifNe('Command', col('Command'))
+      'character': col('Char(1)')
     }, response: {
       'id': pkey.get('operator', col('ID')),
       'precedenceLevel': col('Pre.'),
       'associativity': col('Ass.'),
       'function': {'id': col('ID')},
-      'unicodeCharacter': col('Char(1)'),
-      'latexCommand': ifNe('Command', col('Command'))
+      'character': col('Char(1)')
     })
   ]);
 

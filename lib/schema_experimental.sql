@@ -14,7 +14,10 @@ CREATE TYPE keyword_type AS ENUM (
   
   -- Related to the function LaTeX template
   -- ([a-z]+ form of the function symbol)
-  'symbol'
+  'symbol',
+
+  -- Special case: this keyword is directly related to a LaTeX command.
+  'latex'
 );
 
 -- Keywords ([a-z]+ sequences that identify the function)

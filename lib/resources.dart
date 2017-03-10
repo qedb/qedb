@@ -123,7 +123,8 @@ class FunctionResource extends _Resource<db.FunctionRow> {
   int id;
   bool generic;
   int argumentCount;
-  List<String> latexTemplates;
+  String keyword;
+  String latexTemplate;
   CategoryResource category;
   DescriptorResource descriptor;
 
@@ -132,13 +133,8 @@ class FunctionResource extends _Resource<db.FunctionRow> {
   void loadFields(row, data) {
     generic = row.generic;
     argumentCount = row.argumentCount;
-
-    // Extract templates from session data.
-    latexTemplates = (data.functionLaTeXTemplateTable.values
-            .where((row) => row.functionId == id)
-            .toList()..sort((a, b) => a.priority - b.priority))
-        .map((row) => row.template)
-        .toList();
+    keyword = row.keyword;
+    latexTemplate = row.latexTemplate;
 
     category = new CategoryResource()..load(row.categoryId, data);
     if (row.descriptorId != null) {
@@ -151,8 +147,7 @@ class FunctionResource extends _Resource<db.FunctionRow> {
 class OperatorResource extends _Resource<db.OperatorRow> {
   int id;
   int precedenceLevel;
-  String unicodeCharacter;
-  String latexCommand;
+  String character;
   FunctionResource function;
 
   @ApiProperty(values: const {'rtl': 'right-to-left', 'ltr': 'left-to-right'})
@@ -163,8 +158,7 @@ class OperatorResource extends _Resource<db.OperatorRow> {
   void loadFields(row, data) {
     precedenceLevel = row.precedenceLevel;
     associativity = row.associativity;
-    unicodeCharacter = row.unicodeCharacter;
-    latexCommand = row.latexCommand;
+    character = row.character;
     function = new FunctionResource()..load(row.functionId, data);
   }
 }

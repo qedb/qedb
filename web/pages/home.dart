@@ -18,7 +18,7 @@ final allMethods = [
 
 final homePage = new AdminPage(template: (data) {
   return html([
-    head([title('EqDB admin'), defaultHead(data)]),
+    head([title('EqDB Admin'), defaultHead(data)]),
     body([
       div('.jumbotron', style: 'background: linear-gradient(#ccc, #fff);', c: [
         div('.container', style: 'text-align: center;', c: [

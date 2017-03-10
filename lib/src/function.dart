@@ -18,6 +18,14 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
     'generic': body.generic
   };
 
+  if (body.latexTemplate != null) {
+    insertParameters['latex_template'] = body.latexTemplate;
+  }
+
+  if (body.keyword != null) {
+    insertParameters['keyword'] = body.keyword;
+  }
+
   // If a name is specified, add it to the insert parameters.
   if (body.descriptor != null) {
     // Use ID if provided.
@@ -30,20 +38,5 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
     }
   }
 
-  final functionRow = await functionHelper.insert(s, insertParameters);
-
-  // Insert LaTeX templates.
-  var templatePriority = 0;
-  for (final template in body.latexTemplates) {
-    await createFunctionTemplate(
-        s, functionRow.id, ++templatePriority, template);
-  }
-
-  return functionRow;
-}
-
-Future<db.FunctionLaTeXTemplateRow> createFunctionTemplate(
-    Session s, int functionId, int priority, String template) {
-  return functionLaTeXTemplateHelper.insert(s,
-      {'function_id': functionId, 'priority': priority, 'template': template});
+  return await functionHelper.insert(s, insertParameters);
 }
