@@ -40,3 +40,18 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
 
   return await functionHelper.insert(s, insertParameters);
 }
+
+Future<List<db.FunctionRow>> listFunctions(
+    Session s, List<String> locales, int categoryId) async {
+  final functions = await functionHelper.select(s, {});
+
+  // Select all translations.
+  final descriptorIds =
+      functionHelper.ids(functions, (row) => row.descriptorId);
+  await translationHelper.selectIn(s, {
+    'descriptor_id': descriptorIds,
+    'locale_id': getLocaleIds(s.data.cache, locales)
+  });
+
+  return functions;
+}

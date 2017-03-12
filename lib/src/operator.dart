@@ -12,3 +12,7 @@ Future<db.OperatorRow> createOperator(Session s, OperatorResource body) {
     'character': body.character
   });
 }
+
+Future<List<db.OperatorRow>> listOperators(Session s) {
+  return operatorHelper.select(s, {});
+}

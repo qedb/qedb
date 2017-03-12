@@ -8,28 +8,29 @@ set -e
 
 OBSERVATORY_PORT=8000
 
-# Restart database and kill the API server if still running.
-./tool/stop-db.sh
-./tool/start-db.sh
+# Kill API server here, since killing is async (only sends signal).
 ./tool/kill-port.sh 8080
 
-# Empty the log file.
-truncate -s 0 testlog.txt
+# Restart database.
+./tool/stop-db.sh
+./tool/start-db.sh
 
 # Wait before Postgres is up before starting server (because the API server
 # will try to immedeatly create a connection pool).
 echo 'Sleeping 4 seconds...'
 sleep 4
 
-# Start the API server and redirect logging to testlog.txt
+# Start the API server.
+truncate -s 0 testlog.txt
 export EQPG_API_LOG='testlog.txt'
 dart --checked --observe=$OBSERVATORY_PORT bin/server.dart > /dev/null 2>&1 &
 
 # Wait untill server has started.
 while [ -z "`cat testlog.txt | grep 'Listening at port 8080'`"  ]; do
-  echo 'Waiting for server to initialize...'
-  sleep 0.1
+  echo 'Waiting for API server to initialize...'
+  sleep 0.3
 done
+echo 'API server is initialized.'
 
 # Run the provided test command.
 eval $1

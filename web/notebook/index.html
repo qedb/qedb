@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="packages/katex_js/extern/katex.min.css">
+    <link rel="stylesheet" href="packages/editex/editex.css">
+    <link rel="stylesheet" href="styles/notebook.css">
+	  <script src="katex.min.js"></script>
+  </head>
+  <body>
+    <h1>Lineage editor</h1>
+    <div class="eqdb-lineage-editor">
+      <div class="equation">
+        <div class="eq-left-side">$$a+b$$</div>
+        <div class="equals"></div>
+        <div class="eq-right-side">$$b+a$$</div>
+      </div>
+      <div class="equation">
+        <div class="eq-left-side editex editex-align-right"></div>
+        <div class="equals"></div>
+        <div class="eq-right-side editex editex-align-left"></div>
+      </div>
+      <div class="equation">
+        <div class="eq-left-side editex editex-align-right"></div>
+        <div class="equals"></div>
+        <div class="eq-right-side editex editex-align-left"></div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/contrib/auto-render.min.js"></script>
+    <script>
+      renderMathInElement(document.body);
+    </script>
+    <script src="main.dart" type="application/dart"></script>
+    <script src="packages/browser/dart.js"></script>
+  </body>
+</html>

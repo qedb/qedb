@@ -136,10 +136,25 @@ class EqDB {
       _runRequestSession<FunctionResource>((s) async => new FunctionResource()
         ..loadRow(await api.createFunction(s, body), s.data));
 
+  @ApiMethod(path: 'function/list', method: 'GET')
+  Future<List<FunctionResource>> listFunctions(
+          {String locale: defaultLocale}) =>
+      _runRequestSession<List<FunctionResource>>((s) async =>
+          (await api.listFunctions(s, [locale], 0))
+              .map((r) => new FunctionResource()..loadRow(r, s.data))
+              .toList());
+
   @ApiMethod(path: 'operator/create', method: 'POST')
   Future<OperatorResource> createOperator(OperatorResource body) =>
       _runRequestSession<OperatorResource>((s) async => new OperatorResource()
         ..loadRow(await api.createOperator(s, body), s.data));
+
+  @ApiMethod(path: 'operator/list', method: 'GET')
+  Future<List<OperatorResource>> listOperators() =>
+      _runRequestSession<List<OperatorResource>>((s) async =>
+          (await api.listOperators(s))
+              .map((r) => new OperatorResource()..loadRow(r, s.data))
+              .toList());
 
   @ApiMethod(path: 'definition/create', method: 'POST')
   Future<DefinitionResource> createDefinition(DefinitionResource body) =>
