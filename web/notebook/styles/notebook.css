@@ -20,8 +20,15 @@ h1 {
   font-size: 1.7em;
 }
 
-.eq-left-side span > .katex-display { margin: 1em; text-align: right; }
-.eq-right-side span > .katex-display { margin: 1em; text-align: left; }
+.eq-left-side span > .katex-display {
+  margin: 1em;
+  text-align: right;
+}
+
+.eq-right-side span > .katex-display {
+  margin: 1em;
+  text-align: left;
+}
 
 .equals:before {
   content: '=';

@@ -9,6 +9,7 @@ Future<db.OperatorRow> createOperator(Session s, OperatorResource body) {
     'function_id': body.function.id,
     'precedence_level': body.precedenceLevel,
     'associativity': body.associativity,
+    'operator_type': body.operatorType,
     'character': body.character
   });
 }

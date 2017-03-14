@@ -128,12 +128,22 @@ class FunctionResource extends _Resource<db.FunctionRow> {
   CategoryResource category;
   DescriptorResource descriptor;
 
+  @ApiProperty(values: const {
+    'word': '',
+    'acronym': '',
+    'abbreviation': '',
+    'symbol': '',
+    'latex': ''
+  })
+  String keywordType;
+
   Map<int, db.FunctionRow> _getTableMap(data) => data.functionTable;
 
   void loadFields(row, data) {
     generic = row.generic;
     argumentCount = row.argumentCount;
     keyword = row.keyword;
+    keywordType = row.keywordType;
     latexTemplate = row.latexTemplate;
 
     category = new CategoryResource()..load(row.categoryId, data);
@@ -153,11 +163,19 @@ class OperatorResource extends _Resource<db.OperatorRow> {
   @ApiProperty(values: const {'rtl': 'right-to-left', 'ltr': 'left-to-right'})
   String associativity;
 
+  @ApiProperty(values: const {
+    'prefix': 'unary operator written before argument',
+    'infix': 'binary operator with infix notation',
+    'postfix': 'unary operator written after argument'
+  })
+  String operatorType;
+
   Map<int, db.OperatorRow> _getTableMap(data) => data.operatorTable;
 
   void loadFields(row, data) {
     precedenceLevel = row.precedenceLevel;
     associativity = row.associativity;
+    operatorType = row.operatorType;
     character = row.character;
     function = new FunctionResource()..load(row.functionId, data);
   }

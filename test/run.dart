@@ -161,6 +161,7 @@ Future main() async {
       'generic': col('Generic'),
       'argumentCount': col('ArgC'),
       'keyword': ifNe('Keyword', col('Keyword')),
+      'keywordType': ifNe('Keyword type', col('Keyword type')),
       'latexTemplate': ifNe('LaTeX template', col('LaTeX template'))
     }, response: {
       'id': col('ID'),
@@ -178,20 +179,23 @@ Future main() async {
       'generic': col('Generic'),
       'argumentCount': col('ArgC'),
       'keyword': ifNe('Keyword', col('Keyword')),
+      'keywordType': ifNe('Keyword type', col('Keyword type')),
       'latexTemplate': ifNe('LaTeX template', col('LaTeX template'))
     }),
 
     // Create operator.
     route('POST', 'operator/create', runIf: not(empty(col('Pre.'))), request: {
+      'function': {'id': col('ID')},
       'precedenceLevel': col('Pre.'),
       'associativity': col('Ass.'),
-      'function': {'id': col('ID')},
+      'operatorType': col('Type'),
       'character': col('Char(1)')
     }, response: {
       'id': pkey.get('operator', col('ID')),
+      'function': {'id': col('ID')},
       'precedenceLevel': col('Pre.'),
       'associativity': col('Ass.'),
-      'function': {'id': col('ID')},
+      'operatorType': col('Type'),
       'character': col('Char(1)')
     })
   ]);

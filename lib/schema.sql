@@ -64,8 +64,26 @@ CREATE TABLE category (
   parents     integer[]  NOT NULL
 );
 
+-- Function keyword types
+CREATE TYPE keyword_type AS ENUM (
+  -- [a-z]+ form of an English translation of the function name descriptor
+  -- No upper caps allowed! If the original name contains spaces, dashes or
+  -- other complex symbols, you should consider to NOT create a 'word' keyword.
+  'word',
+  
+  -- Short form of the function name descriptor
+  'acronym',
+  'abbreviation',
+  
+  -- Related to the function LaTeX template
+  -- ([a-z]+ form of the function symbol)
+  'symbol',
+
+  -- Special case: this keyword is directly related to a LaTeX command.
+  'latex'
+);
+
 -- Function
--- Soft constraint: non-generic function with >0 arguments must have a name.
 CREATE TABLE function (
   id              serial    PRIMARY KEY,
   category_id     integer   NOT NULL REFERENCES category(id),
@@ -77,14 +95,25 @@ CREATE TABLE function (
   -- a keyword. Operator functions do not have keywords. Exotic functions might
   -- not use a keyword (instead the descriptor could be used for lookup).
   keyword         text      CHECK (keyword ~ E'^[a-z0-9]+(?:.[a-z0-9]+)*$'),
+  keyword_type    keyword_type,
 
   -- LaTeX template may be empty. Operator information, the keyword, or the
   -- descriptor can also be used to print this function.
-  latex_template  text,
+  latex_template  text      CHECK ((latex_template = '') IS NOT TRUE),
 
   -- At least do not repeat the same LaTeX template within the same direct
   -- category (does not apply to functions in child categories).
-  UNIQUE (category_id, latex_template)
+  UNIQUE (category_id, latex_template),
+
+  -- Non-generic function with >0 arguments must have a name.
+  -- E.g. functions such as ?a, ?fn(x) or x can be left unnamed.
+  CONSTRAINT non_generic_with_args_needs_name CHECK
+    (NOT (generic AND argument_count > 0 AND descriptor_id IS NULL)),
+
+  -- Keyword and keyword type must both be defined or not at all.
+  CONSTRAINT keyword_must_have_type CHECK
+    ((keyword IS NULL AND keyword_type IS NULL) OR
+     (keyword IS NOT NULL AND keyword_type IS NOT NULL))
 );
 
 CREATE INDEX function_category_id_index ON function(category_id);
@@ -101,12 +130,20 @@ CREATE TABLE function_subject_tag (
 -- Operator evaluation (relevant for printing parentheses)
 CREATE TYPE operator_associativity AS ENUM ('ltr', 'rtl');
 
+-- Recognized operator types.
+-- + pefix has one argument and is placed before the argument (e.g. ~)
+-- + infix has two arguments and is placed between the arguments (e.g. +)
+-- + postfix has one argument and is placed after the argument (e.g. !)
+CREATE TYPE operator_type AS ENUM ('prefix', 'infix', 'postfix');
+
 -- Operator properties
 CREATE TABLE operator (
   id                 serial                  PRIMARY KEY,
   function_id        integer                 NOT NULL UNIQUE REFERENCES function(id),
   precedence_level   smallint                NOT NULL CHECK (precedence_level > 0),
   associativity      operator_associativity  NOT NULL,
+  operator_type      operator_type           NOT NULL,
+  
   character          char(1)                 NOT NULL UNIQUE
 );
 

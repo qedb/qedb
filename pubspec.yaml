@@ -23,4 +23,6 @@ dev_dependencies:
 
   browser:      ^0.10.0+2
   katex_js:     ^0.1.0+1
-  editex:       ^0.0.3
+  editex:       ^0.0.4
+  eqpg_client:
+    path:       /home/herman/repos/eqdb/eqpg_client

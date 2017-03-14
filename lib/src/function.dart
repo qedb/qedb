@@ -22,8 +22,9 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
     insertParameters['latex_template'] = body.latexTemplate;
   }
 
-  if (body.keyword != null) {
+  if (body.keyword != null && body.keywordType != null) {
     insertParameters['keyword'] = body.keyword;
+    insertParameters['keyword_type'] = body.keywordType;
   }
 
   // If a name is specified, add it to the insert parameters.

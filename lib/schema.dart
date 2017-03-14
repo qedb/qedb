@@ -86,14 +86,15 @@ class FunctionRow implements Row {
   final bool generic;
   final int argumentCount;
   final String keyword;
+  final String keywordType;
   final String latexTemplate;
 
   FunctionRow(this.id, this.categoryId, this.descriptorId, this.generic,
-      this.argumentCount, this.keyword, this.latexTemplate);
+      this.argumentCount, this.keyword, this.keywordType, this.latexTemplate);
 
   static const mapFormat = '*';
   static FunctionRow map(pg.Row r) =>
-      new FunctionRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
+      new FunctionRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
 }
 
 /// Function subject tag
@@ -115,14 +116,15 @@ class OperatorRow implements Row {
   final int functionId;
   final int precedenceLevel;
   final String associativity;
+  final String operatorType;
   final String character;
 
   OperatorRow(this.id, this.functionId, this.precedenceLevel,
-      this.associativity, this.character);
+      this.associativity, this.operatorType, this.character);
 
   static const mapFormat = '*';
   static OperatorRow map(pg.Row r) =>
-      new OperatorRow(r[0], r[1], r[2], r[3], r[4]);
+      new OperatorRow(r[0], r[1], r[2], r[3], r[4], r[5]);
 }
 
 /// Expression
