@@ -11,6 +11,11 @@ import 'package:eqdb_client/eqdb_client.dart';
 
 /// Implements command resolvers for EdiTeX.
 class CommandResolver {
+  static const extraInstantCommands = const {
+    '(': const EdiTeXCommand('(', r'\left($0\right)', r'($0)'),
+    '[': const EdiTeXCommand('(', r'\left[$0\right]', r'($0)'),
+  };
+
   List<FunctionResource> functions;
   List<OperatorResource> operators;
 
@@ -52,29 +57,34 @@ class CommandResolver {
   }
 
   EdiTeXCommand resolveInstantCommand(String command) {
+    if (extraInstantCommands.containsKey(command)) {
+      return extraInstantCommands[command];
+    }
+
     final ops = operators.where((op) => op.character == command);
     if (ops.isNotEmpty) {
       final op = ops.single;
-      final fn = functions.singleWhere((fn) => fn.id == op.function.id);
-      // Strip function template of arguments.
-      var template = fn.latexTemplate;
-      template = template.replaceAll(new RegExp(r'\$[0-9]+'), '');
+      if (op.character == '/') {
+        // This operator has a special behavior.
+        return null;
+      }
+
+      // Generate parse template.
+      // The operator editor template can never contain arguments that come
+      // before the operator (that would have been typed already). Since our
+      // operators have a maximum of two arguments, this means at most one
+      // argument is present in the operator. If this is the case the parse
+      // template will also contain one argument.
+      final template = op.editorTemplate;
+      final parseTemplate =
+          template.contains(r'$0') ? '${op.character}(\$0)' : op.character;
 
       if (op.character == '/') {
         // This operator has a special behavior.
         return null;
-      } else if (op.character == '*') {
-        // The database template uses implicit multiplication.
-        template = '\\cdot';
       }
 
-      // Surround infix operators with groups to force spacing in LaTeX.
-      if (op.operatorType == 'infix') {
-        template = '{}$template{}';
-      }
-
-      return new EdiTeXCommand(
-          op.character, template, generateFunctionParseTemplate(fn));
+      return new EdiTeXCommand(op.character, template, parseTemplate);
     }
     return null;
   }

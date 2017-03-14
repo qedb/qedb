@@ -189,14 +189,16 @@ Future main() async {
       'precedenceLevel': col('Pre.'),
       'associativity': col('Ass.'),
       'operatorType': col('Type'),
-      'character': col('Char(1)')
+      'character': col('Char(1)'),
+      'editorTemplate': col('Editor')
     }, response: {
       'id': pkey.get('operator', col('ID')),
       'function': {'id': col('ID')},
       'precedenceLevel': col('Pre.'),
       'associativity': col('Ass.'),
       'operatorType': col('Type'),
-      'character': col('Char(1)')
+      'character': col('Char(1)'),
+      'editorTemplate': col('Editor')
     })
   ]);
 

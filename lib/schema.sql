@@ -143,8 +143,8 @@ CREATE TABLE operator (
   precedence_level   smallint                NOT NULL CHECK (precedence_level > 0),
   associativity      operator_associativity  NOT NULL,
   operator_type      operator_type           NOT NULL,
-  
-  character          char(1)                 NOT NULL UNIQUE
+  character          char(1)                 NOT NULL UNIQUE,
+  editor_template    text                    NOT NULL UNIQUE
 );
 
 CREATE TYPE expression_type AS ENUM ('integer', 'function', 'generic');

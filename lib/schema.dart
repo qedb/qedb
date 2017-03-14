@@ -118,13 +118,20 @@ class OperatorRow implements Row {
   final String associativity;
   final String operatorType;
   final String character;
+  final String editorTemplate;
 
-  OperatorRow(this.id, this.functionId, this.precedenceLevel,
-      this.associativity, this.operatorType, this.character);
+  OperatorRow(
+      this.id,
+      this.functionId,
+      this.precedenceLevel,
+      this.associativity,
+      this.operatorType,
+      this.character,
+      this.editorTemplate);
 
   static const mapFormat = '*';
   static OperatorRow map(pg.Row r) =>
-      new OperatorRow(r[0], r[1], r[2], r[3], r[4], r[5]);
+      new OperatorRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
 }
 
 /// Expression

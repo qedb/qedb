@@ -158,6 +158,7 @@ class OperatorResource extends _Resource<db.OperatorRow> {
   int id;
   int precedenceLevel;
   String character;
+  String editorTemplate;
   FunctionResource function;
 
   @ApiProperty(values: const {'rtl': 'right-to-left', 'ltr': 'left-to-right'})
@@ -177,6 +178,7 @@ class OperatorResource extends _Resource<db.OperatorRow> {
     associativity = row.associativity;
     operatorType = row.operatorType;
     character = row.character;
+    editorTemplate = row.editorTemplate;
     function = new FunctionResource()..load(row.functionId, data);
   }
 }

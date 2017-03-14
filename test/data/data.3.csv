@@ -1,24 +1,24 @@
-ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Pre.,Ass.,Type,Char(1)
-1,Algebra,"Basic algebra",Add,,,2,$0+$1,FALSE,1,ltr,infix,+
-2,Algebra,"Basic algebra",Subtract,,,2,$0-$1,FALSE,1,ltr,infix,-
-3,Algebra,"Basic algebra",Multiply,,,2,$0$1,FALSE,2,ltr,infix,*
-4,Algebra,"Basic algebra",Divide,frac,latex,2,\frac{~$0~}{~$1~},FALSE,2,ltr,infix,/
-5,Algebra,"Basic algebra",Power,,,2,$0^{$1},FALSE,3,rtl,infix,^
-6,Algebra,"Basic algebra",Negate,,,1,-$0,FALSE,4,ltr,prefix,~
-7,Algebra,Combinatorics,Factorial,,,1,$0!,FALSE,5,rtl,postfix,!
-8,Algebra,"Basic algebra",,a,symbol,0,,TRUE,,,,
-9,Algebra,"Basic algebra",,b,symbol,0,,TRUE,,,,
-10,Algebra,"Basic algebra",,c,symbol,0,,TRUE,,,,
-11,Algebra,"Vector algebra",,e1,symbol,0,\hat{i},FALSE,,,,
-12,Algebra,"Vector algebra",,e2,symbol,0,\hat{j},FALSE,,,,
-13,Algebra,"Vector algebra",,e3,symbol,0,\hat{k},FALSE,,,,
-14,Algebra,Trigonometry,Radius,r,symbol,0,,FALSE,,,,
-15,Algebra,Trigonometry,Theta,theta,latex,0,\theta,FALSE,,,,
-16,Algebra,Trigonometry,Sine,sin,latex,1,\sin$0,FALSE,,,,
-17,Algebra,Trigonometry,Cosine,cos,latex,1,\cos$0,FALSE,,,,
-18,Algebra,Calculus,,x,symbol,0,,TRUE,,,,
-19,Algebra,Calculus,,y,symbol,0,,TRUE,,,,
-20,Algebra,Calculus,Function,f,abbreviation,1,,TRUE,,,,
-21,Algebra,Calculus,Delta,d,symbol,1,\Delta$0,FALSE,,,,
-22,Algebra,Calculus,Limit,lim,latex,3,\lim_{$0\to$1}$2,FALSE,,,,
-23,Algebra,Calculus,Differential,diff,abbreviation,2,\frac{\partial}{\partial$0}$1,FALSE,,,,
+ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Pre.,Ass.,Type,Char(1),Editor
+1,Algebra,"Basic algebra",Add,,,2,$0+$1,FALSE,1,ltr,infix,+,{}+{}
+2,Algebra,"Basic algebra",Subtract,,,2,$0-$1,FALSE,1,ltr,infix,-,{}-{}
+3,Algebra,"Basic algebra",Multiply,,,2,$0$1,FALSE,2,ltr,infix,*,{}\cdot{}
+4,Algebra,"Basic algebra",Divide,frac,latex,2,\frac{~$0~}{~$1~},FALSE,2,ltr,infix,/,{}\div{}
+5,Algebra,"Basic algebra",Power,,,2,$0^{$1},FALSE,3,rtl,infix,^,^{$0}
+6,Algebra,"Basic algebra",Negate,,,1,-$0,FALSE,4,ltr,prefix,~,-
+7,Algebra,Combinatorics,Factorial,,,1,$0!,FALSE,5,rtl,postfix,!,"!\,"
+8,Algebra,"Basic algebra",,a,symbol,0,,TRUE,,,,,
+9,Algebra,"Basic algebra",,b,symbol,0,,TRUE,,,,,
+10,Algebra,"Basic algebra",,c,symbol,0,,TRUE,,,,,
+11,Algebra,"Vector algebra",,e1,symbol,0,\hat{i},FALSE,,,,,
+12,Algebra,"Vector algebra",,e2,symbol,0,\hat{j},FALSE,,,,,
+13,Algebra,"Vector algebra",,e3,symbol,0,\hat{k},FALSE,,,,,
+14,Algebra,Trigonometry,Radius,r,symbol,0,,FALSE,,,,,
+15,Algebra,Trigonometry,Theta,theta,latex,0,\theta,FALSE,,,,,
+16,Algebra,Trigonometry,Sine,sin,latex,1,\sin$0,FALSE,,,,,
+17,Algebra,Trigonometry,Cosine,cos,latex,1,\cos$0,FALSE,,,,,
+18,Algebra,Calculus,,x,symbol,0,,TRUE,,,,,
+19,Algebra,Calculus,,y,symbol,0,,TRUE,,,,,
+20,Algebra,Calculus,Function,f,abbreviation,1,,TRUE,,,,,
+21,Algebra,Calculus,Delta,d,symbol,1,\Delta$0,FALSE,,,,,
+22,Algebra,Calculus,Limit,lim,latex,3,\lim_{$0\to$1}$2,FALSE,,,,,
+23,Algebra,Calculus,Differential,diff,abbreviation,2,\frac{\partial}{\partial$0}$1,FALSE,,,,,

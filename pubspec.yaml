@@ -24,4 +24,4 @@ dev_dependencies:
   browser:      ^0.10.0+2
   katex_js:     ^0.1.0+1
   editex:       ^0.0.4
-  eqdb_client:  ^0.0.2
+  eqdb_client:  ^0.0.3
