@@ -2,14 +2,14 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqpg.dbutils;
+library eqdb.dbutils;
 
 import 'dart:async';
 
 import 'package:logging/logging.dart';
 import 'package:postgresql/postgresql.dart';
 
-import 'package:eqpg/schema.dart' as db;
+import 'package:eqdb/schema.dart' as db;
 
 part 'src/generated/session_data.dart';
 part 'src/generated/helpers.dart';

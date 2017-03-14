@@ -6,8 +6,8 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:rpc/rpc.dart';
-import 'package:eqpg/api.dart';
-import 'package:eqpg/utils.dart';
+import 'package:eqdb/api.dart';
+import 'package:eqdb/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_handlers/server_logging_handlers.dart';
 
@@ -18,7 +18,7 @@ import 'package:shelf_route/shelf_route.dart' as shelf_route;
 
 Future<Null> main() async {
   final log = new Logger('server');
-  final conf = new EnvConfig('EQPG_', 'dev-config.yaml');
+  final conf = new EnvConfig('EQDB_', 'dev-config.yaml');
 
   // Read some configuration values.
   final logFile = conf.string('API_LOG');
@@ -26,7 +26,7 @@ Future<Null> main() async {
   final dbHost = conf.string('DB_HOST', '0.0.0.0');
   final dbPort = conf.integer('DB_PORT', 5432);
   final dbName = conf.string('DB_NAME', 'eqdb');
-  final dbUser = conf.string('DB_USER', 'eqpg');
+  final dbUser = conf.string('DB_USER', 'eqdb');
   final dbPass = conf.string('DB_PASS', 'unconfigured');
   final minConnections = conf.integer('DB_MIN_CONNECTIONS', 2);
   final maxConnections = conf.integer('DB_MAX_CONNECTIONS', 100);

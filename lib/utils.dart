@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqpg.utils;
+library eqdb.utils;
 
 import 'dart:io';
 

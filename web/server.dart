@@ -5,7 +5,7 @@
 import 'dart:io';
 import 'dart:async';
 
-import 'package:eqpg/utils.dart';
+import 'package:eqdb/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_handlers/server_logging_handlers.dart';
 
@@ -17,7 +17,7 @@ import 'all_pages.dart';
 
 Future<Null> main() async {
   final log = new Logger('server');
-  final conf = new EnvConfig('EQPG_', 'dev-config.yaml');
+  final conf = new EnvConfig('EQDB_', 'dev-config.yaml');
 
   // Read some configuration values.
   final logFile = conf.string('WEB_LOG');

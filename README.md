@@ -1,5 +1,5 @@
-[![Travis](https://img.shields.io/travis/eqdb/eqpg.svg)](https://travis-ci.org/eqdb/eqpg)
-[![Codecov](https://img.shields.io/codecov/c/github/eqdb/eqpg.svg)](https://codecov.io/gh/eqdb/eqpg)
+[![Travis](https://img.shields.io/travis/eqdb/eqdb.svg)](https://travis-ci.org/eqdb/eqdb)
+[![Codecov](https://img.shields.io/codecov/c/github/eqdb/eqdb.svg)](https://codecov.io/gh/eqdb/eqdb)
 
 PostgreSQL backend for EqDB
 ===========================

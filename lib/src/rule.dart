@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqpg;
+part of eqdb;
 
 Future<db.RuleRow> _createRule(Session s, int categoryId, int leftExpressionId,
     int rightExpressionId) async {

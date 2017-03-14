@@ -14,7 +14,7 @@ sleep 2
 truncate -s 0 testlog.txt
 
 # Set log file.
-export EQPG_API_LOG='testlog.txt'
+export EQDB_API_LOG='testlog.txt'
 
 # Run server.
 dart bin/server.dart > /dev/null 2>&1 &

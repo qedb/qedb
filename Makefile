@@ -17,6 +17,7 @@ restart-api-server:
 
 restart-web-server:
 	./tool/kill-port.sh 8081
+	export EQDB_WEB_PORT=8081
 	dart web/server.dart > /dev/null 2>&1 &
 
 check:
@@ -35,7 +36,7 @@ generate-openapi-spec: restart-database restart-api-server
 generate-dot-svg-schema: restart-database
 	sleep 4
 	PASSWORD=`cat dev-config.yaml | grep "DB_PASS" | awk '{print $2}'`
-	postgresql_autodoc -d eqdb -h 172.17.0.2 -p 5432 -u eqpg --password=${PASSWORD} -t dot
+	postgresql_autodoc -d eqdb -h 172.17.0.2 -p 5432 -u eqdb --password=${PASSWORD} -t dot
 	mkdir -p doc
 	mv eqdb.dot doc/schema.dot
 	dot -Tsvg doc/schema.dot > doc/schema.svg

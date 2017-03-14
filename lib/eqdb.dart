@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqpg;
+library eqdb;
 
 import 'dart:async';
 import 'dart:convert';
@@ -12,9 +12,9 @@ import 'package:rpc/rpc.dart';
 import 'package:eqlib/eqlib.dart';
 import 'package:postgresql/postgresql.dart';
 
-import 'package:eqpg/dbutils.dart';
-import 'package:eqpg/resources.dart';
-import 'package:eqpg/schema.dart' as db;
+import 'package:eqdb/dbutils.dart';
+import 'package:eqdb/resources.dart';
+import 'package:eqdb/schema.dart' as db;
 
 part 'src/locale.dart';
 part 'src/descriptor.dart';

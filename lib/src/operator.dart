@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqpg;
+part of eqdb;
 
 Future<db.OperatorRow> createOperator(Session s, OperatorResource body) {
   return operatorHelper.insert(s, {

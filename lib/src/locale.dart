@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqpg;
+part of eqdb;
 
 Future<db.LocaleRow> createLocale(Session s, LocaleResource body) async {
   // Prevent primary key gaps for locales (I am a control freak).

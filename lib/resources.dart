@@ -2,12 +2,12 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqpg.resources;
+library eqdb.resources;
 
 import 'package:rpc/rpc.dart';
-import 'package:eqpg/dbutils.dart';
+import 'package:eqdb/dbutils.dart';
 
-import 'package:eqpg/schema.dart' as db;
+import 'package:eqdb/schema.dart' as db;
 
 /// Boilerplate for resource classes.
 abstract class _Resource<T extends db.Row> {

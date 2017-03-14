@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqpg;
+part of eqdb;
 
 /// Shortcut for decoding base64 codec headers.
 ExprCodecData _decodeCodecHeader(String base64Data) =>

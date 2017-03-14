@@ -5,40 +5,40 @@
 # that can be found in the LICENSE file.
 
 # Generate password.
-export EQPG_DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-64}; echo;`
+export EQDB_DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-64}; echo;`
 
 # Replace password in setup SQL.
-sed "s/\$password/${EQPG_DB_PASS}/" < ./lib/schema.sql > ./tool/docker/setup.sql
+sed "s/\$password/${EQDB_DB_PASS}/" < ./lib/schema.sql > ./tool/docker/setup.sql
 
 # Remove old container to not mess up dev environment.
-docker rmi eqpg-database:latest
+docker rmi eqdb-database:latest
 
 # Build container.
-docker build -t eqpg-database:latest ./tool/docker/
+docker build -t eqdb-database:latest ./tool/docker/
 
 # Run container.
-docker run --name eqpg-database -e POSTGRES_DB="eqdb" -d eqpg-database
+docker run --name eqdb-database -e POSTGRES_DB="eqdb" -d eqdb-database
 
 # Give container some time to setup.
-IS_READY=`docker exec -u postgres eqpg-database pg_isready`
+IS_READY=`docker exec -u postgres eqdb-database pg_isready`
 while [ "${IS_READY}" != "/var/run/postgresql:5432 - accepting connections" ]; do
   sleep 0.1
-  IS_READY=`docker exec -u postgres eqpg-database pg_isready`
+  IS_READY=`docker exec -u postgres eqdb-database pg_isready`
   echo $IS_READY
 done
 
 # Export access parameters.
-export EQPG_DB_HOST=`docker inspect eqpg-database | grep '"IPAddress"' | awk '{print $2}' | awk -F '"' '{print $2}' | head -n1`
-export EQPG_DB_PORT="5432"
-export EQPG_DB_NAME="eqdb"
-export EQPG_DB_USER="eqpg"
+export EQDB_DB_HOST=`docker inspect eqdb-database | grep '"IPAddress"' | awk '{print $2}' | awk -F '"' '{print $2}' | head -n1`
+export EQDB_DB_PORT="5432"
+export EQDB_DB_NAME="eqdb"
+export EQDB_DB_USER="eqdb"
 
 # Write config file.
 rm -f dev-config.yaml
 touch dev-config.yaml
-echo "DB_HOST: '${EQPG_DB_HOST}'" >> dev-config.yaml
-echo "DB_PORT: ${EQPG_DB_PORT}" >> dev-config.yaml
-echo "DB_NAME: ${EQPG_DB_NAME}" >> dev-config.yaml
-echo "DB_USER: ${EQPG_DB_USER}" >> dev-config.yaml
-echo "DB_PASS: ${EQPG_DB_PASS}" >> dev-config.yaml
+echo "DB_HOST: '${EQDB_DB_HOST}'" >> dev-config.yaml
+echo "DB_PORT: ${EQDB_DB_PORT}" >> dev-config.yaml
+echo "DB_NAME: ${EQDB_DB_NAME}" >> dev-config.yaml
+echo "DB_USER: ${EQDB_DB_USER}" >> dev-config.yaml
+echo "DB_PASS: ${EQDB_DB_PASS}" >> dev-config.yaml
 cat dev-config.yaml

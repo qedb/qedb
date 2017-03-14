@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqpg;
+part of eqdb;
 
 Future<db.SubjectRow> createSubject(Session s, SubjectResource body) async {
   if (body.descriptor.id != null) {

@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqpg;
+part of eqdb;
 
 Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
   // Non-generic functions with >0 arguments must have a name (soft constraint).

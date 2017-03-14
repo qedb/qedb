@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqpg.api;
+library eqdb.api;
 
 import 'dart:async';
 
@@ -11,11 +11,11 @@ import 'package:logging/logging.dart';
 import 'package:postgresql/pool.dart';
 import 'package:postgresql/postgresql.dart';
 
-import 'package:eqpg/dbutils.dart';
-import 'package:eqpg/resources.dart';
-import 'package:eqpg/eqpg.dart' as api;
+import 'package:eqdb/dbutils.dart';
+import 'package:eqdb/resources.dart';
+import 'package:eqdb/eqdb.dart' as api;
 
-final log = new Logger('eqpg');
+final log = new Logger('eqdb');
 const defaultLocale = 'en_US';
 
 @ApiClass(name: 'eqdb', version: 'v0', description: 'EqDB read/write API')
