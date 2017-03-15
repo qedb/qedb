@@ -21,7 +21,7 @@ descriptor_id = (
   WHERE content = @content AND locale_id = @locale_id)''',
         {
           'content': translation.content,
-          'locale_id': translation.locale.getId(s.data)
+          'locale_id': localeId(s, translation.locale)
         });
 
     // If no subject exists, raise an error.
@@ -66,7 +66,7 @@ Future<db.CategoryRow> readCategory(
   final subject = await subjectHelper.selectOne(s, {'id': category.subjectId});
   await translationHelper.selectIn(s, {
     'descriptor_id': [subject.descriptorId],
-    'locale_id': getLocaleIds(s.data.cache, locales)
+    'locale_id': await getLocaleIds(s, locales)
   });
   return category;
 }
@@ -93,7 +93,7 @@ Future<List<db.CategoryRow>> listCategories(Session s, List<String> locales,
   final descriptorIds = subjectHelper.ids(subjects, (row) => row.descriptorId);
   await translationHelper.selectIn(s, {
     'descriptor_id': descriptorIds,
-    'locale_id': getLocaleIds(s.data.cache, locales)
+    'locale_id': await getLocaleIds(s, locales)
   });
 
   return categories;

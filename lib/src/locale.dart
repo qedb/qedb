@@ -7,30 +7,33 @@ part of eqdb;
 Future<db.LocaleRow> createLocale(Session s, LocaleResource body) async {
   // Prevent primary key gaps for locales (I am a control freak).
   final localeId = await localeHelper.getId(s, {'code': body.code});
-  s.data.cache.localeIdToCode[localeId] = body.code;
-  s.data.cache.localeCodeToId[body.code] = localeId;
   return new db.LocaleRow(localeId, body.code);
 }
 
-List<LocaleResource> listLocales(DbCache cache) {
-  // Reconstruct from memory.
-  final list = new List<LocaleResource>();
-  cache.localeIdToCode.forEach((id, code) {
-    list.add(new LocaleResource()
-      ..id = id
-      ..code = code);
-  });
-  return list;
+Future<List<db.LocaleRow>> listLocales(Session s) {
+  return localeHelper.select(s, {});
 }
 
-/// Retrieve locale IDs from the given [cache] for the given [locales].
-List<int> getLocaleIds(DbCache cache, List<String> locales) {
-  final list = new List<int>();
-  for (final localeCode in locales) {
-    final id = cache.localeCodeToId[localeCode];
-    if (id != null) {
-      list.add(id);
+/// Return locale IDs for the given locale ISO codes.
+/// Note that all locales should already be loaded.
+Future<List<int>> getLocaleIds(Session s, List<String> locales) async {
+  final ids = new List<int>();
+  for (final locale in s.data.localeTable.values) {
+    if (locales.contains(locale.code)) {
+      ids.add(locale.id);
     }
   }
-  return list;
+  return ids;
+}
+
+/// Get ID from the given locale.
+/// This assumes all locales are loaded into the session data.
+int localeId(Session s, LocaleResource locale) {
+  if (locale.id == null) {
+    return s.data.localeTable.values
+        .singleWhere((r) => r.code == locale.code)
+        .id;
+  } else {
+    return locale.id;
+  }
 }

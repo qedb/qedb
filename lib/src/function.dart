@@ -51,7 +51,7 @@ Future<List<db.FunctionRow>> listFunctions(
       functionHelper.ids(functions, (row) => row.descriptorId);
   await translationHelper.selectIn(s, {
     'descriptor_id': descriptorIds,
-    'locale_id': getLocaleIds(s.data.cache, locales)
+    'locale_id': await getLocaleIds(s, locales)
   });
 
   return functions;

@@ -10,7 +10,7 @@ import 'package:eqdb/dbutils.dart';
 import 'package:eqdb/schema.dart' as db;
 
 /// Boilerplate for resource classes.
-abstract class _Resource<T extends db.Row> {
+abstract class ResourceBase<T extends db.Row> {
   set id(int v);
 
   /// Get database row from the session [data] by [id].
@@ -40,23 +40,19 @@ abstract class _Resource<T extends db.Row> {
 //------------------------------------------------------------------------------
 
 /// Locale
-class LocaleResource extends _Resource<db.LocaleRow> {
+class LocaleResource extends ResourceBase<db.LocaleRow> {
   int id;
   String code;
 
   Map<int, db.LocaleRow> _getTableMap(data) => data.localeTable;
 
-  void load(targetId, data) {
-    id = targetId;
-    code = data.cache.localeIdToCode[targetId];
+  void loadFields(row, data) {
+    code = row.code;
   }
-
-  int getId(SessionData data) =>
-      id != null ? id : data.cache.localeCodeToId[code];
 }
 
 /// Descriptor
-class DescriptorResource extends _Resource<db.DescriptorRow> {
+class DescriptorResource extends ResourceBase<db.DescriptorRow> {
   int id;
   List<TranslationResource> translations;
 
@@ -75,7 +71,7 @@ class DescriptorResource extends _Resource<db.DescriptorRow> {
 }
 
 /// Subject
-class SubjectResource extends _Resource<db.SubjectRow> {
+class SubjectResource extends ResourceBase<db.SubjectRow> {
   int id;
   DescriptorResource descriptor;
 
@@ -87,7 +83,7 @@ class SubjectResource extends _Resource<db.SubjectRow> {
 }
 
 /// Translation
-class TranslationResource extends _Resource<db.TranslationRow> {
+class TranslationResource extends ResourceBase<db.TranslationRow> {
   int id;
   String content;
   LocaleResource locale;
@@ -105,7 +101,7 @@ class TranslationResource extends _Resource<db.TranslationRow> {
 //------------------------------------------------------------------------------
 
 /// Category
-class CategoryResource extends _Resource<db.CategoryRow> {
+class CategoryResource extends ResourceBase<db.CategoryRow> {
   int id;
   List<int> parents;
   SubjectResource subject;
@@ -119,7 +115,7 @@ class CategoryResource extends _Resource<db.CategoryRow> {
 }
 
 /// Function
-class FunctionResource extends _Resource<db.FunctionRow> {
+class FunctionResource extends ResourceBase<db.FunctionRow> {
   int id;
   bool generic;
   int argumentCount;
@@ -154,7 +150,7 @@ class FunctionResource extends _Resource<db.FunctionRow> {
 }
 
 /// Operator
-class OperatorResource extends _Resource<db.OperatorRow> {
+class OperatorResource extends ResourceBase<db.OperatorRow> {
   int id;
   int precedenceLevel;
   String character;
@@ -184,7 +180,7 @@ class OperatorResource extends _Resource<db.OperatorRow> {
 }
 
 /// Expression
-class ExpressionResource extends _Resource<db.ExpressionRow> {
+class ExpressionResource extends ResourceBase<db.ExpressionRow> {
   int id;
   String data;
   String hash;
@@ -204,7 +200,7 @@ class ExpressionResource extends _Resource<db.ExpressionRow> {
 //------------------------------------------------------------------------------
 
 /// Rule
-class RuleResource extends _Resource<db.RuleRow> {
+class RuleResource extends ResourceBase<db.RuleRow> {
   int id;
   CategoryResource category;
   ExpressionResource leftExpression;
@@ -221,7 +217,7 @@ class RuleResource extends _Resource<db.RuleRow> {
 }
 
 /// Definition
-class DefinitionResource extends _Resource<db.DefinitionRow> {
+class DefinitionResource extends ResourceBase<db.DefinitionRow> {
   int id;
   RuleResource rule;
 
@@ -237,7 +233,7 @@ class DefinitionResource extends _Resource<db.DefinitionRow> {
 //------------------------------------------------------------------------------
 
 /// Expression lineage
-class ExpressionLineageResource extends _Resource<db.ExpressionLineageRow> {
+class ExpressionLineageResource extends ResourceBase<db.ExpressionLineageRow> {
   int id;
   List<LineageExpressionResource> expressions;
 
@@ -246,7 +242,7 @@ class ExpressionLineageResource extends _Resource<db.ExpressionLineageRow> {
 }
 
 /// Expression lineage expression
-class LineageExpressionResource extends _Resource<db.LineageExpressionRow> {
+class LineageExpressionResource extends ResourceBase<db.LineageExpressionRow> {
   int id;
   ExpressionLineageResource lineage;
   CategoryResource category;

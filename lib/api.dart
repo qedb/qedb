@@ -22,26 +22,29 @@ const defaultLocale = 'en_US';
 class EqDB {
   final Pool pool;
 
-  /// Persistent cache of database data (for some immutable rows).
-  final cache = new DbCache();
-
   EqDB(String dbUri, int minConnections, int maxConnections)
       : pool = new Pool(dbUri,
             minConnections: minConnections, maxConnections: maxConnections);
 
-  /// Initialize [pool] and [cache].
+  /// Initialize [pool].
   Future<Null> initialize() async {
     await pool.start();
-    final conn = await pool.connect();
-    await cache.initialize(conn);
-    conn.close();
   }
 
   /// Utility to reuse method calling boilerplate.
   Future<T> _runRequestSession<T>(Future<T> handler(Session s)) {
-    return _runSandboxed<T>((conn) {
-      final data = new SessionData(cache);
-      return handler(new Session(conn, data));
+    return _runSandboxed<T>((conn) async {
+      final data = new SessionData();
+      final session = new Session(conn, data);
+
+      // Retrieve all locales.
+      // This may seem a bit ridiculous, but the overhead is not actually that
+      // big. Additionally, this makes the rest of the code more convenient, and
+      // locale codes can be included in all responses for free. A TTL spanning
+      // multiple sessions might be used to optimize this in the future.
+      await api.listLocales(session);
+
+      return handler(session);
     }, pool);
   }
 
@@ -51,27 +54,18 @@ class EqDB {
         ..load((await api.createLocale(s, body)).id, s.data));
 
   @ApiMethod(path: 'locale/list', method: 'GET')
-  List<LocaleResource> listLocales() => api.listLocales(cache);
+  Future<List<LocaleResource>> listLocales() =>
+      // Note that all locales are loaded for each session.
+      _runRequestSession<List<LocaleResource>>((s) async => s
+          .data.localeTable.values
+          .map((r) => new LocaleResource()..loadRow(r, s.data))
+          .toList());
 
   @ApiMethod(path: 'descriptor/create', method: 'POST')
   Future<DescriptorResource> createDescriptor(DescriptorResource body) =>
       _runRequestSession<DescriptorResource>((s) async =>
           new DescriptorResource()
             ..load((await api.createDescriptor(s, body)).id, s.data));
-
-  @ApiMethod(path: 'descriptor/{id}/translation/create', method: 'POST')
-  Future<TranslationResource> createTranslation(
-          int id, TranslationResource body) =>
-      _runRequestSession<TranslationResource>((s) async =>
-          new TranslationResource()
-            ..loadRow(await api.createTranslation(s, id, body), s.data));
-
-  @ApiMethod(path: 'descriptor/{id}/translation/list', method: 'GET')
-  Future<List<TranslationResource>> listDescriptorTranslations(int id) =>
-      _runRequestSession<List<TranslationResource>>((s) async =>
-          (await api.listTranslations(s, id))
-              .map((r) => new TranslationResource()..loadRow(r, s.data))
-              .toList());
 
   @ApiMethod(path: 'descriptor/list', method: 'GET')
   Future<List<DescriptorResource>> listDescriptors(
@@ -86,6 +80,20 @@ class EqDB {
       new DescriptorResource()
         ..id = id
         ..translations = await listDescriptorTranslations(id);
+
+  @ApiMethod(path: 'descriptor/{id}/translation/create', method: 'POST')
+  Future<TranslationResource> createTranslation(
+          int id, TranslationResource body) =>
+      _runRequestSession<TranslationResource>((s) async =>
+          new TranslationResource()
+            ..loadRow(await api.createTranslation(s, id, body), s.data));
+
+  @ApiMethod(path: 'descriptor/{id}/translation/list', method: 'GET')
+  Future<List<TranslationResource>> listDescriptorTranslations(int id) =>
+      _runRequestSession<List<TranslationResource>>((s) async =>
+          (await api.listTranslations(s, id))
+              .map((r) => new TranslationResource()..loadRow(r, s.data))
+              .toList());
 
   @ApiMethod(path: 'subject/create', method: 'POST')
   Future<SubjectResource> createSubject(SubjectResource body) =>
@@ -104,12 +112,6 @@ class EqDB {
       _runRequestSession<CategoryResource>((s) async => new CategoryResource()
         ..loadRow(await api.createCategory(s, 0, body), s.data));
 
-  @ApiMethod(path: 'category/{id}/read', method: 'GET')
-  Future<CategoryResource> readCategory(int id,
-          {String locale: defaultLocale}) =>
-      _runRequestSession<CategoryResource>((s) async => new CategoryResource()
-        ..loadRow(await api.readCategory(s, id, [locale]), s.data));
-
   @ApiMethod(path: 'category/list', method: 'GET')
   Future<List<CategoryResource>> listCategories(
           {String locale: defaultLocale}) =>
@@ -117,6 +119,12 @@ class EqDB {
           (await api.listCategories(s, [locale]))
               .map((r) => new CategoryResource()..loadRow(r, s.data))
               .toList());
+
+  @ApiMethod(path: 'category/{id}/read', method: 'GET')
+  Future<CategoryResource> readCategory(int id,
+          {String locale: defaultLocale}) =>
+      _runRequestSession<CategoryResource>((s) async => new CategoryResource()
+        ..loadRow(await api.readCategory(s, id, [locale]), s.data));
 
   @ApiMethod(path: 'category/{id}/category/create', method: 'POST')
   Future<CategoryResource> createSubCategory(int id, CategoryResource body) =>

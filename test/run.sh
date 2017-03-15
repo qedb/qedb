@@ -18,4 +18,4 @@ then
   rename -v 's/data.csv.([0-9]+)/data.$1.csv/' data/data.csv.*
 fi
 
-dart run.dart
+time dart run.dart

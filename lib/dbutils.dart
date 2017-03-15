@@ -16,22 +16,6 @@ part 'src/generated/helpers.dart';
 
 final log = new Logger('dbutils');
 
-/// Specialized cache for some append-only tables (locale).
-class DbCache {
-  /// Map of <localeId, localeCode>.
-  final localeIdToCode = new Map<int, String>();
-  final localeCodeToId = new Map<String, int>();
-
-  Future<Null> initialize(Connection conn) async {
-    /// Load existing locales.
-    final result = conn.query('SELECT id, code FROM locale');
-    await for (final row in result) {
-      localeIdToCode[row[0]] = row[1];
-      localeCodeToId[row[1]] = row[0];
-    }
-  }
-}
-
 /// Session state
 class Session {
   final Connection conn;
@@ -134,8 +118,8 @@ RETURNING $rowFormatter'''
 
   /// Select a record using `field IN (...)`.
   /// If you want to select all records use [select].
-  Future<List<R>> selectIn(Session s, Map<String, List<dynamic>> parameters,
-      {bool save: true}) async {
+  Future<List<R>> selectIn(
+      Session s, Map<String, List<dynamic>> parameters) async {
     final keys = parameters.keys.toList();
     final conditions = new List<String>.generate(keys.length, (i) {
       return '${keys[i]} IN (${parameters[keys[i]].join(',')})';
@@ -147,9 +131,7 @@ RETURNING $rowFormatter'''
 
     // Retrieve result.
     final result = await s.conn.query(sql, {}).map(mapper).toList();
-    if (save) {
-      result.forEach((record) => saver(s.data, record));
-    }
+    result.forEach((record) => saver(s.data, record));
     return result;
   }
 
@@ -175,12 +157,15 @@ RETURNING $rowFormatter'''
   }
 
   /// Get a record ID for the given parameters.
-  Future<int> getId(Session s, Map<String, dynamic> parameters) async {
+  Future<int> getId(Session s, Map<String, dynamic> parameters,
+      {bool create: true}) async {
     final records = await select(s, parameters);
     if (records.isNotEmpty) {
       return records.single.id;
-    } else {
+    } else if (create) {
       return (await insert(s, parameters)).id;
+    } else {
+      return 0;
     }
   }
 
@@ -192,7 +177,7 @@ RETURNING $rowFormatter'''
 /// Get ID's from the given [list] of Rows.
 List<int> getIds<T extends db.Row>(List<T> list,
     [int getFn(T row) = _defaultGetIdListGetFn]) {
-  return new List<int>.generate(list.length, (i) => getFn(list[i]));
+  return list.map(getFn).toList();
 }
 
 int _defaultGetIdListGetFn(db.Row row) => row.id;

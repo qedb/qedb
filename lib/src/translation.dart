@@ -5,16 +5,10 @@
 part of eqdb;
 
 Future<db.TranslationRow> createTranslation(
-    Session s, int descriptorId, TranslationResource body) async {
-  final localeId = s.data.cache.localeCodeToId[body.locale.code];
-  if (localeId == null) {
-    // On the fly creation of locales is purposefully not supported.
-    throw new UnprocessableEntityError('unknown locale');
-  }
-
-  return await translationHelper.insert(s, {
+    Session s, int descriptorId, TranslationResource body) {
+  return translationHelper.insert(s, {
     'descriptor_id': descriptorId,
-    'locale_id': localeId,
+    'locale_id': localeId(s, body.locale),
     'content': body.content
   });
 }

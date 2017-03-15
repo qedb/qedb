@@ -4,6 +4,8 @@
 
 part of eqdb;
 
+/// Has some fancy mechanism to resolve descriptors when multiple translations
+/// are provided, is this
 Future<db.DescriptorRow> createDescriptor(
     Session s, DescriptorResource body) async {
   // You must submit at least one translation.
@@ -13,9 +15,8 @@ Future<db.DescriptorRow> createDescriptor(
   }
 
   // First check if a descriptor with any of the given translations exists.
-  final translations = new List<String>.generate(body.translations.length, (i) {
-    final t = body.translations[i];
-    return ['(', t.locale.getId(s.data), ',', encodeString(t.content), ')']
+  final translations = body.translations.map((t) {
+    return ['(', localeId(s, t.locale), ',', encodeString(t.content), ')']
         .join();
   });
   final existingTranslations = await translationHelper.selectCustom(
@@ -42,7 +43,7 @@ Future<db.DescriptorRow> createDescriptor(
       for (final translation in body.translations.where((r1) =>
           existingTranslations
               .where((r2) =>
-                  r2.localeId == r1.locale.getId(s.data) &&
+                  r2.localeId == localeId(s, r1.locale) &&
                   r2.content == r1.content)
               .isEmpty)) {
         await createTranslation(s, descriptorId, translation);
@@ -63,7 +64,7 @@ Future<List<db.DescriptorRow>> listDescriptors(
   // Select all translations.
   await translationHelper.selectIn(s, {
     'descriptor_id': getIds(descriptors),
-    'locale_id': getLocaleIds(s.data.cache, locales)
+    'locale_id': await getLocaleIds(s, locales)
   });
 
   return descriptors;

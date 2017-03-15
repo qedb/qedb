@@ -22,7 +22,7 @@ Future<List<db.SubjectRow>> listSubjects(
   // Select all translations.
   await translationHelper.selectIn(s, {
     'descriptor_id': getIds(descriptors),
-    'locale_id': getLocaleIds(s.data.cache, locales)
+    'locale_id': await getLocaleIds(s, locales)
   });
 
   return subjects;
