@@ -17,7 +17,7 @@ restart-api-server:
 
 restart-web-server:
 	./tool/kill-port.sh 8081
-	export EQDB_WEB_PORT=8081
+	export EQDB_WEB_PORT=8081; \
 	dart web/server.dart > /dev/null 2>&1 &
 
 check:
