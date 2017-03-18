@@ -17,7 +17,7 @@ docker rmi eqdb-database:latest
 docker build -t eqdb-database:latest ./tool/docker/
 
 # Run container.
-docker run --name eqdb-database -e POSTGRES_DB="eqdb" -d eqdb-database
+docker run --name eqdb-database -e POSTGRES_DB="eqdb" -e POSTGRES_PASSWORD="$EQDB_DB_PASS" -d eqdb-database
 
 # Give container some time to setup.
 IS_READY=`docker exec -u postgres eqdb-database pg_isready`
