@@ -12,7 +12,13 @@ Future main() async {
   final eqlib = new EqlibHelper();
 
   // Load function keywords.
-  await eqlib.loadKeywords('data/data.3.csv', 'ID', 'Keyword');
+  await eqlib.loadKeywords('data/data.3.csv',
+      id: 'ID',
+      keyword: 'Keyword',
+      precedenceLevel: 'Pre.',
+      associativity: 'Ass.',
+      character: 'Char(1)',
+      type: 'Type');
 
   // Locales
   await csvtest(baseUrl, 'data/data.0.csv', [

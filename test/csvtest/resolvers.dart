@@ -96,9 +96,15 @@ class PrimaryKeyEmulator {
 /// In-memory function database and expression parser.
 class EqlibHelper {
   final map = new Map<String, int>();
+  final operators = new OperatorConfig(0);
 
-  Future<Null> loadKeywords(
-      String csvPath, String idColumn, String keywordsColumn) async {
+  Future<Null> loadKeywords(String csvPath,
+      {String id,
+      String keyword,
+      String precedenceLevel,
+      String associativity,
+      String character,
+      String type}) async {
     // Load CSV file.
     final table = const CsvToListConverter(eol: '\n')
         .convert(await new File(csvPath).readAsString());
@@ -106,13 +112,36 @@ class EqlibHelper {
 
     for (var i = 1; i < table.length; i++) {
       final row = new Row(columns, table[i]);
-      map[row.getColumn(keywordsColumn)] = row.getColumn(idColumn);
+      final idValue = row.getColumn(id);
+      map[row.getColumn(keyword)] = idValue;
+
+      if (row.hasColumn(precedenceLevel)) {
+        final typeValue = row.getColumn(type);
+        final String operatorCharacter = row.getColumn(character);
+        operators.add(new Operator(
+            idValue,
+            row.getColumn(precedenceLevel),
+            row.getColumn(associativity) == 'ltr'
+                ? Associativity.ltr
+                : Associativity.rtl,
+            operatorCharacter.runes.first,
+            typeValue == 'infix'
+                ? OperatorType.infix
+                : typeValue == 'prefix'
+                    ? OperatorType.prefix
+                    : OperatorType.postfix));
+      }
     }
+
+    // Add default setting for implicit multiplication.
+    operators.add(new Operator(operators.implicitMultiplyId, 3,
+        Associativity.rtl, -1, OperatorType.infix));
   }
 
   ExprCodecData _encode(ValueResolver<String> input, Row row) {
     final str = input(row);
-    final expr = new Expr.parse(str, (String keyword, [bool generic = false]) {
+    final expr =
+        parseExpression(str, operators, (String keyword, bool generic) {
       if (map.containsKey(keyword)) {
         return map[keyword];
       } else {

@@ -1,11 +1,11 @@
-ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Pre.,Ass.,Type,Char(1),Editor
-1,Algebra,"Basic algebra",Add,,,2,$0+$1,FALSE,1,ltr,infix,+,{}+{}
-2,Algebra,"Basic algebra",Subtract,,,2,$0-$1,FALSE,1,ltr,infix,-,{}-{}
-3,Algebra,"Basic algebra",Multiply,,,2,$0$1,FALSE,2,ltr,infix,*,{}\cdot{}
-4,Algebra,"Basic algebra",Divide,frac,latex,2,\frac{~$0~}{~$1~},FALSE,2,ltr,infix,/,{}\div{}
-5,Algebra,"Basic algebra",Power,,,2,$0^{$1},FALSE,3,rtl,infix,^,^{$0}
-6,Algebra,"Basic algebra",Negate,,,1,-$0,FALSE,4,ltr,prefix,~,-
-7,Algebra,Combinatorics,Factorial,,,1,$0!,FALSE,5,rtl,postfix,!,"!\,"
+ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Pre.,Ass.,Char(1),Type,Editor
+1,Algebra,"Basic algebra",Add,,,2,$0+$1,FALSE,1,ltr,+,infix,{}+{}
+2,Algebra,"Basic algebra",Subtract,,,2,$0-$1,FALSE,1,ltr,-,infix,{}-{}
+3,Algebra,"Basic algebra",Multiply,,,2,$0$1,FALSE,2,ltr,*,infix,{}\cdot{}
+4,Algebra,"Basic algebra",Divide,frac,latex,2,\frac{~$0~}{~$1~},FALSE,2,ltr,/,infix,{}\div{}
+5,Algebra,"Basic algebra",Power,,,2,$0^{$1},FALSE,3,rtl,^,infix,^{$0}
+6,Algebra,"Basic algebra",Negate,,,1,-$0,FALSE,4,ltr,~,prefix,-
+7,Algebra,Combinatorics,Factorial,,,1,$0!,FALSE,5,rtl,!,postfix,"!\,"
 8,Algebra,"Basic algebra",,a,symbol,0,,TRUE,,,,,
 9,Algebra,"Basic algebra",,b,symbol,0,,TRUE,,,,,
 10,Algebra,"Basic algebra",,c,symbol,0,,TRUE,,,,,

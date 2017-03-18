@@ -95,6 +95,11 @@ class Row {
       throw new Exception("column '$column' does not exist");
     }
   }
+
+  bool hasColumn(String column) {
+    final v = getColumn(column);
+    return !(v == null || (v is String && v.isEmpty));
+  }
 }
 
 /// API route test.
