@@ -12,7 +12,6 @@ OBSERVATORY_PORT=8000
 ./tool/kill-port.sh 8080
 
 # Restart database.
-./tool/stop-db.sh
 ./tool/start-db.sh
 
 # Wait before Postgres is up before starting server (because the API server

@@ -8,4 +8,5 @@ before_install:
 - gem install mustache
 script:
 - pub global activate coverage
-- ./tool/check.sh
+- make build-base-container
+- make check

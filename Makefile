@@ -4,6 +4,9 @@ init:
 	# Install admin server dependencies.
 	npm install pug
 
+build-base-container:
+	docker build -t eqdb-postgres-base:latest ./tool/docker/eqdb-postgres-base/
+
 start-database:
 	./tool/start-db.sh
 

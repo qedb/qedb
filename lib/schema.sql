@@ -10,7 +10,7 @@
 --------------------------------------------------------------------------------
 
 CREATE EXTENSION pllua;
---CREATE EXTENSION plperl;
+CREATE EXTENSION plperl;
 CREATE EXTENSION pgcrypto;
 
 --------------------------------------------------------------------------------
@@ -296,4 +296,4 @@ GRANT CONNECT ON DATABASE eqdb TO eqdb;
 GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA public TO eqdb;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public to eqdb;
 GRANT USAGE ON LANGUAGE pllua TO eqdb;
---GRANT USAGE ON LANGUAGE plperl TO eqdb;
+GRANT USAGE ON LANGUAGE plperl TO eqdb;
