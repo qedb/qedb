@@ -164,6 +164,7 @@ class ExpressionRow implements Row {
 //------------------------------------------------------------------------------
 
 /// Rule
+/// Note: left_array_data and right_array_data are not included.
 class RuleRow implements Row {
   final int id;
   final int categoryId;
@@ -173,7 +174,8 @@ class RuleRow implements Row {
   RuleRow(
       this.id, this.categoryId, this.leftExpressionId, this.rightExpressionId);
 
-  static const mapFormat = '*';
+  static const mapFormat =
+      'id, category_id, left_expression_id, right_expression_id';
   static RuleRow map(pg.Row r) => new RuleRow(r[0], r[1], r[2], r[3]);
 }
 

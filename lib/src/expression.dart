@@ -62,9 +62,9 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
   return await expressionHelper.insert(s, {
     'data': new Sql("decode(@data, 'base64')", {'data': base64}),
     'hash': new Sql("digest(decode(@data, 'base64') ,'sha256')"),
-    'functions': new Sql('ARRAY[${codecData.functionId.join(',')}]::integer[]'),
+    'functions': intarray(codecData.functionId),
     'node_type': nodeType,
     'node_value': nodeValue,
-    'node_arguments': new Sql('ARRAY[${nodeArguments.join(',')}]::integer[]')
+    'node_arguments': intarray(nodeArguments)
   });
 }

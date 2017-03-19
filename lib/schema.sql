@@ -177,10 +177,12 @@ CREATE INDEX expression_functions_index on expression USING GIN (functions);
 
 -- Rule (equation of two expression)
 CREATE TABLE rule (
-  id                   serial   PRIMARY KEY,
-  category_id          integer  NOT NULL REFERENCES category(id),
-  left_expression_id   integer  NOT NULL REFERENCES expression(id),
-  right_expression_id  integer  NOT NULL REFERENCES expression(id),
+  id                   serial     PRIMARY KEY,
+  category_id          integer    NOT NULL REFERENCES category(id),
+  left_expression_id   integer    NOT NULL REFERENCES expression(id),
+  right_expression_id  integer    NOT NULL REFERENCES expression(id),
+  left_array_data      integer[]  NOT NULL,
+  right_array_data     integer[]  NOT NULL,
 
   UNIQUE (left_expression_id, right_expression_id)
 );

@@ -4,11 +4,13 @@
 
 part of eqdb;
 
-Future<db.RuleRow> _createRule(Session s, int categoryId, int leftExpressionId,
-    int rightExpressionId) async {
+Future<db.RuleRow> createRule(Session s, int categoryId, int leftExpressionId,
+    int rightExpressionId, Expr left, Expr right) async {
   return await ruleHelper.insert(s, {
     'category_id': categoryId,
     'left_expression_id': leftExpressionId,
-    'right_expression_id': rightExpressionId
+    'right_expression_id': rightExpressionId,
+    'left_array_data': intarray(left.toArray()),
+    'right_array_data': intarray(right.toArray())
   });
 }

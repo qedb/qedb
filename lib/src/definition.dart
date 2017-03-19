@@ -76,8 +76,8 @@ Future<db.DefinitionRow> createDefinition(
   final rightExpr = await _createExpression(s, rightDecoded);
 
   // Insert rule.
-  final rule =
-      await _createRule(s, body.rule.category.id, leftExpr.id, rightExpr.id);
+  final rule = await createRule(s, body.rule.category.id, leftExpr.id,
+      rightExpr.id, leftDecoded, rightDecoded);
 
   // Insert definition.
   return await definitionHelper.insert(s, {'rule_id': rule.id});

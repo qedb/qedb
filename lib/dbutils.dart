@@ -34,6 +34,9 @@ class Sql {
       : sql = 'array_append($array, $append)::$castAs';
 }
 
+/// Utility function to create an [Sql] object for sending an integer array.
+Sql intarray(List<int> data) => new Sql('ARRAY[${data.join(',')}]::integer[]');
+
 /// DB data Stream mapper.
 typedef R RowMapper<R extends db.Row>(Row r);
 
