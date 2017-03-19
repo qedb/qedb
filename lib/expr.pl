@@ -1,6 +1,7 @@
 #!/bin/perl
 
 use strict;
+use Time::HiRes qw(time);
 
 my $EXPR_INTEGER       = 1;
 my $EXPR_SYMBOL        = 2;
@@ -116,6 +117,7 @@ sub fung {
   return \@data;
 }
 
+# Test cases
 my @tests = (
   [
     func('+', numi(100), func('/', symb('x'), symb('y'))),
@@ -141,6 +143,11 @@ my @tests = (
     func('+', numi(100), fung('/', symb('x'), symb('y'))),
     func('+', symg('a'), func('/', symg('x'))),
     0
+  ],
+  [
+    func('+', numi(100), func('/', symb('x'), symb('y'))),
+    func('+', symg('a'), func('/', symb('x'), symg('z'))),
+    1
   ]
 );
 
@@ -149,3 +156,19 @@ foreach my $test (@tests) {
   my $result = expr_match($test->[0], $test->[1]);
   print 'test #', ++$testI, ': ', $result == $test->[2] ? 'PASS' : 'FAIL', "\n";
 }
+
+# Performance test, run all 6 test cases 10.000 times.
+my $start_time = time();
+
+my $n = 10000;
+my $counter = $n;
+while ($counter--) {
+  foreach my $test (@tests) {
+    expr_match($test->[0], $test->[1]);
+  }
+}
+
+my $end_time = time();
+my $s_per_call = ($end_time - $start_time) / (scalar(@tests) * $n);
+printf("Avg. time per call: %.2fns\n", $s_per_call * 1000000000);
+printf("Avg. calls per second: %.2f\n", 1 / $s_per_call);
