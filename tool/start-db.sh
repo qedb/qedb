@@ -13,6 +13,9 @@ export EQDB_DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-64}; echo;`
 # Replace password in setup SQL.
 sed "s/\$password/${EQDB_DB_PASS}/" < ./lib/schema.sql > ./tool/docker/eqdb-postgres/setup.sql
 
+# Copy Perl function.
+cp ./lib/pl/expr.pgsql ./tool/docker/eqdb-postgres/expr.sql
+
 # Build container.
 docker build -t eqdb-postgres:latest ./tool/docker/eqdb-postgres/
 

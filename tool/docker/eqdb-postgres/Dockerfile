@@ -1,2 +1,2 @@
 FROM eqdb-postgres-base
-COPY setup.sql /docker-entrypoint-initdb.d
+COPY setup.sql expr.sql /docker-entrypoint-initdb.d/
