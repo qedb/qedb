@@ -20,6 +20,9 @@ dartanalyzer \
 # Run tests.
 ./tool/run-test.sh ./test/run.sh coverage.json
 
+# Run Perl algorithm tests.
+perl -Ilib/pl lib/pl/test.pl
+
 # Upload coverage.
 if [ ! -z ${CODECOV_TOKEN+x} ];
 then

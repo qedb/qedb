@@ -2,22 +2,16 @@
 # Use of this source code is governed by an AGPL-3.0-style license
 # that can be found in the LICENSE file.
 
+# Algorithm to match expression patterns and rule patterns.
 package ExprPattern;
 require Exporter;
-@ISA = qw(Exporter);
-@EXPORT_OK = qw(expr_match_pattern expr_match_rule);
+@ISA        = qw(Exporter);
+@EXPORT_OK  = qw(expr_match_pattern expr_match_rule);
 
 use strict;
 use warnings;
 
-# Simple logging.
-# We avoid Log::Message::Simple to reduce dependencies.
-my $debug_print = 0;
-sub debug {
-  if ($debug_print) {
-    print 'LOG: ', @_;
-  }
-}
+use ExprUtils qw(debug expr_hash_mix expr_hash_postprocess);
 
 my $EXPR_INTEGER       = 1;
 my $EXPR_SYMBOL        = 2;
@@ -25,11 +19,42 @@ my $EXPR_SYMBOL_GEN    = 3;
 my $EXPR_FUNCTION      = 4;
 my $EXPR_FUNCTION_GEN  = 5;
 
+# Compute hash for the given part of the expression data array. Replacing all
+# hashes that are in the mapping with the mapped hashes.
+sub compute_mapped_hash {
+  my ($ptr, $mapping_hash, $data) = @_;
+
+  my $hash = $data->[$ptr++];
+  my $type = $data->[$ptr++];
+  my $value = $data->[$ptr++];
+
+  if (exists $$mapping_hash{$hash}) {
+    return ($$mapping_hash{$hash}, $ptr);
+  } elsif ($type == $EXPR_FUNCTION || $type == $EXPR_FUNCTION_GEN) {
+    # Hash all arguments together.
+    my $argc = $data->[$ptr];
+    $ptr += 2;
+    debug("compute hash for function with: hash = $hash, argc = $argc\n");
+    
+    $hash = 0;
+    $hash = expr_hash_mix($hash, $type);
+    $hash = expr_hash_mix($hash, $value);
+
+    while ($argc > 0) {
+      $argc--;
+      (my $arg_hash, $ptr) = compute_mapped_hash($ptr, $mapping_hash, $data);
+      $hash = expr_hash_mix($hash, $arg_hash);
+    }
+    return expr_hash_postprocess($hash);
+  } else {
+    return ($hash, $ptr);
+  }
+}
+
 # Recursive expression pattern matching.
-# TODO: store final index pointer values back into references.
 sub match_pattern {
-  my ($write_mapping, $mapping_hash, $mapping_ptrs,
-    $ptr_e, $ptr_p, @data) = @_;
+  my ($write_mapping, $internal_remap, $mapping_hash, $mapping_genfn,
+      $ptr_t, $ptr_p, @data) = @_;
     
   my $argc = 1; # arguments left to be processed.
 
@@ -39,91 +64,122 @@ sub match_pattern {
   while ($argc > 0) {
     $argc--;
     
-    my $hash_e = $data[$ptr_e++];
+    my $hash_t = $data[$ptr_t++];
     my $hash_p = $data[$ptr_p++];
-    my $type_e = $data[$ptr_e++];
+    my $type_t = $data[$ptr_t++];
     my $type_p = $data[$ptr_p++];
-    my $value_e = $data[$ptr_e++];
+    my $value_t = $data[$ptr_t++];
     my $value_p = $data[$ptr_p++];
+
+    debug(sprintf('target: %s:%s[#%s]', $type_t, $hash_t, $value_t), "\n");
+    debug(sprintf('pattern: %s:%s[#%s]', $type_p, $hash_p, $value_p), "\n");
   
-    if ($type_p == $EXPR_SYMBOL_GEN || $type_p == $EXPR_FUNCTION_GEN) {  
-      # Store expression hash in generic mapping.
-      if (!$write_mapping) {
-        if ($$mapping_hash{$value_p} != $hash_e) {
-          return 0;
-        }
-
-        # Run internal remapping.
-        if ($type_p == $EXPR_FUNCTION_GEN) {
-          my $ptrs = $$mapping_ptrs{$value_p};
-          my $mptr_e = $$ptrs[0];
-          my $mptr_p = $$ptrs[1];
-
-          # Assume strict mode is used, meaning that the source pattern only has
-          # a single argument. This code does not enforce that this argument maps
-          # to a syol (instead it can be any expression). This is done in eqlib
-          # to isolate the cases where internal remapping is allowed.
-          my $srcsym_id = $data[$mptr_p + 2];
-          my $dstsym_hash = $$mapping_hash{$srcsym_id};
-          
-          # If the argument symbol is not mapped yet, we will map it to the
-          # expression function first argument (only if it has 1 argument!).
-          # if (!$dstsym_hash) {
-          #   if () {
-
-          #   } else {
-          #     return 0;
-          #   }
-          # }
-
-          $$mapping_hash{$srcsym_id} = $dstsym_hash;
-
-          if (!match_pattern(0, $mapping_hash, $mapping_ptrs,
-              $mptr_e, $mptr_p, @data)) {
-            return 0;
-          }
-        }
-      } elsif (exists $$mapping_hash{$value_p}) {
-        if ($$mapping_hash{$value_p} != $hash_e) {
+    if ($type_p == $EXPR_SYMBOL_GEN) {
+      if (!$write_mapping || exists $$mapping_hash{$hash_p}) {
+        if ($$mapping_hash{$hash_p} != $hash_t) {
           return 0;
         }
       } else {
-        $$mapping_hash{$value_p} = $hash_e;
+        $$mapping_hash{$hash_p} = $hash_t;
+      }
 
-        # Also store pointer mapping for generic functions (to process internal
-        # remapping later).
-        if ($type_p == $EXPR_FUNCTION_GEN) {
-          # expr ptr starts at expression, pattern ptr starts at first argument.
-          $$mapping_ptrs{$value_p} = [$ptr_e - 3, $ptr_p + 2];
+      # Jump over function body.
+      if ($type_t == $EXPR_FUNCTION || $type_t == $EXPR_FUNCTION_GEN) {
+        $ptr_t += 2 + $data[$ptr_t + 1];
+      }      
+    } elsif ($type_p == $EXPR_FUNCTION_GEN) {
+      if (!$write_mapping) {
+        # Internal remapping.
+        if ($internal_remap) {
+          # Disallow generic functions in internal remapping.
+          return 0;
+        }
+
+        # Retrieve pointers.
+        my $ptrs = $$mapping_genfn{$value_p};
+        my $mptr_t = $$ptrs[0];
+        my $pattern_arg_hash = $$ptrs[2];
+        my $pattern_arg_target_hash = $$mapping_hash{$pattern_arg_hash};
+
+        # Compute hash for internal substitution.
+        # Overhead of running this when there is no difference is minimal.
+        my @result = compute_mapped_hash($ptr_p + 2, $mapping_hash, \@data);
+        my $computed_hash = $result[0];
+        debug('computed hash: ', $computed_hash, "\n");
+        debug('for target: ', $pattern_arg_target_hash, "\n");
+
+        # Deep compare if the computed hash is different.
+        if ($computed_hash != $pattern_arg_target_hash) {
+          # Temporarily add hash to mapping.
+          my $old_hash = $$mapping_hash{$pattern_arg_target_hash};
+          $$mapping_hash{$pattern_arg_target_hash} = $computed_hash;
+
+          # Old expression is used as pattern, current expression as target.
+          debug("internal remapping start\n");
+          if (!match_pattern(0, 1, $mapping_hash, $mapping_genfn,
+              $ptr_t - 3, $mptr_t, @data)) {
+            return 0;
+          }
+          debug("internal remapping end\n");
+
+          # Restore old mapping.
+          $$mapping_hash{$pattern_arg_target_hash} = $old_hash;
+        } else {
+          # Shallow compare.
+          if ($$mapping_hash{$hash_p} != $hash_t) {
+            return 0;
+          }
+        }
+      } else {
+        # Validate against existing mapping hash.
+        if (exists $$mapping_hash{$hash_p}) {
+          if ($$mapping_hash{$hash_p} != $hash_t) {
+            return 0;
+          }
+        } else {
+          $$mapping_hash{$hash_p} = $hash_t;
+
+          # Add expression pointer to mapping for later use.
+          # Both pointers point at the start of the expression.
+          $$mapping_genfn{$value_p} = [$ptr_t - 3, $ptr_p - 3];
         }
       }
-      
+
       # Jump over function body.
-      if ($type_e == $EXPR_FUNCTION || $type_e == $EXPR_FUNCTION_GEN) {
-        $ptr_e += 2 + $data[$ptr_e + 1];
+      # Generic functions operating on generic functions are actually bullshit.
+      if ($type_t == $EXPR_FUNCTION || $type_t == $EXPR_FUNCTION_GEN) {
+        $ptr_t += 2 + $data[$ptr_t + 1];
       }
-      if ($type_p == $EXPR_FUNCTION_GEN) {
-        $ptr_p += 2 + $data[$ptr_p + 1];
+      $ptr_p += 2 + $data[$ptr_p + 1];
+    } elsif ($type_p == $EXPR_SYMBOL) {
+      # Check interal remapping caused by generic functions.
+      if ($internal_remap && exists $$mapping_hash{$hash_p}) {
+        if ($$mapping_hash{$hash_p} != $hash_t) {
+          return 0;
+        } else {
+          # The symbol is in the mapping and matches the given hash. It is
+          # possible that the target is a function so now we need to jump over
+          # its function body.
+          if ($type_t == $EXPR_FUNCTION || $type_t == $EXPR_FUNCTION_GEN) {
+            $ptr_t += 2 + $data[$ptr_t + 1];
+          }
+        }
+      } else {
+        if ($type_t != $EXPR_SYMBOL || $value_t != $value_p) {
+          return 0;
+        }
       }
-    } elsif ($type_p == $EXPR_INTEGER || $type_p == $EXPR_SYMBOL) {
-      # There is no need to skip the function content of the expression. If it
-      # is a function the pattern is not matching anymore.
-      if (!($type_e == $type_p && $value_e == $value_p)) {
-        return 0;
-      }
-    } elsif ($type_p == $EXPR_FUNCTION) {
-      debug "pattern is function #$value_p\n";
-  
-      if ($type_e == $EXPR_FUNCTION && $value_e == $value_p) {
-        my $argc_e = $data[$ptr_e++];
+    } elsif ($type_p == $EXPR_FUNCTION) {  
+      if ($type_t == $EXPR_FUNCTION && $value_t == $value_p) {
+        my $argc_t = $data[$ptr_t++];
         my $argc_p = $data[$ptr_p++];
   
-        debug "matching function, argument count: $argc_e, $argc_p\n";
+        debug("matching function, argument count: $argc_t, $argc_p\n");
   
         # Both functions must have the same number of arguments.
-        if ($argc_e == $argc_p) {
+        if ($argc_t == $argc_p) {
           # Skip content-length.
-          $ptr_e++;
+          $ptr_t++;
           $ptr_p++;
         
           # Add argument count to the total.
@@ -136,49 +192,85 @@ sub match_pattern {
         # Pattern is a function but expression is not.
         return 0;
       }
+    } elsif ($type_p == $EXPR_INTEGER) {
+      # Integers are not very common in patterns. Therefore this is checked
+      # last.
+      if ($type_t != $EXPR_INTEGER || $value_t != $value_p) {
+        return 0;
+      }
     } else {
       # Unknown expression type.
       return 0;
     }
   }
 
+  debug("target did match pattern\n");
+
   # Also return pointer value.
-  return (1, $ptr_e, $ptr_p);
+  return (1, $ptr_t, $ptr_p);
 }
 
 # Initialization for match_pattern.
 sub expr_match_pattern {
   my ($expression, $pattern) = @_;
-  my (%mapping_hash, %mapping_ptrs);
-  my $ptr_e = 0;
+  my (%mapping_hash, %mapping_genfn);
+  my $ptr_t = 0;
   my $ptr_p = scalar(@$expression);
   
-  debug 'expression: ', join(', ', @$expression), "\n";
-  debug 'pattern: ', join(', ', @$pattern), "\n";
+  debug('expression: ', join(', ', @$expression), "\n");
+  debug('pattern: ', join(', ', @$pattern), "\n");
   
-  my $result = match_pattern(
-    1, \%mapping_hash, \%mapping_ptrs, $ptr_e, $ptr_p, @$expression, @$pattern);
+  my $result = match_pattern(1, 0, \%mapping_hash, \%mapping_genfn,
+                             $ptr_t, $ptr_p, @$expression, @$pattern);
   return !($result == 0);
 }
 
 # Rule matching
+# It is possible to put match_pattern inside this function for some very minimal
+# gain (arguments do not have to be copied).
 sub expr_match_rule {
   my ($expr_left, $expr_right, $rule_left, $rule_right) = @_;
-  my (%mapping_hash, %mapping_ptrs);
-  my $ptr_e = 0;
+  my (%mapping_hash, %mapping_genfn);
+  my $ptr_t = 0;
   my $ptr_p = scalar(@$expr_left) + scalar(@$expr_right);
   my @data = (@$expr_left, @$expr_right, @$rule_left, @$rule_right);
   
-  (my $result_left, $ptr_e, $ptr_p) = match_pattern(
-    1, \%mapping_hash, \%mapping_ptrs, $ptr_e, $ptr_p, @data);
+  debug("match rule left side\n");
+  (my $result_left, $ptr_t, $ptr_p) = match_pattern(
+    1, 0, \%mapping_hash, \%mapping_genfn, $ptr_t, $ptr_p, @data);
   if (!$result_left) {
     return 0;
   }
+
+  debug("match rule right side\n");
+  # Process generic function mapping.
+  foreach my $ptrs (values %mapping_genfn) {
+    my $mptr_t = $$ptrs[0];
+    my $mptr_p = $$ptrs[1];
+
+    # Get hash of first argument of pattern function.
+    # This first argument should be generic.
+    my $pattern_arg_hash = $data[$mptr_p + 5];
+    push @$ptrs, $pattern_arg_hash;
+    
+    # If no target hash exists and the expression function has 1 argument, the
+    # generic is mapped to that argument.
+    if (!exists $mapping_hash{$pattern_arg_hash}) {
+      if ($data[$mptr_t + 3] == 1) {
+        # Map pattern argument to hash of first expression argument.
+        my $hash = $data[$mptr_t + 5];
+        debug("infer $hash for pattern $pattern_arg_hash\n");
+        $mapping_hash{$pattern_arg_hash} = $hash;
+      } else {
+        # Argument count not 1, and no target hash exists. So terminate.
+        return 0;
+      }
+    }
+  }
   
   my $result_right = match_pattern(
-    0, \%mapping_hash, \%mapping_ptrs, $ptr_e, $ptr_p, @data);
+    0, 0, \%mapping_hash, \%mapping_genfn, $ptr_t, $ptr_p, @data);
   return !($result_right == 0);
 }
 
-# Succesfully load module.
-return 1;
+1;

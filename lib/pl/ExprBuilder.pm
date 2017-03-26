@@ -2,126 +2,152 @@
 # Use of this source code is governed by an AGPL-3.0-style license
 # that can be found in the LICENSE file.
 
+# Utilities to build expression data using Perl syntax.
 package ExprBuilder;
 require Exporter;
-@ISA = qw(Exporter);
-@EXPORT_OK = qw(expr_number expr_symbols expr_function expr_generic_function);
+@ISA        = qw(Exporter);
+@EXPORT_OK  = qw(expr_number expr_symbols expr_function expr_generic_function format_expression);
 
 use strict;
 use warnings;
 
-# Jenkins one-at-a-time hash
-{
-  package EqLib::Hash;
-
-  sub jenkins_oaat {
-    my $hash = 0;
-    foreach (@_) {
-      $hash += $_;
-      $hash += 0x1fffffff & ($hash << 10);
-      $hash ^= 0x1fffffff & ($hash >> 6);
-    }
-    $hash += 0x1fffffff & ($hash << 3);
-    $hash ^= 0x1fffffff & ($hash >> 11);
-    $hash += 0x1fffffff & ($hash << 15);
-    return $hash;
-  }
-  
-  sub jenkins_oaat_str {
-    return jenkins_oaat(map(ord, split(//, shift)));
-  }
-}
-
-# Expression array builders.
-{
-  package EqLib::Expr;
-  
-  my $EXPR_INTEGER       = 1;
-  my $EXPR_SYMBOL        = 2;
-  my $EXPR_SYMBOL_GEN    = 3;
-  my $EXPR_FUNCTION      = 4;
-  my $EXPR_FUNCTION_GEN  = 5;
-  
-  # Create expression from data array (add hash and bless).
-  sub make_expr {
-    my @array = @_;
-    unshift(@array, EqLib::Hash::jenkins_oaat(@array));
-    my $ref = \@array;
-    bless $ref, 'EqLib::Expr::WithOperators';
-    return \@array;
-  }
-  
-  # Create function from argument array.
-  sub make_function {
-    my @data = (shift, EqLib::Hash::jenkins_oaat_str(shift), 0, 0);
-    foreach my $arg (@_) {
-      $data[2]++;
-      if (ref($arg) eq 'EqLib::Expr::WithOperators') {
-        push(@data, @$arg);
-      } else {
-        my $numdata = number($arg);
-        push(@data, @$numdata);
-      }
-    }
-    $data[3] = scalar(@data) - 4;
-    return make_expr(@data);
-  }
-  
-  sub number { return make_expr($EXPR_INTEGER, $_[0]); }
-  
-  sub symbol {
-    return make_expr($EXPR_SYMBOL,
-      EqLib::Hash::jenkins_oaat_str($_[0]));
-  }
-  sub symbol_gen {
-    return make_expr($EXPR_SYMBOL_GEN,
-      EqLib::Hash::jenkins_oaat_str($_[0]));
-  }
-  
-  sub function { return make_function($EXPR_FUNCTION, @_); }
-  sub function_gen { return make_function($EXPR_FUNCTION_GEN, @_); }
-  
-  sub _auto_symbol {
-    my $str = $_;
-    if (substr($str, 0, 1) eq '?') {
-      return symbol_gen(substr $str, 1);
-    } else {
-      return symbol($str);
-    }
-  }
-  
-  sub symbols {
-    my @strs = split(/,\s/, shift);
-    return map(_auto_symbol, @strs);
-  }
-}
+use ExprUtils qw(expr_hash_mix expr_hash_postprocess expr_hash expr_hash_str);
 
 # Operators for expression arrays (which are blessed with this 'class').
 {
-  package EqLib::Expr::WithOperators;
+  package ExprOperators;
   
-  sub make_op_args {
-    if ($_[2]) {
-      return ($_[0], $_[1]);
-    } else {
-      return ($_[1], $_[0]);
-    }
+  # Arrange arguments according to operator direction.
+  sub _arrange_args {
+    my ($arg1, $arg2, $swap) = @_;
+    return $swap ? ($arg2, $arg1) : ($arg1, $arg2);
   }
   
   use overload
-    '+' => sub { EqLib::Expr::function('+', make_op_args($_[0], $_[1], $_[2])); },
-    '-' => sub { EqLib::Expr::function('-', make_op_args($_[0], $_[1], $_[2])); },
-    '*' => sub { EqLib::Expr::function('*', make_op_args($_[0], $_[1], $_[2])); },
-    '/' => sub { EqLib::Expr::function('/', make_op_args($_[0], $_[1], $_[2])); },
-    '^' => sub { EqLib::Expr::function('^', make_op_args($_[0], $_[1], $_[2])); },
-    '>>' => sub { [$_[0], $_[1]]; };
+    '+' => sub { ExprBuilder::expr_function('+', _arrange_args(@_)); },
+    '-' => sub { ExprBuilder::expr_function('-', _arrange_args(@_)); },
+    '*' => sub { ExprBuilder::expr_function('*', _arrange_args(@_)); },
+    '/' => sub { ExprBuilder::expr_function('/', _arrange_args(@_)); },
+    '^' => sub { ExprBuilder::expr_function('^', _arrange_args(@_)); },
+    '>>' => sub {
+      my ($arg1, $arg2, $swap) = @_;
+      return $swap ? [$arg2, $arg1] : [$arg1, $arg2];
+    };
 }
 
-# Public API functions.
-sub expr_number { EqLib::Expr::number(@_); }
-sub expr_symbols { EqLib::Expr::symbols(@_); }
-sub expr_function { EqLib::Expr::function(@_); }
-sub expr_generic_function { EqLib::Expr::function_gen(@_); }
+my $EXPR_INTEGER       = 1;
+my $EXPR_SYMBOL        = 2;
+my $EXPR_SYMBOL_GEN    = 3;
+my $EXPR_FUNCTION      = 4;
+my $EXPR_FUNCTION_GEN  = 5;
+my %formatting_data;
+  
+# Build expression from data array (add hash and bless).
+sub _build_expr {
+  my @array = @_;
+  unshift(@array, expr_hash(@array));
+  my $ref = \@array;
+  bless($ref, 'ExprOperators');
+  return $ref;
+}
 
-# Succesfully load module.
-return 1;
+# Build function from argument array.
+sub _build_function {
+  my ($type, $str, @args) = @_;
+  my $id = expr_hash_str($str);
+  $formatting_data{$id} = $str;
+  my @data = (0, $type, $id, 0, 0);
+  my $hash = 0;
+  $hash = expr_hash_mix($hash, $type);
+  $hash = expr_hash_mix($hash, $id);
+
+  foreach my $arg (@args) {
+    $data[3]++;
+    if (ref($arg) eq 'ExprOperators') {
+      push(@data, @$arg);
+      $hash = expr_hash_mix($hash, $arg->[0]);
+    } else {
+      my $numdata = expr_number($arg);
+      push @data, @$numdata;
+      $hash = expr_hash_mix($hash, $numdata->[0]);
+    }
+  }
+
+  $data[4] = scalar(@data) - 5;
+  $data[0] = expr_hash_postprocess($hash);
+
+  my $ref = \@data;
+  bless($ref, 'ExprOperators');
+  return $ref;
+}
+
+# Build symbol.
+sub _build_symbol {
+  my ($type, $str) = @_;
+  my $id = expr_hash_str($str);
+  $formatting_data{$id} = $str;
+  return _build_expr($type, $id);
+}
+
+sub expr_number { _build_expr($EXPR_INTEGER, @_); }
+sub expr_symbol { _build_symbol($EXPR_SYMBOL, @_); }
+sub expr_generic_symbol { _build_symbol($EXPR_SYMBOL_GEN, @_); }
+sub expr_function { _build_function($EXPR_FUNCTION, @_); }
+sub expr_generic_function { _build_function($EXPR_FUNCTION_GEN, @_); }
+
+# Build symbol from provided string. Symbol will be generic if the string starts
+# with a question mark. 
+sub _auto_symbol {
+  my $str = $_;
+  if (substr($str, 0, 1) eq '?') {
+    return expr_generic_symbol(substr($str, 1));
+  } else {
+    return expr_symbol($str);
+  }
+}
+
+# Build array of symbols from the provided string with comma separated symbol
+# labels.
+sub expr_symbols {
+  my ($str) = @_;
+  my @strs = split(/,\s/, $str);
+  return map(_auto_symbol, @strs);
+}
+
+# Format expression data as string using %formatting_data.
+sub format_expression {
+  my ($data, $indent, $ptr, $indent_lvl) = @_;
+
+  # Default arguments.
+  if (!defined($indent)) { $indent = 0; }
+  if (!defined($ptr)) { my $ptr_v = 0; $ptr = \$ptr_v; }
+  if (!defined($indent_lvl)) { $indent_lvl = 0; }
+
+  my $hash = $data->[$$ptr++];
+  my $type = $data->[$$ptr++];
+  my $value = $data->[$$ptr++];
+  my $indent_str = $indent ? "\n" . (' ' x ($indent_lvl * 2)) : '';
+
+  if ($type == $EXPR_FUNCTION || $type == $EXPR_FUNCTION_GEN) {
+    my $argc = $data->[$$ptr];
+    $$ptr += 2;
+    my @args;
+
+    while ($argc > 0) {
+      $argc--;
+      push(@args, format_expression($data, $indent, $ptr, $indent_lvl + 1));
+    }
+
+    return sprintf('%s%s%s[%d](%s)', $indent_str,
+      $type == $EXPR_FUNCTION_GEN ? '?' : '',
+      $formatting_data{$value}, $hash, join(', ', @args));
+  } elsif ($type == $EXPR_SYMBOL || $type == $EXPR_SYMBOL_GEN) {
+    return sprintf('%s%s%s[%d]', $indent_str,
+      $type == $EXPR_SYMBOL_GEN ? '?' : '',
+      $formatting_data{$value}, $hash);
+  } else {
+    return sprintf('%s%d', $indent_str, $value);
+  }
+}
+
+1;
