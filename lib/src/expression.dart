@@ -41,10 +41,6 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
     nodeType = 'integer';
     nodeValue = expr.value;
     nodeArguments = [];
-  } else if (expr is SymbolExpr) {
-    nodeType = expr.isGeneric ? 'generic' : 'function';
-    nodeValue = expr.id;
-    nodeArguments = [];
   } else if (expr is FunctionExpr) {
     nodeType = expr.isGeneric ? 'generic' : 'function';
     nodeValue = expr.id;

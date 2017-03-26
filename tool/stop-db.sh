@@ -5,7 +5,7 @@
 # that can be found in the LICENSE file.
 
 CONTAINER=`docker ps -a --filter='name=eqdb-postgres' | grep "eqdb-postgres" | awk '{print $1}'`
-IMAGE=`docker images --filter='label=eqdb-postgres' | grep "eqdb-postgres" | awk '{print $3}'`
+IMAGE=`docker images eqdb-postgres | grep "eqdb-postgres" | awk '{print $3}'`
 if [ -n "${CONTAINER}" ]; then
   docker stop --time=1 eqdb-postgres
   docker rm eqdb-postgres
