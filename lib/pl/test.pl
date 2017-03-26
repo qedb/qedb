@@ -61,10 +61,11 @@ my @rule_tests = (
 my $test_index = 0;
 sub print_test_result {
   my ($name, $pass) = @_;
-  print($pass ? color('green') : color('red'));
+  print($pass ? color('bright_green') : color('bright_red'));
   print('test #', ++$test_index, ' (', $name, '): ',  $pass ? 'PASS' : 'FAIL', "\n");
   
   if (!$pass) {
+    print(color('reset'));
     exit(1);
   }
 }
@@ -139,10 +140,10 @@ sub run_rule_benchmark_cycles {
   }
 }
 
+print(color('reset'), "All tests successful.\n");
+
 # Run benchmark (if specified in command line argument).
 if ($ARGV[0] eq 'benchmark') {
-  print(color('reset'));
-
   # Warmup
   print("Benchmark warmup...\n");
   run_rule_benchmark_cycles(10000);

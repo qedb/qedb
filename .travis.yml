@@ -6,7 +6,11 @@ services:
 - docker
 before_install:
 - gem install mustache
+before_script:
+- cpanm --quiet --notest --skip-satisfied Devel::Cover Devel::Cover::Report::Codecov
 script:
 - pub global activate coverage
 - make build-base-container
 - make check
+after_success:
+- cover -report codecov
