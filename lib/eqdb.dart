@@ -27,7 +27,7 @@ part 'src/expression.dart';
 part 'src/rule.dart';
 part 'src/definition.dart';
 part 'src/expression_lineage.dart';
-part 'src/equation_difference.dart';
+part 'src/expression_difference.dart';
 
 class UnprocessableEntityError extends RpcError {
   UnprocessableEntityError(String message)

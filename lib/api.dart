@@ -176,6 +176,12 @@ class EqDB {
       _runRequestSession<ExpressionLineageResource>((s) async =>
           new ExpressionLineageResource()
             ..loadRow(await api.createExpressionLineage(s, body), s.data));
+
+  @ApiMethod(path: 'expressionDifference/resolve', method: 'POST')
+  Future<api.ExpressionDifferenceResource> resolveExpressionDifference(
+          api.ExpressionDifferenceResource body) =>
+      _runRequestSession<api.ExpressionDifferenceResource>(
+          (s) => api.resolveExpressionDifference(s, body));
 }
 
 /// Utility to reuse method calling boilerplate.
