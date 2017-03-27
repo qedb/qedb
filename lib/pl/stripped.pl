@@ -254,12 +254,15 @@ my $expr_match_rule = sub {
   return !($result_right == 0);
 };
 
-return $expr_match_rule->($_[0], $_[1], $_[2], $_[3]);
+return $expr_match_rule->(@_);
 }
 
 my $add_id                = 1; # 300000183
+
+# From test.pl.
 my $rule_from_test_left   = [510598191, 4, 300000183, 2, 6, 345855432, 3, 170824770, 293769665, 3, 14385563];
 my $rule_from_test_right  = [52846174,  4, 300000183, 2, 6, 293769665, 3, 14385563,  345855432, 3, 170824770];
+
 my $rule_from_db_left     = [514286275, 4, 1,         2, 6, 405417200, 3, 8,         99059819,  3, 9];
 my $rule_from_db_right    = [199446249, 4, 1,         2, 6, 99059819,  3, 9,         405417200, 3, 8];
 
@@ -267,6 +270,5 @@ my $rule_from_db_right    = [199446249, 4, 1,         2, 6, 99059819,  3, 9,    
 print(pgsql_function(
   [198636817, 4, $add_id, 2, 6, 215923310, 2, 319006181, 313418812, 1, 1],
   [420266830, 4, $add_id, 2, 6, 313418812, 1, 1, 215923310, 2, 319006181],
-#  $rule_from_test_left, $rule_from_test_right)
   $rule_from_db_left, $rule_from_db_right)
   ? 'PASS!!!' : 'FAIL :(', "\n");

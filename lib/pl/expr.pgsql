@@ -6,10 +6,10 @@ CREATE EXTENSION plperl;
 
 -- To test:
 --
--- SELECT expr_match_rule(
+-- SELECT * FROM rule WHERE expr_match_rule(
 --   ARRAY[198636817, 4, 1, 2, 6, 215923310, 2, 319006181, 313418812, 1, 1],
 --   ARRAY[420266830, 4, 1, 2, 6, 313418812, 1, 1, 215923310, 2, 319006181],
---   left_array_data, right_array_data) FROM rule;
+--   left_array_data, right_array_data);
 
 CREATE FUNCTION expr_match_rule(
   integer[],
@@ -261,6 +261,6 @@ my $expr_match_rule = sub {
   return !($result_right == 0);
 };
 
-return $expr_match_rule->($_[0], $_[1], $_[2], $_[3]);
+return $expr_match_rule->(@_);
 $BODY$
   LANGUAGE plperl;
