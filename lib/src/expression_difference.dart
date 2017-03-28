@@ -50,39 +50,50 @@ Future<DifferenceBranch> resolveTreeDiff(
     // Try to find matching rule in the database.
     final exprLeft = intarray(branch.diff.left.toArray()).sql;
     final exprRight = intarray(branch.diff.right.toArray()).sql;
+
+    // TODO: add option to override this via the configuration file.
+    final computableIds = intarray([1, 2, 3]).sql;
+
     final selectRule = (String where) async =>
         await ruleHelper.selectCustom(s, '$where LIMIT 1', {});
 
     // Select rule (non-inverted or inverted).
     var rules = await selectRule(
-        'expr_match_rule($exprLeft, $exprRight, left_array_data, right_array_data)');
+        'expr_match_rule($exprLeft, $exprRight, left_array_data, right_array_data, $computableIds)');
     if (rules.isEmpty) {
       rules = await selectRule(
-          'expr_match_rule($exprLeft, $exprRight, right_array_data, left_array_data)');
+          'expr_match_rule($exprLeft, $exprRight, right_array_data, left_array_data, $computableIds)');
       if (rules.isNotEmpty) {
         outputBranch.invertRule = true;
       }
+    } else {
+      outputBranch.invertRule = false;
     }
 
     if (rules.isNotEmpty) {
       outputBranch.unresolved = false;
       outputBranch.rule = new RuleResource()..loadRow(rules.single, s.data);
     } else {
-      // Attempt to resolve all arguments.
-      outputBranch.arguments = [];
-      outputBranch.unresolved = false;
-      log.info(branch.arguments.length);
-      for (final arg in branch.arguments) {
-        if (arg.different) {
-          final result = await resolveTreeDiff(s, arg);
-          outputBranch.arguments.add(result);
+      if (branch.arguments.isNotEmpty) {
+        // Attempt to resolve all arguments.
+        outputBranch.arguments = [];
+        outputBranch.unresolved = false;
 
-          if (result.unresolved) {
-            outputBranch.unresolved = true;
+        for (final arg in branch.arguments) {
+          if (arg.different) {
+            final result = await resolveTreeDiff(s, arg);
+            outputBranch.arguments.add(result);
+
+            if (result.unresolved) {
+              outputBranch.unresolved = true;
+            }
+          } else {
+            outputBranch.arguments
+                .add(new DifferenceBranch()..different = false);
           }
-        } else {
-          outputBranch.arguments.add(new DifferenceBranch()..different = false);
         }
+      } else {
+        outputBranch.unresolved = true;
       }
     }
   }

@@ -88,8 +88,17 @@ class LineageEditor {
       if (compareWith >= 0 &&
           editors[compareWith].isNotEmpty &&
           editor.isNotEmpty) {
-        final left = interface.parse(editors[compareWith].getParsableContent());
-        final right = interface.parse(editor.getParsableContent());
+        var left = interface.parse(editors[compareWith].getParsableContent());
+        var right = interface.parse(editor.getParsableContent());
+
+        // Special case where the sides have to be swapped.
+        if (editor.index == 0) {
+          final tmp = left;
+          left = right;
+          right = tmp;
+        }
+
+        // TODO: evaluate both sides of the equation before submitting.
 
         // Resolve difference via API.
         final result = await db

@@ -16,13 +16,13 @@ use ExprUtils qw(expr_hash_mix expr_hash_postprocess expr_hash expr_hash_str);
 # Operators for expression arrays (which are blessed with this 'class').
 {
   package ExprOperators;
-  
+
   # Arrange arguments according to operator direction.
   sub _arrange_args {
     my ($arg1, $arg2, $swap) = @_;
     return $swap ? ($arg2, $arg1) : ($arg1, $arg2);
   }
-  
+
   use overload
     '+' => sub { ExprBuilder::expr_function('+', _arrange_args(@_)); },
     '-' => sub { ExprBuilder::expr_function('-', _arrange_args(@_)); },
@@ -41,11 +41,25 @@ my $EXPR_SYMBOL_GEN    = 3;
 my $EXPR_FUNCTION      = 4;
 my $EXPR_FUNCTION_GEN  = 5;
 my %formatting_data;
-  
+
+# Shift and mask hash as non-integer hash.
+sub _hash_postprocess_non_integer {
+  my ($value) = @_;
+  return ($value << 1) & 0x3fffffff;
+}
+
+# Shift integer hash.
+sub _hash_postprocess_integer {
+  my ($value) = @_;
+  return (($value << 1) & 0x3fffffff) | 0x1;
+}
+
 # Build expression from data array (add hash and bless).
 sub _build_expr {
   my @array = @_;
-  unshift(@array, expr_hash(@array));
+  unshift(@array, $array[0] == $EXPR_INTEGER
+    ? _hash_postprocess_integer($array[1])
+    : _hash_postprocess_non_integer(expr_hash(@array)));
   my $ref = \@array;
   bless($ref, 'ExprOperators');
   return $ref;
@@ -74,7 +88,7 @@ sub _build_function {
   }
 
   $data[4] = scalar(@data) - 5;
-  $data[0] = expr_hash_postprocess($hash);
+  $data[0] = _hash_postprocess_non_integer(expr_hash_postprocess($hash));
 
   my $ref = \@data;
   bless($ref, 'ExprOperators');

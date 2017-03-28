@@ -8,8 +8,8 @@ use strict;
 
 use Term::ANSIColor;
 use Time::HiRes  qw(time);
-use ExprUtils    qw(set_debug debug);
-use ExprBuilder  qw(expr_symbols expr_function expr_generic_function format_expression);
+use ExprUtils    qw(expr_hash_str set_debug debug);
+use ExprBuilder  qw(expr_number expr_symbols expr_function expr_generic_function format_expression);
 use ExprPattern  qw(expr_match_pattern expr_match_rule);
 
 if ($ARGV[0] eq 'debug') {
@@ -37,7 +37,7 @@ my @pattern_tests = (
 );
 
 # Rules to test against.
-my $rule_n = 8;
+my $rule_n = 9;
 my %rules = (
   1 => $a + $b >> $b + $a,
   2 => $a - $b >> $b - $a,
@@ -46,7 +46,8 @@ my %rules = (
   5 => $a * ($b * $c) >> ($a * $b) * $c,
   6 => $a * $b + $a * $c >> $a * ($b + $c),
   7 => diff(f($a), $b) >> diff($a, $b) * diff(f($a), $a),
-  8 => diff(f($a), $a) >> lim(d($a), 0, (f($a + d($a)) - f($a)) / d($a))
+  8 => diff(f($a), $a) >> lim(d($a), 0, (f($a + d($a)) - f($a)) / d($a)),
+  9 => diff($a^$b, $a) >> $b * ($a^($b - 1))
 );
 
 # Rule inputs that are tested, format: [RULE#, EQUATION].
@@ -54,8 +55,13 @@ my @rule_tests = (
   [1, $x + 1 >> 1 + $x],
   [6, $a * $x + $a * $y >> $a * ($x + $y)],
   [7, diff(sine($x^2), $x) >> diff($x^2, $x) * diff(sine($x^2), $x^2)],
-  [8, diff($x^2, $x) >> lim(d($x), 0, ((($x + d($x))^2) - (($x)^2)) / d($x))]
+  [8, diff($x^2, $x) >> lim(d($x), 0, ((($x + d($x))^2) - (($x)^2)) / d($x))],
+  [1, expr_number(1) + expr_number(2) >> expr_number(3)],
+  [9, diff($x^2, $x) >> 2*($x^1)]
 );
+
+# Computable function IDs.
+my @computable_ids = map { expr_hash_str($_) } ('+', '-', '*');
 
 # Test result printer.
 my $test_index = 0;
@@ -63,7 +69,7 @@ sub print_test_result {
   my ($name, $pass) = @_;
   print($pass ? color('bright_green') : color('bright_red'));
   print('test #', ++$test_index, ' (', $name, '): ',  $pass ? 'PASS' : 'FAIL', "\n");
-  
+
   if (!$pass) {
     print(color('reset'));
     exit(1);
@@ -76,7 +82,7 @@ foreach my $test_data (@pattern_tests) {
   print(color($test_index % 2 == 0 ? 'white' : 'cyan'));
 
   my $result = expr_match_pattern($test_data->[1], $test_data->[2]);
-  print_test_result 'pattern match', $result == $test_data->[0];
+  print_test_result('pattern match', $result == $test_data->[0]);
 }
 
 # Run rule tests.
@@ -89,7 +95,7 @@ foreach my $test_data (@rule_tests) {
   debug("\nEQUATION:\n",
       format_expression(\@expr_left, 1), "\n\n=\n",
       format_expression(\@expr_right, 1), "\n\n");
-  
+
   # Find matching rule (there can be only 1).
   my @matching_rules;
   for (my $i = 1; $i <= $rule_n; $i++) {
@@ -103,13 +109,14 @@ foreach my $test_data (@rule_tests) {
     debug(color('yellow'), "\nRULE:\n",
         format_expression(\@rule_left, 0), "\n=\n",
         format_expression(\@rule_right, 0), "\n\n");
-    
+
     # Alternate debug color.
     print(color($i % 2 == 0 ? 'white' : 'cyan'));
 
     my $result = expr_match_rule(
       \@expr_left, \@expr_right,
-      \@rule_left, \@rule_right);
+      \@rule_left, \@rule_right,
+      \@computable_ids);
     if ($result) {
       push @matching_rules, $i;
     }
@@ -117,7 +124,7 @@ foreach my $test_data (@rule_tests) {
 
   my $expect = $test_data->[0];
   my $did_pass = scalar(@matching_rules) == 1 && $expect == $matching_rules[0];
-  print_test_result 'rule match', $did_pass;
+  print_test_result('rule match', $did_pass);
 }
 
 sub run_rule_benchmark_cycles {
@@ -134,7 +141,8 @@ sub run_rule_benchmark_cycles {
         my @rule_right = @{$rule_data->[1]};
         my $result = expr_match_rule(
           \@expr_left, \@expr_right,
-          \@rule_left, \@rule_right);
+          \@rule_left, \@rule_right,
+          \@computable_ids);
       }
     }
   }

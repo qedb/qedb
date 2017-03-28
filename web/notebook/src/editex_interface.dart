@@ -50,7 +50,7 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   int assignId(String label, bool generic) {
     //return functions.singleWhere((fn) => fn.keyword == label).id;
     // We generate radix string labels (see [_generateFunctionParseTemplate]).
-    return int.parse(label.substring(1));
+    return int.parse(label.substring(1), radix: 16);
   }
 
   Expr parse(String content) {
