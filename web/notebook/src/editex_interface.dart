@@ -2,15 +2,14 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-import 'dart:html';
 import 'dart:async';
 
+import 'package:eqlib/eqlib.dart';
 import 'package:editex/editex.dart';
-import 'package:http/browser_client.dart';
 import 'package:eqdb_client/eqdb_client.dart';
 
 /// Implements command resolvers for EdiTeX.
-class CommandResolver {
+class EqDBEdiTeXInterface implements EdiTeXInterface {
   static const extraInstantCommands = const {
     '(': const EdiTeXCommand('(', r'\left($0\right)', r'($0)'),
     '[': const EdiTeXCommand('(', r'\left[$0\right]', r'($0)'),
@@ -18,18 +17,56 @@ class CommandResolver {
 
   List<FunctionResource> functions;
   List<OperatorResource> operators;
+  final operatorConfig = new OperatorConfig();
 
   Future loadData(EqdbApi db) async {
     functions = await db.listFunctions();
     operators = await db.listOperators();
+
+    // Populate operator config.
+    for (final op in operators) {
+      operatorConfig.add(new Operator(
+          op.id,
+          op.precedenceLevel,
+          op.associativity == 'ltr' ? Associativity.ltr : Associativity.rtl,
+          op.character.runes.first,
+          op.operatorType == 'infix'
+              ? OperatorType.infix
+              : op.operatorType == 'prefix'
+                  ? OperatorType.prefix
+                  : OperatorType.postfix));
+    }
+
+    // Add default setting for implicit multiplication.
+    // (same precedence level as power operator).
+    operatorConfig.add(new Operator(
+        operatorConfig.implicitMultiplyId,
+        operatorConfig.byId[operatorConfig.id('*')].precedenceLevel,
+        Associativity.rtl,
+        -1,
+        OperatorType.infix));
   }
 
-  String generateFunctionParseTemplate(FunctionResource fn) {
-    final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
-    return '#${fn.id.toRadixString(16)}(${args.join(',')})';
+  int assignId(String label, bool generic) {
+    //return functions.singleWhere((fn) => fn.keyword == label).id;
+    // We generate radix string labels (see [_generateFunctionParseTemplate]).
+    return int.parse(label.substring(1));
   }
 
-  EdiTeXCommand resolveCommand(String command) {
+  Expr parse(String content) {
+    return parseExpression(content, operatorConfig, assignId);
+  }
+
+  String _generateFunctionParseTemplate(FunctionResource fn) {
+    if (fn.argumentCount > 0) {
+      final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
+      return '#${fn.id.toRadixString(16)}(${args.join(',')})';
+    } else {
+      return '#${fn.id.toRadixString(16)}';
+    }
+  }
+
+  EdiTeXCommand resolveCommand(command) {
     final fns = functions.where((fn) => fn.keyword == command);
     if (fns.isNotEmpty) {
       final fn = fns.single;
@@ -51,12 +88,16 @@ class CommandResolver {
       }
 
       return new EdiTeXCommand(
-          fn.keyword, template, generateFunctionParseTemplate(fn));
+          fn.keyword, template, _generateFunctionParseTemplate(fn));
     }
     return null;
   }
 
-  EdiTeXCommand resolveInstantCommand(String command) {
+  bool hasCommand(command) {
+    return functions.any((fn) => fn.keyword == command);
+  }
+
+  EdiTeXCommand resolveInstantCommand(command) {
     if (extraInstantCommands.containsKey(command)) {
       return extraInstantCommands[command];
     }
@@ -79,45 +120,13 @@ class CommandResolver {
       final parseTemplate =
           template.contains(r'$0') ? '${op.character}(\$0)' : op.character;
 
-      if (op.character == '/') {
-        // This operator has a special behavior.
-        return null;
-      }
-
       return new EdiTeXCommand(op.character, template, parseTemplate);
     }
     return null;
   }
-}
 
-Future main() async {
-  // Retrieve operators and functions.
-  final db = new EqdbApi(new BrowserClient());
-  final resolver = new CommandResolver();
-  await resolver.loadData(db);
-  final editexInterface = new EdiTeXInterface(
-      resolver.resolveCommand, resolver.resolveInstantCommand);
-
-  // Construct editors.
-  EdiTeX prev;
-  for (final div in querySelectorAll('.editex')) {
-    final editor = new EdiTeX(div, editexInterface);
-
-    if (prev != null) {
-      prev.onRightLeave.listen((_) {
-        editor.cursorIdx = 0;
-        editor.doUpdate = true;
-        editor.container.focus();
-      });
-
-      final prevWrapper = prev;
-      editor.onLeftLeave.listen((_) {
-        prevWrapper.cursorIdx = prevWrapper.content.length - 1;
-        prevWrapper.doUpdate = true;
-        prevWrapper.container.focus();
-      });
-    }
-
-    prev = editor;
+  bool hasInstantCommand(command) {
+    return extraInstantCommands.containsKey(command) ||
+        operators.any((op) => op.character == command);
   }
 }

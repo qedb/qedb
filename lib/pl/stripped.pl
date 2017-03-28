@@ -249,9 +249,9 @@ my $expr_match_rule = sub {
     }
   }
   
-  my $result_right = $match_pattern->(
+  my ($result_right) = $match_pattern->(
     0, 0, \%mapping_hash, \%mapping_genfn, $ptr_t, $ptr_p, @data);
-  return !($result_right == 0);
+  return $result_right;
 };
 
 return $expr_match_rule->(@_);

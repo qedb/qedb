@@ -13,6 +13,7 @@ class ExpressionDifferenceResource {
 class DifferenceBranch {
   bool different;
   bool unresolved;
+  bool invertRule;
   RuleResource rule;
   List<DifferenceBranch> arguments;
 }
@@ -21,20 +22,20 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
     Session s, ExpressionDifferenceResource body) async {
   // Decode expressions.
   final left = new Expr.fromBase64(body.left.data);
-  final right = new Expr.fromBase64(body.left.data);
+  final right = new Expr.fromBase64(body.right.data);
 
   // Get difference tree.
-  final diff = getExpressionDiff(left, right);
+  final result = getExpressionDiff(left, right);
 
   // Resolve difference tree.
-  if (diff.numericInequality) {
+  if (result.numericInequality) {
     body.difference = new DifferenceBranch()
       ..different = true
       ..unresolved = true;
-  } else if (diff.hasDiff) {
-    body.difference = await resolveTreeDiff(s, diff.diff);
+  } else if (result.diff.different) {
+    body.difference = await resolveTreeDiff(s, result.diff);
   } else {
-    body.difference = new DifferenceBranch();
+    body.difference = new DifferenceBranch()..different = false;
   }
 
   return body;
@@ -43,16 +44,25 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
 Future<DifferenceBranch> resolveTreeDiff(
     Session s, ExprDiffBranch branch) async {
   final outputBranch = new DifferenceBranch();
-  outputBranch.different = branch.diff != null;
+  outputBranch.different = branch.different;
 
   if (outputBranch.different) {
     // Try to find matching rule in the database.
     final exprLeft = intarray(branch.diff.left.toArray()).sql;
     final exprRight = intarray(branch.diff.right.toArray()).sql;
-    final rules = await ruleHelper.selectCustom(
-        s,
-        'expr_match_rule($exprLeft, $exprRight, left_array_data, right_array_data) LIMIT 1',
-        {});
+    final selectRule = (String where) async =>
+        await ruleHelper.selectCustom(s, '$where LIMIT 1', {});
+
+    // Select rule (non-inverted or inverted).
+    var rules = await selectRule(
+        'expr_match_rule($exprLeft, $exprRight, left_array_data, right_array_data)');
+    if (rules.isEmpty) {
+      rules = await selectRule(
+          'expr_match_rule($exprLeft, $exprRight, right_array_data, left_array_data)');
+      if (rules.isNotEmpty) {
+        outputBranch.invertRule = true;
+      }
+    }
 
     if (rules.isNotEmpty) {
       outputBranch.unresolved = false;
@@ -60,12 +70,18 @@ Future<DifferenceBranch> resolveTreeDiff(
     } else {
       // Attempt to resolve all arguments.
       outputBranch.arguments = [];
+      outputBranch.unresolved = false;
+      log.info(branch.arguments.length);
       for (final arg in branch.arguments) {
-        final result = await resolveTreeDiff(s, arg);
-        outputBranch.arguments.add(result);
+        if (arg.different) {
+          final result = await resolveTreeDiff(s, arg);
+          outputBranch.arguments.add(result);
 
-        if (result.unresolved) {
-          outputBranch.unresolved = true;
+          if (result.unresolved) {
+            outputBranch.unresolved = true;
+          }
+        } else {
+          outputBranch.arguments.add(new DifferenceBranch()..different = false);
         }
       }
     }

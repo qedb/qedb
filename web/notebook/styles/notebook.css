@@ -9,23 +9,27 @@ h1 {
   font-family: KaTeX_Main;
 }
 
-.equation {
+.lineage-editor {
+  margin-bottom: 5em;
+}
+
+.lineage-row {
   display: flex;
   flex-direction: row;
   align-items: center;
 }
 
-.eq-left-side, .eq-right-side {
+.lineage-row-left, .lineage-row-right {
   flex: 1;
   font-size: 1.7em;
 }
 
-.eq-left-side span > .katex-display {
+.lineage-row-left span > .katex-display {
   margin: 1em;
   text-align: right;
 }
 
-.eq-right-side span > .katex-display {
+.lineage-row-right span > .katex-display {
   margin: 1em;
   text-align: left;
 }
