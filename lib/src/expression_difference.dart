@@ -11,8 +11,8 @@ class ExpressionDifferenceResource {
 }
 
 class DifferenceBranch {
+  bool resolved;
   bool different;
-  bool unresolved;
   bool invertRule;
   RuleResource rule;
   List<DifferenceBranch> arguments;
@@ -31,7 +31,7 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
   if (result.numericInequality) {
     body.difference = new DifferenceBranch()
       ..different = true
-      ..unresolved = true;
+      ..resolved = false;
   } else if (result.diff.different) {
     body.difference = await resolveTreeDiff(s, result.diff);
   } else {
@@ -71,21 +71,21 @@ Future<DifferenceBranch> resolveTreeDiff(
     }
 
     if (rules.isNotEmpty) {
-      outputBranch.unresolved = false;
+      outputBranch.resolved = true;
       outputBranch.rule = new RuleResource()..loadRow(rules.single, s.data);
     } else {
       if (branch.arguments.isNotEmpty) {
         // Attempt to resolve all arguments.
         outputBranch.arguments = [];
-        outputBranch.unresolved = false;
+        outputBranch.resolved = true;
 
         for (final arg in branch.arguments) {
           if (arg.different) {
             final result = await resolveTreeDiff(s, arg);
             outputBranch.arguments.add(result);
 
-            if (result.unresolved) {
-              outputBranch.unresolved = true;
+            if (!result.resolved) {
+              outputBranch.resolved = false;
             }
           } else {
             outputBranch.arguments
@@ -93,7 +93,7 @@ Future<DifferenceBranch> resolveTreeDiff(
           }
         }
       } else {
-        outputBranch.unresolved = true;
+        outputBranch.resolved = false;
       }
     }
   }

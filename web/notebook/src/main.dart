@@ -6,8 +6,8 @@ import 'dart:html';
 import 'dart:async';
 
 import 'package:editex/editex.dart';
-import 'package:http/browser_client.dart';
 import 'package:eqdb_client/eqdb_client.dart';
+import 'package:eqdb_client/browser_client.dart';
 
 import 'editex_interface.dart';
 
