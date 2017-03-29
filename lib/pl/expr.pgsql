@@ -41,7 +41,8 @@ my $expr_hash_postprocess = sub {
 
 # Compute hash for the given part of the expression data array. Replacing all
 # hashes that are in the mapping with the mapped hashes.
-my $compute_mapped_hash = sub {
+my $compute_mapped_hash;
+$compute_mapped_hash = sub {
   my ($ptr, $mapping_hash, $data) = @_;
 
   my $hash = $data->[$ptr++];
@@ -56,16 +57,16 @@ my $compute_mapped_hash = sub {
     $ptr += 2;
 
     $hash = 0;
-    $hash = expr_hash_mix($hash, $type);
-    $hash = expr_hash_mix($hash, $value);
+    $hash = $expr_hash_mix->($hash, $type);
+    $hash = $expr_hash_mix->($hash, $value);
 
     while ($argc > 0) {
       $argc--;
-      (my $arg_hash, $ptr) = compute_mapped_hash($ptr, $mapping_hash, $data);
-      $hash = expr_hash_mix($hash, $arg_hash);
+      (my $arg_hash, $ptr) = $compute_mapped_hash->($ptr, $mapping_hash, $data);
+      $hash = $expr_hash_mix->($hash, $arg_hash);
     }
 
-    $hash = expr_hash_postprocess($hash);
+    $hash = $expr_hash_postprocess->($hash);
     $hash = ($hash << 1) & 0x3fffffff;
     return ($hash, $ptr);
   } else {
@@ -150,7 +151,8 @@ my $evaluate = sub {
 };
 
 # Recursive expression pattern matching.
-my $match_pattern = sub {
+my $match_pattern;
+$match_pattern = sub {
   my ($write_mapping, $internal_remap, $mapping_hash, $mapping_genfn,
       $ptr_t, $ptr_p, $computable_ids, @data) = @_;
 

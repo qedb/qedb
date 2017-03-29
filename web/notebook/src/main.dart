@@ -5,17 +5,65 @@
 import 'dart:html';
 import 'dart:async';
 
+import 'package:eqlib/eqlib.dart';
 import 'package:editex/editex.dart';
 import 'package:eqdb_client/eqdb_client.dart';
 import 'package:eqdb_client/browser_client.dart';
 
+import 'utils.dart';
 import 'editex_interface.dart';
 
 class ExpressionEditor extends EdiTeX {
   final int index;
+  final DivElement arrow, ellipsis, infoPane;
+  Expr oldExpression;
 
-  ExpressionEditor(this.index, DivElement container, EdiTeXInterface interface)
-      : super(container, interface);
+  ExpressionEditor(this.index, this.arrow, this.ellipsis, this.infoPane,
+      DivElement container, EdiTeXInterface interface)
+      : super(container, interface) {
+    hideResolveInfo();
+  }
+
+  void hideResolveInfo() {
+    arrow.style.opacity = '0';
+    ellipsis.hidden = true;
+    infoPane.children.clear();
+  }
+
+  /// TODO: solve this using a Stream based approach?
+  Future resolveDifference(ExpressionEditor previous, EqdbApi db,
+      EqDBEdiTeXInterface interface) async {
+    if (previous.isNotEmpty && this.isNotEmpty) {
+      // TODO: evaluate both sides of the equation.
+      final left = interface.parse(previous.getParsableContent());
+      final right = interface.parse(this.getParsableContent());
+
+      if (right == oldExpression) {
+        return;
+      } else {
+        oldExpression = right;
+      }
+
+      // TODO: use a stream based approach?, something like a state stream.
+      arrow.style.opacity = '1';
+      ellipsis.hidden = false;
+      ellipsis.classes.add('animated');
+      infoPane.children.clear();
+
+      // Resolve difference via API.
+      final result = await db
+          .resolveExpressionDifference(new ExpressionDifferenceResource()
+            ..left = (new ExpressionResource()..data = left.toBase64())
+            ..right = (new ExpressionResource()..data = right.toBase64()));
+
+      ellipsis.hidden = true;
+      if (!result.difference.resolved) {
+        infoPane.append(div('.error-badge'));
+      }
+    } else {
+      hideResolveInfo();
+    }
+  }
 }
 
 class LineageEditor {
@@ -27,21 +75,47 @@ class LineageEditor {
   LineageEditor(this.container, this.db, this.interface);
 
   void addLineageRow() {
-    final row = new DivElement()..classes.add('lineage-row');
-    final leftDiv = new DivElement()
-      ..classes.addAll(['lineage-row-left', 'editex', 'editex-align-right']);
-    final rightDiv = new DivElement()
-      ..classes.addAll(['lineage-row-right', 'editex', 'editex-align-left']);
+    DivElement leftArrow, leftEllipsis, leftInfoPane, leftContainer;
+    DivElement rightArrow, rightEllipsis, rightInfoPane, rightContainer;
 
-    row.append(leftDiv);
-    row.append(new DivElement()..classes.add('equals'));
-    row.append(rightDiv);
-    container.append(row);
+    // Add resolve info elements.
+    container.append(div('.resolve-info-row', c: [
+      div('.resolve-info-left', c: [
+        div('.arrow-left', store: (e) => leftArrow = e),
+        div('.ellipsis', store: (e) => leftEllipsis = e, c: [
+          span('.ellipsis-dot1'),
+          span('.ellipsis-dot2'),
+          span('.ellipsis-dot3')
+        ]),
+        div('.resolve-info-pane', store: (e) => leftInfoPane = e)
+      ]),
+      div('.resolve-info-separator'),
+      div('.resolve-info-right', c: [
+        div('.arrow-right', store: (e) => rightArrow = e),
+        div('.ellipsis', store: (e) => rightEllipsis = e, c: [
+          span('.ellipsis-dot1'),
+          span('.ellipsis-dot2'),
+          span('.ellipsis-dot3')
+        ]),
+        div('.resolve-info-pane', store: (e) => rightInfoPane = e)
+      ])
+    ]));
 
-    final left = new ExpressionEditor(editors.length, leftDiv, interface);
+    // Add editor containers.
+    container.append(div('.lineage-row', c: [
+      div('.lineage-row-left.editex.editex-align-right',
+          store: (e) => leftContainer = e),
+      div('.equals'),
+      div('.lineage-row-right.editex.editex-align-left',
+          store: (e) => rightContainer = e)
+    ]));
+
+    final left = new ExpressionEditor(editors.length, leftArrow, leftEllipsis,
+        leftInfoPane, leftContainer, interface);
     _addEditorEvents(left);
     editors.add(left);
-    final right = new ExpressionEditor(editors.length, rightDiv, interface);
+    final right = new ExpressionEditor(editors.length, rightArrow,
+        rightEllipsis, rightInfoPane, rightContainer, interface);
     _addEditorEvents(right);
     editors.add(right);
   }
@@ -80,33 +154,13 @@ class LineageEditor {
     });
 
     /// Do automatic difference check when an editor is unfocussed.
-    editor.container.onBlur.listen((_) async {
-      // Find index of editor to compare with.
-      final compareWith =
-          editor.index < 2 ? 1 - editor.index : editor.index - 2;
-
-      if (compareWith >= 0 &&
-          editors[compareWith].isNotEmpty &&
-          editor.isNotEmpty) {
-        var left = interface.parse(editors[compareWith].getParsableContent());
-        var right = interface.parse(editor.getParsableContent());
-
-        // Special case where the sides have to be swapped.
-        if (editor.index == 0) {
-          final tmp = left;
-          left = right;
-          right = tmp;
-        }
-
-        // TODO: evaluate both sides of the equation before submitting.
-
-        // Resolve difference via API.
-        final result = await db
-            .resolveExpressionDifference(new ExpressionDifferenceResource()
-              ..left = (new ExpressionResource()..data = left.toBase64())
-              ..right = (new ExpressionResource()..data = right.toBase64()));
-
-        print(result.toJson());
+    editor.container.onBlur.listen((_) {
+      if (editor.index == 0) {
+        editors[1].resolveDifference(editor, db, interface);
+      } else if (editor.index == 1) {
+        editor.resolveDifference(editors[0], db, interface);
+      } else {
+        editor.resolveDifference(editors[editor.index - 2], db, interface);
       }
     });
 
