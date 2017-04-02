@@ -41,7 +41,7 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
     // (same precedence level as power operator).
     operatorConfig.add(new Operator(
         operatorConfig.implicitMultiplyId,
-        operatorConfig.byId[operatorConfig.id('*')].precedenceLevel,
+        operatorConfig.byId[operatorConfig.id('^')].precedenceLevel,
         Associativity.rtl,
         -1,
         OperatorType.infix));

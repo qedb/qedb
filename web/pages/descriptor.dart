@@ -9,13 +9,7 @@ import 'templates.dart';
 final createDescriptorPage = new AdminPage(
     template: (data) {
       return createResourceTemplate(data, 'descriptor', inputs: (data) {
-        return [
-          localeSelect(data),
-          div('.form-group', [
-            label('Translation', _for: 'content'),
-            input('#content.form-control', type: 'text', name: 'content')
-          ])
-        ];
+        return [localeSelect(data), formInput('Translation', name: 'content')];
       }, success: (data) {
         return [
           a('.btn.btn-primary', 'Go to descriptors overview',

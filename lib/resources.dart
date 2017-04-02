@@ -120,9 +120,6 @@ class FunctionResource extends ResourceBase<db.FunctionRow> {
   bool generic;
   int argumentCount;
   String keyword;
-  String latexTemplate;
-  CategoryResource category;
-  DescriptorResource descriptor;
 
   @ApiProperty(values: const {
     'word': '',
@@ -132,6 +129,10 @@ class FunctionResource extends ResourceBase<db.FunctionRow> {
     'latex': ''
   })
   String keywordType;
+
+  String latexTemplate;
+  CategoryResource category;
+  DescriptorResource descriptor;
 
   Map<int, db.FunctionRow> _getTableMap(data) => data.functionTable;
 
@@ -153,9 +154,6 @@ class FunctionResource extends ResourceBase<db.FunctionRow> {
 class OperatorResource extends ResourceBase<db.OperatorRow> {
   int id;
   int precedenceLevel;
-  String character;
-  String editorTemplate;
-  FunctionResource function;
 
   @ApiProperty(values: const {'rtl': 'right-to-left', 'ltr': 'left-to-right'})
   String associativity;
@@ -166,6 +164,10 @@ class OperatorResource extends ResourceBase<db.OperatorRow> {
     'postfix': 'unary operator written after argument'
   })
   String operatorType;
+
+  String character;
+  String editorTemplate;
+  FunctionResource function;
 
   Map<int, db.OperatorRow> _getTableMap(data) => data.operatorTable;
 
@@ -184,6 +186,7 @@ class ExpressionResource extends ResourceBase<db.ExpressionRow> {
   int id;
   String data;
   String hash;
+  String latex;
   List<int> functions;
 
   Map<int, db.ExpressionRow> _getTableMap(data) => data.expressionTable;
@@ -191,6 +194,7 @@ class ExpressionResource extends ResourceBase<db.ExpressionRow> {
   void loadFields(row, sdata) {
     data = row.data;
     hash = row.hash;
+    latex = row.latex;
     functions = row.functions;
   }
 }

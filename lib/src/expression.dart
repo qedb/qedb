@@ -58,9 +58,65 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
   return await expressionHelper.insert(s, {
     'data': new Sql("decode(@data, 'base64')", {'data': base64}),
     'hash': new Sql("digest(decode(@data, 'base64') ,'sha256')"),
+    'latex': await _renderExpressionLaTeX(s, codecData.functionId, expr),
     'functions': intarray(codecData.functionId),
     'node_type': nodeType,
     'node_value': nodeValue,
     'node_arguments': intarray(nodeArguments)
   });
+}
+
+/// Expression LaTeX rendering.
+/// Internal function. Allows reuse of codec data for more efficient function ID
+///
+Future<String> _renderExpressionLaTeX(
+    Session s, List<int> functionsInExpr, Expr expr) async {
+  // Load operators.
+  final ops = new OperatorConfig();
+  final operators = await listOperators(s);
+
+  // Populate operator config.
+  for (final op in operators) {
+    ops.add(new Operator(
+        op.id,
+        op.precedenceLevel,
+        op.associativity == 'ltr' ? Associativity.ltr : Associativity.rtl,
+        op.character.runes.first,
+        op.operatorType == 'infix'
+            ? OperatorType.infix
+            : op.operatorType == 'prefix'
+                ? OperatorType.prefix
+                : OperatorType.postfix));
+  }
+
+  // Add default setting for implicit multiplication.
+  // (same precedence level as power operator).
+  ops.add(new Operator(
+      ops.implicitMultiplyId,
+      ops.byId[ops.id('^')].precedenceLevel,
+      Associativity.rtl,
+      -1,
+      OperatorType.infix));
+
+  final printer = new LaTeXPrinter();
+
+  // Retrieve latex templates and populate printer dictionary.
+  var getLbl = (int id) => '\\#$id';
+  if (functionsInExpr.isNotEmpty) {
+    final functions = await functionHelper.selectIn(s, {'id': functionsInExpr});
+
+    // Create new LaTeX printer and populate dictionary.
+    functions.forEach((row) {
+      if (row.latexTemplate != null) {
+        printer.dict[row.id] = row.latexTemplate;
+      }
+    });
+
+    // Also look for fallback labels in function keywords.
+    // A constraint ensures that either a template or a keyword is present.
+    getLbl = (int id) => functions.singleWhere((r) => r.id == id).keyword;
+  }
+
+  // Print expression.
+  return printer.render(expr, getLbl, ops);
 }

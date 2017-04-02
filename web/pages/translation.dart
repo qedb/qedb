@@ -15,10 +15,7 @@ final createTranslationPage = new AdminPage(
               name: 'descriptorId',
               value: data.pathParameters['id']),
           localeSelect(data),
-          div('.form-group', [
-            label('Translation', _for: 'content'),
-            input('#content.form-control', type: 'text', name: 'content')
-          ])
+          formInput('Translation', name: 'content')
         ];
       }, success: (data) {
         return [

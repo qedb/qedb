@@ -19,7 +19,7 @@ ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Pr
 18,Algebra,Trigonometry,Cosine,cos,latex,1,\cos$0,FALSE,,,,,
 19,Algebra,Calculus,,x,symbol,0,,TRUE,,,,,
 20,Algebra,Calculus,,y,symbol,0,,TRUE,,,,,
-21,Algebra,Calculus,Function,f,abbreviation,1,,TRUE,,,,,
+21,Algebra,Calculus,,f,abbreviation,1,,TRUE,,,,,
 22,Algebra,Calculus,Delta,d,symbol,1,\Delta$0,FALSE,,,,,
 23,Algebra,Calculus,Limit,lim,latex,3,\lim_{$0\to$1}$2,FALSE,,,,,
 24,Algebra,Calculus,Differential,diff,abbreviation,2,\frac{\partial}{\partial$0}$1,FALSE,,,,,

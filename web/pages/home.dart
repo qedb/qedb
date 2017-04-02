@@ -11,9 +11,11 @@ final allMethods = [
   ['descriptor/create', 'Create descriptor'],
   ['subject/create', 'Create subject'],
   ['category/create', 'Create category'],
+  ['function/create', 'Create function'],
   ['descriptor/list', 'List descriptors'],
   ['subject/list', 'List subjects'],
-  ['category/list', 'List categories']
+  ['category/list', 'List categories'],
+  ['function/list', 'List functions']
 ];
 
 final homePage = new AdminPage(template: (data) {

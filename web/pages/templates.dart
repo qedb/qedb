@@ -57,16 +57,39 @@ dynamic breadcrumb(PageData data) {
   ]);
 }
 
+String formGroup(String labelText, String id, List widget) {
+  return div('.form-group', [label(labelText, _for: id), widget]);
+}
+
+String formInput(String labelText, {String name, String type: 'text'}) {
+  return formGroup(
+      labelText, name, [input('#$name.form-control', type: type, name: name)]);
+}
+
+String formCheck(String labelText, {String name}) {
+  return div('.form-check', [
+    label('.form-check-label',
+        [input('.form-check-input', type: 'checkbox'), span(labelText)])
+  ]);
+}
+
 /// Language locale select form element.
-dynamic localeSelect(PageData data, [String name = 'locale']) =>
-    div('.form-group', [
-      label('Locale', _for: name),
-      select('#$name.custom-select.form-control',
-          name: name,
-          c: data.additional['locales'].map((locale) {
-            return option(locale.code, value: locale.code);
-          }).toList())
-    ]);
+String localeSelect(PageData data,
+    {String name: 'locale',
+    String customClass: '.custom-select',
+    bool inGroup: true}) {
+  final selectHtml = select('#$name$customClass.form-control',
+      name: name,
+      c: data.additional['locales'].map((locale) {
+        return option(locale.code, value: locale.code);
+      }).toList());
+
+  if (inGroup) {
+    return formGroup('Locale', name, [selectHtml]);
+  } else {
+    return selectHtml;
+  }
+}
 
 String createResourceTemplate(PageData data, String name,
     {InlineHtmlBuilder inputs,
@@ -95,7 +118,8 @@ String createResourceTemplate(PageData data, String name,
                     : [],
                 form(method: 'POST', c: [
                   inputs(data),
-                  button('.btn.btn-primary', 'Submit', type: 'submit')
+                  br(),
+                  button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
                 ])
               ]
       ])
@@ -110,11 +134,14 @@ String listResourceTemplate(
     {String customTitle = '',
     String customCreateButton = '',
     List tableHead,
-    HtmlTableRowBuilder row}) {
+    HtmlTableRowBuilder row,
+    List customHeaderTags: const [],
+    List customBodyTags: const []}) {
   return html([
     head([
       title('', customTitle.isEmpty ? 'All $namePlural' : customTitle),
-      defaultHead(data)
+      defaultHead(data),
+      customHeaderTags
     ]),
     body([
       breadcrumb(data),
@@ -135,7 +162,8 @@ String listResourceTemplate(
           }).toList())
         ]),
         br()
-      ])
+      ]),
+      customBodyTags
     ])
   ]);
 }

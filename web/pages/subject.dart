@@ -9,13 +9,7 @@ import 'templates.dart';
 final createSubjectPage = new AdminPage(
     template: (data) {
       return createResourceTemplate(data, 'subject', inputs: (data) {
-        return [
-          localeSelect(data),
-          div('.form-group', [
-            label('Descriptor', _for: 'content'),
-            input('#content.form-control', type: 'text', name: 'content')
-          ])
-        ];
+        return [localeSelect(data), formInput('Descriptor', name: 'content')];
       }, success: (data) {
         return [
           a('.btn.btn-primary', 'Go to subjects overview',

@@ -10,6 +10,7 @@ import 'dart:typed_data';
 
 import 'package:rpc/rpc.dart';
 import 'package:eqlib/eqlib.dart';
+import 'package:eqlib/latex.dart';
 import 'package:postgresql/postgresql.dart';
 
 import 'package:eqdb/dbutils.dart';

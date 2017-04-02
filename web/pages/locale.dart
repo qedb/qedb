@@ -9,12 +9,7 @@ import 'templates.dart';
 final createLocalePage = new AdminPage(
     template: (data) {
       return createResourceTemplate(data, 'locale', inputs: (data) {
-        return [
-          div('.form-group', [
-            label('Locale ISO code', _for: 'code'),
-            input('#code.form-control', type: 'text', name: 'code')
-          ])
-        ];
+        return [formInput('Locale ISO code', name: 'code')];
       }, success: (data) {
         return [
           a('.btn.btn-primary', 'Return to locale overview',

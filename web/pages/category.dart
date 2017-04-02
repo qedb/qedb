@@ -12,10 +12,7 @@ final createCategoryPage = new AdminPage(
         return [
           input(type: 'hidden', name: 'locale', value: 'en_US'),
           localeSelect(data),
-          div('.form-group', [
-            label('Subject', _for: 'subject'),
-            input('#subject.form-control', type: 'text', name: 'subject')
-          ])
+          formInput('Subject', name: 'subject')
         ];
       }, success: (data) {
         return [

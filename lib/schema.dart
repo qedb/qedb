@@ -138,25 +138,27 @@ class OperatorRow implements Row {
 class ExpressionRow implements Row {
   final int id;
   final String data, hash;
+  final String latex;
   final List<int> functions;
   final String nodeType;
   final int nodeValue;
   final List<int> nodeArguments;
 
-  ExpressionRow(this.id, this.data, this.hash, this.functions, this.nodeType,
-      this.nodeValue, this.nodeArguments);
+  ExpressionRow(this.id, this.data, this.hash, this.latex, this.functions,
+      this.nodeType, this.nodeValue, this.nodeArguments);
 
   static final mapFormat = [
     'id',
     "encode(data, 'base64')",
     "encode(hash, 'base64')",
+    'latex',
     "array_to_string(functions, ',')",
     'node_type',
     'node_value',
     "array_to_string(node_arguments, ',')"
   ].join(',');
-  static ExpressionRow map(pg.Row r) => new ExpressionRow(
-      r[0], r[1], r[2], intsFromString(r[3]), r[4], r[5], intsFromString(r[6]));
+  static ExpressionRow map(pg.Row r) => new ExpressionRow(r[0], r[1], r[2],
+      r[3], intsFromString(r[4]), r[5], r[6], intsFromString(r[7]));
 }
 
 //------------------------------------------------------------------------------

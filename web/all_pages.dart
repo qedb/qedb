@@ -17,6 +17,7 @@ import 'pages/descriptor.dart';
 import 'pages/subject.dart';
 import 'pages/translation.dart';
 import 'pages/category.dart';
+import 'pages/function.dart';
 
 import 'pages/templates.dart';
 import 'common.dart';
@@ -35,7 +36,9 @@ Map<String, AdminPage> pages = {
   '/category/list': listCategoriesPage,
   '/category/{id}/read': readCategoryPage,
   '/category/{id}/category/create': createCategoryPage,
-  '/category/{id}/category/list': listSubCategoriesPage
+  '/category/{id}/category/list': listSubCategoriesPage,
+  '/function/create': createFunctionPage,
+  '/function/list': listFunctionsPage
 };
 
 /// Requests constants.
@@ -113,7 +116,20 @@ dynamic encodePostData(dynamic format, Map<String, String> formData) {
     return new List.generate(
         format.length, (i) => encodePostData(format[i], formData));
   } else if (format is String) {
-    return formData.containsKey(format) ? formData[format] : format;
+    // Format may start with '$type:' to cast it.
+    final parts = format.split(':');
+    final targetName = parts.last;
+    if (formData.containsKey(targetName)) {
+      if (parts.first == 'int') {
+        return int.parse(formData[targetName]);
+      } else if (parts.first == 'bool') {
+        return formData[targetName] == 'true';
+      } else {
+        return formData[targetName];
+      }
+    } else {
+      return format;
+    }
   } else {
     return format;
   }

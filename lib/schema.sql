@@ -94,7 +94,7 @@ CREATE TABLE function (
   -- It is not feasible to make unique keywords. It is not required to configure
   -- a keyword. Operator functions do not have keywords. Exotic functions might
   -- not use a keyword (instead the descriptor could be used for lookup).
-  keyword         text      CHECK (keyword ~ E'^[a-z0-9]+(?:.[a-z0-9]+)*$'),
+  keyword         text      CHECK (keyword ~ E'^[a-z][a-z0-9]*$'),
   keyword_type    keyword_type,
 
   -- LaTeX template may be empty. Operator information, the keyword, or the
@@ -108,12 +108,16 @@ CREATE TABLE function (
   -- Non-generic function with >0 arguments must have a name.
   -- E.g. functions such as ?a, ?fn(x) or x can be left unnamed.
   CONSTRAINT non_generic_with_args_needs_name CHECK
-    (NOT (generic AND argument_count > 0 AND descriptor_id IS NULL)),
+    (NOT (NOT generic AND argument_count > 0 AND descriptor_id IS NULL)),
 
   -- Keyword and keyword type must both be defined or not at all.
   CONSTRAINT keyword_must_have_type CHECK
     ((keyword IS NULL AND keyword_type IS NULL) OR
-     (keyword IS NOT NULL AND keyword_type IS NOT NULL))
+     (keyword IS NOT NULL AND keyword_type IS NOT NULL)),
+  
+  -- At least a keyword or a LaTeX template must be provided for printing.
+  CONSTRAINT must_have_keyword_or_template CHECK
+    (keyword IS NOT NULL OR latex_template IS NOT NULL)
 );
 
 CREATE INDEX function_category_id_index ON function(category_id);
@@ -157,6 +161,9 @@ CREATE TABLE expression (
   id         serial     PRIMARY KEY,
   data       bytea      NOT NULL UNIQUE,
   hash       bytea      NOT NULL UNIQUE,
+
+  -- Rendered LaTeX expression
+  latex      text,
 
   -- All function IDs in this expression for fast indexing and searching.
   functions  integer[]  NOT NULL,

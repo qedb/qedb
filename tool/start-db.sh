@@ -16,6 +16,9 @@ sed "s/\$password/${EQDB_DB_PASS}/" < ./lib/schema.sql > ./tool/docker/eqdb-post
 # Copy Perl function.
 cp ./lib/pl/expr.pgsql ./tool/docker/eqdb-postgres/expr.sql
 
+# Copy triggers.
+cp ./lib/triggers.pgsql ./tool/docker/eqdb-postgres/triggers.sql
+
 # Build container.
 docker build -t eqdb-postgres:latest ./tool/docker/eqdb-postgres/
 
