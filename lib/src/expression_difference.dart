@@ -58,6 +58,8 @@ Future<DifferenceBranch> resolveTreeDiff(
         await ruleHelper.selectCustom(s, '$where LIMIT 1', {});
 
     // Select rule (non-inverted or inverted).
+    // TODO: this can be done in 4 ways (the input can also be inverted for
+    // evaluation in the other direction)
     var rules = await selectRule(
         'expr_match_rule($exprLeft, $exprRight, left_array_data, right_array_data, $computableIds)');
     if (rules.isEmpty) {

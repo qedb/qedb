@@ -38,10 +38,12 @@ class ExpressionEditor extends EdiTeX {
       final left = interface.parse(previous.getParsableContent());
       final right = interface.parse(this.getParsableContent());
 
-      if (right == oldExpression) {
+      if (right == oldExpression || left == previous.oldExpression) {
         return;
       } else {
+        // TODO: Split into method.
         oldExpression = right;
+        previous.oldExpression = left;
       }
 
       // TODO: use a stream based approach?, something like a state stream.
