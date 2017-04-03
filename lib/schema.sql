@@ -88,13 +88,14 @@ CREATE TABLE function (
   id              serial    PRIMARY KEY,
   category_id     integer   NOT NULL REFERENCES category(id),
   descriptor_id   integer   UNIQUE REFERENCES descriptor(id),
+  rearrangeable   boolean   NOT NULL CHECK (NOT (rearrangeable AND argument_count < 2)),
   generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2),
   argument_count  smallint  NOT NULL CHECK (argument_count >= 0),
 
   -- It is not feasible to make unique keywords. It is not required to configure
   -- a keyword. Operator functions do not have keywords. Exotic functions might
   -- not use a keyword (instead the descriptor could be used for lookup).
-  keyword         text      CHECK (keyword ~ E'^[a-z][a-z0-9]*$'),
+  keyword         text      CHECK (keyword ~ E'^[a-z]+[0-9]*$'),
   keyword_type    keyword_type,
 
   -- LaTeX template may be empty. Operator information, the keyword, or the

@@ -118,6 +118,7 @@ class CategoryResource extends ResourceBase<db.CategoryRow> {
 class FunctionResource extends ResourceBase<db.FunctionRow> {
   int id;
   bool generic;
+  bool rearrangeable;
   int argumentCount;
   String keyword;
 
@@ -138,6 +139,7 @@ class FunctionResource extends ResourceBase<db.FunctionRow> {
 
   void loadFields(row, data) {
     generic = row.generic;
+    rearrangeable = row.rearrangeable;
     argumentCount = row.argumentCount;
     keyword = row.keyword;
     keywordType = row.keywordType;

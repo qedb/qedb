@@ -13,6 +13,7 @@ import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/latex.dart';
 import 'package:postgresql/postgresql.dart';
 
+import 'package:eqdb/utils.dart';
 import 'package:eqdb/dbutils.dart';
 import 'package:eqdb/resources.dart';
 import 'package:eqdb/schema.dart' as db;

@@ -8,6 +8,9 @@ import 'dart:io';
 
 import 'package:yaml/yaml.dart';
 
+/// Check the given String is not null and not empty.
+bool notEmpty(String str) => str != null && str.isNotEmpty;
+
 /// Convert string with comma separated integers to List<int>.
 List<int> intsFromString(String str) {
   if (str.trim().isEmpty) {

@@ -84,17 +84,26 @@ class FunctionRow implements Row {
   final int categoryId;
   final int descriptorId;
   final bool generic;
+  final bool rearrangeable;
   final int argumentCount;
   final String keyword;
   final String keywordType;
   final String latexTemplate;
 
-  FunctionRow(this.id, this.categoryId, this.descriptorId, this.generic,
-      this.argumentCount, this.keyword, this.keywordType, this.latexTemplate);
+  FunctionRow(
+      this.id,
+      this.categoryId,
+      this.descriptorId,
+      this.generic,
+      this.rearrangeable,
+      this.argumentCount,
+      this.keyword,
+      this.keywordType,
+      this.latexTemplate);
 
   static const mapFormat = '*';
   static FunctionRow map(pg.Row r) =>
-      new FunctionRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+      new FunctionRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
 }
 
 /// Function subject tag

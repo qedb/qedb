@@ -165,6 +165,7 @@ Future main() async {
         ]
       }),
       'generic': col('Generic'),
+      'rearrangeable': col('Arr.'),
       'argumentCount': col('ArgC'),
       'keyword': ifNe('Keyword', col('Keyword')),
       'keywordType': ifNe('Keyword type', col('Keyword type')),
@@ -183,6 +184,7 @@ Future main() async {
         ]
       }),
       'generic': col('Generic'),
+      'rearrangeable': col('Arr.'),
       'argumentCount': col('ArgC'),
       'keyword': ifNe('Keyword', col('Keyword')),
       'keywordType': ifNe('Keyword type', col('Keyword type')),

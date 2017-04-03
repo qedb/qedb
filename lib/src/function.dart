@@ -13,16 +13,17 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
 
   // Insert function.
   final insertParameters = {
-    'category_id': body.category.id,
+    'generic': body.generic,
+    'rearrangeable': body.rearrangeable,
     'argument_count': body.argumentCount,
-    'generic': body.generic
+    'category_id': body.category.id
   };
 
-  if (body.latexTemplate != null) {
+  if (notEmpty(body.latexTemplate)) {
     insertParameters['latex_template'] = body.latexTemplate;
   }
 
-  if (body.keyword != null && body.keywordType != null) {
+  if (notEmpty(body.keyword) && body.keywordType != null) {
     insertParameters['keyword'] = body.keyword;
     insertParameters['keyword_type'] = body.keywordType;
   }
