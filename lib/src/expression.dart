@@ -47,7 +47,7 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
 
     // Get expression IDs for all arguments.
     nodeArguments = new List<int>();
-    for (final arg in expr.args) {
+    for (final arg in expr.arguments) {
       nodeArguments.add((await _createExpression(s, arg)).id);
     }
   }

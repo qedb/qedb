@@ -13,6 +13,7 @@ class ExpressionDifferenceResource {
 class DifferenceBranch {
   bool resolved;
   bool different;
+  bool rearrange;
   bool invertRule;
   RuleResource rule;
   List<DifferenceBranch> arguments;
@@ -24,8 +25,24 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
   final left = new Expr.fromBase64(body.left.data);
   final right = new Expr.fromBase64(body.right.data);
 
+  // Get rearrangeable functions.
+  final rearrangeable =
+      (await functionHelper.select(s, {'rearrangeable': true}))
+          .map((row) => row.id)
+          .toList();
+
+  // Get computable functions via operator tables.
+  // (it is reasonable to assume +-* are the operator characters)
+  final compOpMap = new Map<String, int>.fromIterable(
+      await operatorHelper.selectIn(s, {
+        'character': ["'+'", "'-'", "'*'"]
+      }),
+      key: (db.OperatorRow row) => row.character,
+      value: (db.OperatorRow row) => row.id);
+  final computableFnIds = [compOpMap['+'], compOpMap['-'], compOpMap['*']];
+
   // Get difference tree.
-  final result = getExpressionDiff(left, right);
+  final result = getExpressionDiff(left, right, rearrangeable);
 
   // Resolve difference tree.
   if (result.numericInequality) {
@@ -33,7 +50,7 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
       ..different = true
       ..resolved = false;
   } else if (result.diff.different) {
-    body.difference = await resolveTreeDiff(s, result.diff);
+    body.difference = await resolveTreeDiff(s, result.diff, computableFnIds);
   } else {
     body.difference = new DifferenceBranch()..different = false;
   }
@@ -42,63 +59,66 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
 }
 
 Future<DifferenceBranch> resolveTreeDiff(
-    Session s, ExprDiffBranch branch) async {
+    Session s, ExprDiffBranch branch, List<int> computableFnIds) async {
   final outputBranch = new DifferenceBranch();
   outputBranch.different = branch.different;
+  outputBranch.rearrange = branch.rearrangeable;
 
-  if (outputBranch.different) {
-    // Try to find matching rule in the database.
-    final exprLeft = intarray(branch.diff.left.toArray()).sql;
-    final exprRight = intarray(branch.diff.right.toArray()).sql;
+  if (outputBranch.rearrange) {
+    outputBranch.resolved = true;
+    return outputBranch;
+  } else if (outputBranch.different) {
+    // Get array data SQL statements.
+    final exprLeft = intarray(branch.replace.left.toArray()).sql;
+    final exprRight = intarray(branch.replace.right.toArray()).sql;
+    final computableIds = intarray(computableFnIds).sql;
 
-    // TODO: add option to override this via the configuration file.
-    final computableIds = intarray([1, 2, 3]).sql;
+    // Closure around function to find matching rule in the database.
+    final selectRule = (List<String> params) async => await ruleHelper
+        .selectCustom(s, 'expr_match_rule(${params.join(',')}) LIMIT 1', {});
 
-    final selectRule = (String where) async =>
-        await ruleHelper.selectCustom(s, '$where LIMIT 1', {});
+    // Try to find rule.
+    final exprParams = [exprLeft, exprRight];
+    final ruleParams = ['left_array_data', 'right_array_data'];
 
-    // Select rule (non-inverted or inverted).
-    // TODO: this can be done in 4 ways (the input can also be inverted for
-    // evaluation in the other direction)
-    var rules = await selectRule(
-        'expr_match_rule($exprLeft, $exprRight, left_array_data, right_array_data, $computableIds)');
-    if (rules.isEmpty) {
-      rules = await selectRule(
-          'expr_match_rule($exprLeft, $exprRight, right_array_data, left_array_data, $computableIds)');
+    for (var i = 0; i < 4; i++) {
+      final rules = await selectRule([]
+        ..addAll(i < 2 ? exprParams : exprParams.reversed.toList())
+        ..addAll(i % 2 == 0 ? ruleParams : ruleParams.reversed.toList())
+        ..add(computableIds));
+
       if (rules.isNotEmpty) {
-        outputBranch.invertRule = true;
-      }
-    } else {
-      outputBranch.invertRule = false;
-    }
-
-    if (rules.isNotEmpty) {
-      outputBranch.resolved = true;
-      outputBranch.rule = new RuleResource()..loadRow(rules.single, s.data);
-    } else {
-      if (branch.arguments.isNotEmpty) {
-        // Attempt to resolve all arguments.
-        outputBranch.arguments = [];
+        outputBranch.invertRule == !(i % 2 == 0);
         outputBranch.resolved = true;
-
-        for (final arg in branch.arguments) {
-          if (arg.different) {
-            final result = await resolveTreeDiff(s, arg);
-            outputBranch.arguments.add(result);
-
-            if (!result.resolved) {
-              outputBranch.resolved = false;
-            }
-          } else {
-            outputBranch.arguments
-                .add(new DifferenceBranch()..different = false);
-          }
-        }
-      } else {
-        outputBranch.resolved = false;
+        outputBranch.rule = new RuleResource()..loadRow(rules.single, s.data);
+        return outputBranch;
       }
     }
-  }
 
-  return outputBranch;
+    // Fallback to processing individual arguments.
+    if (branch.arguments.isNotEmpty) {
+      // Attempt to resolve all arguments.
+      outputBranch.arguments = [];
+      outputBranch.resolved = true;
+
+      for (final arg in branch.arguments) {
+        if (arg.different) {
+          final result = await resolveTreeDiff(s, arg, computableFnIds);
+          outputBranch.arguments.add(result);
+
+          if (!result.resolved) {
+            outputBranch.resolved = false;
+          }
+        } else {
+          outputBranch.arguments.add(new DifferenceBranch()..different = false);
+        }
+      }
+    } else {
+      outputBranch.resolved = false;
+    }
+
+    return outputBranch;
+  } else {
+    return outputBranch;
+  }
 }

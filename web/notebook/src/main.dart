@@ -34,11 +34,24 @@ class ExpressionEditor extends EdiTeX {
   Future resolveDifference(ExpressionEditor previous, EqdbApi db,
       EqDBEdiTeXInterface interface) async {
     if (previous.isNotEmpty && this.isNotEmpty) {
-      // TODO: evaluate both sides of the equation.
       final left = interface.parse(previous.getParsableContent());
       final right = interface.parse(this.getParsableContent());
 
-      if (right == oldExpression || left == previous.oldExpression) {
+      // Turn into equation and evaluate both sides.
+      final eq = new Eq(left, right);
+      eq.evaluate((int id, List<num> args) {
+        if (id == interface.operatorConfig.id('+')) {
+          return args[0] + args[1];
+        } else if (id == interface.operatorConfig.id('-')) {
+          return args[0] - args[1];
+        } else if (id == interface.operatorConfig.id('*')) {
+          return args[0] * args[1];
+        } else {
+          return double.NAN;
+        }
+      });
+
+      if (right == oldExpression && left == previous.oldExpression) {
         return;
       } else {
         // TODO: Split into method.
@@ -55,11 +68,11 @@ class ExpressionEditor extends EdiTeX {
       // Resolve difference via API.
       final result = await db
           .resolveExpressionDifference(new ExpressionDifferenceResource()
-            ..left = (new ExpressionResource()..data = left.toBase64())
-            ..right = (new ExpressionResource()..data = right.toBase64()));
+            ..left = (new ExpressionResource()..data = eq.left.toBase64())
+            ..right = (new ExpressionResource()..data = eq.right.toBase64()));
 
       ellipsis.hidden = true;
-      if (!result.difference.resolved) {
+      if (result.difference.different && !result.difference.resolved) {
         infoPane.append(div('.error-badge'));
       }
     } else {
