@@ -14,21 +14,22 @@ import 'utils.dart';
 import 'editex_interface.dart';
 
 class ExpressionState {
-  final bool different;
+  final bool different, valid;
   final Expr expression;
-  ExpressionState(this.different, this.expression);
+  ExpressionState(this.different, this.valid, this.expression);
 }
 
-enum ResolveInfoState { empty, inProgress, resolved, unresolved }
+enum ResolveInfoState { empty, inProgress, resolved, error }
 
 class ExpressionEditor extends EdiTeX {
   final int index;
+  final Node removeOnDestroy;
   final DivElement arrow, ellipsis, infoPane;
   final EqDBEdiTeXInterface _interface;
   Expr _previousExpression;
 
-  ExpressionEditor(this.index, this.arrow, this.ellipsis, this.infoPane,
-      DivElement container, this._interface)
+  ExpressionEditor(this.index, this.removeOnDestroy, this.arrow, this.ellipsis,
+      this.infoPane, DivElement container, this._interface)
       : super(container, _interface) {
     setInfoState(ResolveInfoState.empty);
   }
@@ -40,22 +41,32 @@ class ExpressionEditor extends EdiTeX {
     state == ResolveInfoState.inProgress
         ? ellipsis.classes.add('animated')
         : ellipsis.classes.remove('animated');
+    if (state == ResolveInfoState.error) {
+      infoPane.append(div('.error-badge'));
+    }
   }
 
   ExpressionState updateState() {
-    final expr = _interface.parse(getParsableContent());
-    final different = expr != _previousExpression;
-    _previousExpression = expr;
-    return new ExpressionState(different, expr);
+    try {
+      final expr = _interface.parse(getParsableContent());
+      final different = expr != _previousExpression;
+      _previousExpression = expr;
+      return new ExpressionState(different, true, expr);
+    } catch (e) {
+      return new ExpressionState(false, false, null);
+    }
   }
 
-  Future resolveDifference(ExpressionEditor compareWith, EqdbApi db,
-      EqDBEdiTeXInterface interface) async {
+  Future resolveDifference(
+      ExpressionEditor compareWith, EqdbApi db, EqDBEdiTeXInterface interface,
+      [bool force = false]) async {
     if (compareWith.isNotEmpty && this.isNotEmpty) {
       final left = compareWith.updateState();
       final right = this.updateState();
 
-      if (left.different || right.different) {
+      if (!left.valid || !right.valid) {
+        setInfoState(ResolveInfoState.error);
+      } else if (left.different || right.different || force) {
         setInfoState(ResolveInfoState.inProgress);
 
         // Turn into equation and evaluate both sides.
@@ -79,7 +90,7 @@ class ExpressionEditor extends EdiTeX {
               ..right = (new ExpressionResource()..data = eq.right.toBase64()));
 
         if (result.difference.different && !result.difference.resolved) {
-          setInfoState(ResolveInfoState.unresolved);
+          setInfoState(ResolveInfoState.error);
         } else {
           setInfoState(ResolveInfoState.resolved);
         }
@@ -93,6 +104,7 @@ class ExpressionEditor extends EdiTeX {
 class LineageEditor {
   final DivElement container;
   final editors = new List<ExpressionEditor>();
+  final checkboxValues = new List<bool>();
   final EqDBEdiTeXInterface interface;
   final EqdbApi db;
 
@@ -103,7 +115,8 @@ class LineageEditor {
     DivElement rightArrow, rightEllipsis, rightInfoPane, rightContainer;
 
     // Add resolve info elements.
-    container.append(div('.resolve-info-row', c: [
+    final row1 = container.append(div('.resolve-info-row', c: [
+      div('.row-padding'),
       div('.resolve-info-left', c: [
         div('.arrow-left', store: (e) => leftArrow = e),
         div('.ellipsis', store: (e) => leftEllipsis = e, c: [
@@ -122,23 +135,42 @@ class LineageEditor {
           span('.ellipsis-dot3')
         ]),
         div('.resolve-info-pane', store: (e) => rightInfoPane = e)
-      ])
+      ]),
+      div('.row-padding')
     ]));
 
+    // Checkbox storage glue.
+    final checkboxIndex = checkboxValues.length;
+    checkboxValues.add(false);
+
     // Add editor containers.
-    container.append(div('.lineage-row', c: [
+    final row2 = container.append(div('.lineage-row', c: [
+      div('.row-padding', c: [
+        checkbox(editors.isEmpty ? 'Definition' : 'Rule', (checked) {
+          checkboxValues[checkboxIndex] = checked;
+          if (checkboxIndex == 0) {
+            // Special side effect on initial equation.
+            if (checked) {
+              editors[1].setInfoState(ResolveInfoState.empty);
+            } else {
+              editors[1].resolveDifference(editors[0], db, interface, true);
+            }
+          }
+        })
+      ]),
       div('.lineage-row-left.editex.editex-align-right',
           store: (e) => leftContainer = e),
       div('.equals'),
       div('.lineage-row-right.editex.editex-align-left',
-          store: (e) => rightContainer = e)
+          store: (e) => rightContainer = e),
+      div('.row-padding')
     ]));
 
-    final left = new ExpressionEditor(editors.length, leftArrow, leftEllipsis,
-        leftInfoPane, leftContainer, interface);
+    final left = new ExpressionEditor(editors.length, row1, leftArrow,
+        leftEllipsis, leftInfoPane, leftContainer, interface);
     _addEditorEvents(left);
     editors.add(left);
-    final right = new ExpressionEditor(editors.length, rightArrow,
+    final right = new ExpressionEditor(editors.length, row2, rightArrow,
         rightEllipsis, rightInfoPane, rightContainer, interface);
     _addEditorEvents(right);
     editors.add(right);
@@ -179,19 +211,41 @@ class LineageEditor {
 
     /// Do automatic difference check when an editor is unfocussed.
     editor.container.onBlur.listen((_) {
-      if (editor.index == 0) {
+      if (editor.index < 2 && checkboxValues.first == true) {
+        // Initial equation is flagged as definition.
+        return;
+      } else if (editor.index == 0) {
         editors[1].resolveDifference(editor, db, interface);
       } else if (editor.index == 1) {
         editor.resolveDifference(editors[0], db, interface);
       } else {
-        editor.resolveDifference(editors[editor.index - 2], db, interface);
+        // Find previous non-empty editor.
+        var i = editor.index - 2;
+        while (editors[i].isEmpty && i > 1) {
+          i -= 2;
+        }
+
+        editor.resolveDifference(editors[i], db, interface);
       }
     });
 
-    // Add new row when an editor in the bottom row is focussed.
     editor.container.onFocus.listen((_) {
       if (editors.length - editor.index <= 2) {
+        // Add new row when there are now rows left below the focussed editor.
         addLineageRow();
+      } else {
+        // Remove empty rows from the bottom stopping leaving one empty row
+        // after the current focussed element.
+        var i = editors.length - 1;
+        while (i > editor.index + 3 &&
+            editors[i - 0].isEmpty &&
+            editors[i - 1].isEmpty &&
+            editors[i - 2].isEmpty &&
+            editors[i - 3].isEmpty) {
+          editors.removeLast().removeOnDestroy.remove();
+          editors.removeLast().removeOnDestroy.remove();
+          i -= 2;
+        }
       }
     });
   }
