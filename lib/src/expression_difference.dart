@@ -62,15 +62,15 @@ Future<DifferenceBranch> resolveTreeDiff(
     Session s, ExprDiffBranch branch, List<int> computableFnIds) async {
   final outputBranch = new DifferenceBranch();
   outputBranch.different = branch.different;
-  outputBranch.rearrange = branch.rearrangeable;
+  outputBranch.rearrange = branch.rearranged;
 
   if (outputBranch.rearrange) {
     outputBranch.resolved = true;
     return outputBranch;
   } else if (outputBranch.different) {
     // Get array data SQL statements.
-    final exprLeft = intarray(branch.replace.left.toArray()).sql;
-    final exprRight = intarray(branch.replace.right.toArray()).sql;
+    final exprLeft = intarray(branch.replaced.left.toArray()).sql;
+    final exprRight = intarray(branch.replaced.right.toArray()).sql;
     final computableIds = intarray(computableFnIds).sql;
 
     // Closure around function to find matching rule in the database.
@@ -96,14 +96,14 @@ Future<DifferenceBranch> resolveTreeDiff(
     }
 
     // Fallback to processing individual arguments.
-    if (branch.arguments.isNotEmpty) {
+    if (branch.argumentDifference.isNotEmpty) {
       // Attempt to resolve all arguments.
       outputBranch.arguments = [];
       outputBranch.resolved = true;
 
-      for (final arg in branch.arguments) {
-        if (arg.different) {
-          final result = await resolveTreeDiff(s, arg, computableFnIds);
+      for (final argBranch in branch.argumentDifference) {
+        if (argBranch.different) {
+          final result = await resolveTreeDiff(s, argBranch, computableFnIds);
           outputBranch.arguments.add(result);
 
           if (!result.resolved) {

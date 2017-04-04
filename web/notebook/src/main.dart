@@ -13,70 +13,79 @@ import 'package:eqdb_client/browser_client.dart';
 import 'utils.dart';
 import 'editex_interface.dart';
 
+class ExpressionState {
+  final bool different;
+  final Expr expression;
+  ExpressionState(this.different, this.expression);
+}
+
+enum ResolveInfoState { empty, inProgress, resolved, unresolved }
+
 class ExpressionEditor extends EdiTeX {
   final int index;
   final DivElement arrow, ellipsis, infoPane;
-  Expr oldExpression;
+  final EqDBEdiTeXInterface _interface;
+  Expr _previousExpression;
 
   ExpressionEditor(this.index, this.arrow, this.ellipsis, this.infoPane,
-      DivElement container, EdiTeXInterface interface)
-      : super(container, interface) {
-    hideResolveInfo();
+      DivElement container, this._interface)
+      : super(container, _interface) {
+    setInfoState(ResolveInfoState.empty);
   }
 
-  void hideResolveInfo() {
-    arrow.style.opacity = '0';
-    ellipsis.hidden = true;
+  void setInfoState(ResolveInfoState state) {
     infoPane.children.clear();
+    arrow.style.opacity = state == ResolveInfoState.empty ? '0' : '1';
+    ellipsis.hidden = !(state == ResolveInfoState.inProgress);
+    state == ResolveInfoState.inProgress
+        ? ellipsis.classes.add('animated')
+        : ellipsis.classes.remove('animated');
   }
 
-  /// TODO: solve this using a Stream based approach?
-  Future resolveDifference(ExpressionEditor previous, EqdbApi db,
+  ExpressionState updateState() {
+    final expr = _interface.parse(getParsableContent());
+    final different = expr != _previousExpression;
+    _previousExpression = expr;
+    return new ExpressionState(different, expr);
+  }
+
+  Future resolveDifference(ExpressionEditor compareWith, EqdbApi db,
       EqDBEdiTeXInterface interface) async {
-    if (previous.isNotEmpty && this.isNotEmpty) {
-      final left = interface.parse(previous.getParsableContent());
-      final right = interface.parse(this.getParsableContent());
+    if (compareWith.isNotEmpty && this.isNotEmpty) {
+      final left = compareWith.updateState();
+      final right = this.updateState();
 
-      // Turn into equation and evaluate both sides.
-      final eq = new Eq(left, right);
-      eq.evaluate((int id, List<num> args) {
-        if (id == interface.operatorConfig.id('+')) {
-          return args[0] + args[1];
-        } else if (id == interface.operatorConfig.id('-')) {
-          return args[0] - args[1];
-        } else if (id == interface.operatorConfig.id('*')) {
-          return args[0] * args[1];
+      if (left.different || right.different) {
+        setInfoState(ResolveInfoState.inProgress);
+
+        // Turn into equation and evaluate both sides.
+        final eq = new Eq(left.expression, right.expression);
+        eq.evaluate((int id, List<num> args) {
+          if (id == interface.operatorConfig.id('+')) {
+            return args[0] + args[1];
+          } else if (id == interface.operatorConfig.id('-')) {
+            return args[0] - args[1];
+          } else if (id == interface.operatorConfig.id('*')) {
+            return args[0] * args[1];
+          } else {
+            return double.NAN;
+          }
+        });
+
+        // Resolve difference via API.
+        final result = await db
+            .resolveExpressionDifference(new ExpressionDifferenceResource()
+              ..left = (new ExpressionResource()..data = eq.left.toBase64())
+              ..right = (new ExpressionResource()..data = eq.right.toBase64()));
+
+        if (result.difference.different && !result.difference.resolved) {
+          setInfoState(ResolveInfoState.unresolved);
         } else {
-          return double.NAN;
+          setInfoState(ResolveInfoState.resolved);
         }
-      });
-
-      if (right == oldExpression && left == previous.oldExpression) {
-        return;
-      } else {
-        // TODO: Split into method.
-        oldExpression = right;
-        previous.oldExpression = left;
-      }
-
-      // TODO: use a stream based approach?, something like a state stream.
-      arrow.style.opacity = '1';
-      ellipsis.hidden = false;
-      ellipsis.classes.add('animated');
-      infoPane.children.clear();
-
-      // Resolve difference via API.
-      final result = await db
-          .resolveExpressionDifference(new ExpressionDifferenceResource()
-            ..left = (new ExpressionResource()..data = eq.left.toBase64())
-            ..right = (new ExpressionResource()..data = eq.right.toBase64()));
-
-      ellipsis.hidden = true;
-      if (result.difference.different && !result.difference.resolved) {
-        infoPane.append(div('.error-badge'));
       }
     } else {
-      hideResolveInfo();
+      setInfoState(ResolveInfoState.empty);
     }
   }
 }
