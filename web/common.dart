@@ -5,13 +5,14 @@
 import 'package:json_object/json_object.dart';
 
 typedef String HtmlBuilder(PageData data);
+typedef dynamic PostDataBuilder(Map<String, String> formData);
 
-class AdminPage {
+class Page {
   final HtmlBuilder template;
-  final dynamic postFormat;
+  final PostDataBuilder onPost;
   final Map<String, String> additional;
 
-  AdminPage({this.template, this.postFormat, this.additional: const {}});
+  Page({this.template, this.onPost, this.additional: const {}});
 }
 
 class PageData {

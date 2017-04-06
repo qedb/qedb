@@ -6,7 +6,7 @@ import '../htgen/htgen.dart';
 import '../common.dart';
 import 'templates.dart';
 
-final createFunctionPage = new AdminPage(
+final createFunctionPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'function', inputs: (data) {
         return [
@@ -63,28 +63,28 @@ final createFunctionPage = new AdminPage(
         ];
       });
     },
-    postFormat: {
-      'generic': 'bool:generic',
-      'argumentCount': 'int:argument-count',
-      'keyword': 'keyword',
-      'keywordType': 'keyword-type',
-      'latexTemplate': 'latex-template',
-      'category': {'id': 'int:category'},
-      'descriptor': {
-        'translations': [
-          {
-            'locale': {'code': 'name-locale'},
-            'content': 'name'
+    onPost: (data) => {
+          'generic': data['generic'] == 'true',
+          'argumentCount': int.parse(data['argument-count']),
+          'keyword': 'keyword',
+          'keywordType': 'keyword-type',
+          'latexTemplate': 'latex-template',
+          'category': {'id': int.parse(data['category'])},
+          'descriptor': {
+            'translations': [
+              {
+                'locale': {'code': 'name-locale'},
+                'content': 'name'
+              }
+            ]
           }
-        ]
-      }
-    },
+        },
     additional: {
       'locales': 'locale/list',
       'categories': 'category/list?locale=en_US'
     });
 
-final listFunctionsPage = new AdminPage(template: (data) {
+final listFunctionsPage = new Page(template: (data) {
   return listResourceTemplate(data, 'function', 'functions', tableHead: [
     th('ID'),
     th('Category'),

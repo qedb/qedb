@@ -13,11 +13,28 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
   // Encode expression.
   final codecData = exprCodecEncode(expr);
 
-  // Additional check for floating point numbers.
+  // Expression may not contain floating point numbers.
   if (codecData.float64Count > 0) {
     throw new UnprocessableEntityError('rejected expression')
       ..errors.add(new RpcErrorDetail(
           reason: 'expression contains floating point numbers'));
+  }
+
+  if (codecData.functionId.isNotEmpty) {
+    final functions =
+        await functionHelper.selectIn(s, {'id': codecData.functionId});
+    for (final fn in functions) {
+      // Validate function.
+      final fnIdx = codecData.functionId.indexOf(fn.id);
+      if (codecData.functionArgc[fnIdx] != fn.argumentCount) {
+        throw new UnprocessableEntityError(
+            'expression not compatible with function table');
+      }
+      if (codecData.inGenericRange(fnIdx) != fn.generic) {
+        throw new UnprocessableEntityError(
+            'expression not compatible with function table');
+      }
+    }
   }
 
   // Generate BASE64 data.
@@ -55,10 +72,11 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
   assert(nodeType != null && nodeValue != null && nodeArguments != null);
 
   // Create expression node.
+  final ops = await _loadOperatorConfig(s);
   return await expressionHelper.insert(s, {
     'data': new Sql("decode(@data, 'base64')", {'data': base64}),
     'hash': new Sql("digest(decode(@data, 'base64') ,'sha256')"),
-    'latex': await _renderExpressionLaTeX(s, codecData.functionId, expr),
+    'latex': await _renderExpressionLaTeX(s, codecData.functionId, expr, ops),
     'functions': intarray(codecData.functionId),
     'node_type': nodeType,
     'node_value': nodeValue,
@@ -66,11 +84,29 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
   });
 }
 
-/// Expression LaTeX rendering.
-/// Internal function. Allows reuse of codec data for more efficient function ID
-///
-Future<String> _renderExpressionLaTeX(
-    Session s, List<int> functionsInExpr, Expr expr) async {
+Future<List<db.ExpressionRow>> listExpressions(Session s, List<int> ids) async {
+  final expressions = await expressionHelper.selectIn(s, {'id': ids});
+
+  // Check if there are any NULL latex fields.
+  // TODO: implement latex updating
+  /*final queue = new List<Future>();
+  final ops = await _loadOperatorConfig(s);
+  for (var i = 0; i < expressions.length; i++) {
+    final expr = expressions[i];
+    if (expr.latex == null) {
+      final codecData = _decodeCodecHeader(expr.data);
+      final latex = _renderExpressionLaTeX(
+          s, codecData.functionId, exprCodecDecode(codecData), ops);
+      queue.add(expressionHelper
+          .set(s, {'latex': latex}).then((row) => expressions[i] = row));
+    }
+  }
+  await Future.wait(queue);*/
+
+  return expressions;
+}
+
+Future<OperatorConfig> _loadOperatorConfig(Session s) async {
   // Load operators.
   final ops = new OperatorConfig();
   final operators = await listOperators(s);
@@ -98,6 +134,14 @@ Future<String> _renderExpressionLaTeX(
       -1,
       OperatorType.infix));
 
+  return ops;
+}
+
+/// Expression LaTeX rendering.
+/// Internal function. Allows reuse of codec data for more efficient function ID
+///
+Future<String> _renderExpressionLaTeX(
+    Session s, List<int> functionsInExpr, Expr expr, OperatorConfig ops) async {
   final printer = new LaTeXPrinter();
 
   // Retrieve latex templates and populate printer dictionary.

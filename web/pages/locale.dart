@@ -6,7 +6,7 @@ import '../htgen/htgen.dart';
 import '../common.dart';
 import 'templates.dart';
 
-final createLocalePage = new AdminPage(
+final createLocalePage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'locale', inputs: (data) {
         return [formInput('Locale ISO code', name: 'code')];
@@ -17,4 +17,4 @@ final createLocalePage = new AdminPage(
         ];
       });
     },
-    postFormat: {'code': 'code'});
+    onPost: (data) => {'code': data['code']});

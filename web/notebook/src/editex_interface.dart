@@ -63,11 +63,12 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   }
 
   String _generateFunctionParseTemplate(FunctionResource fn) {
+    final generic = fn.generic ? '?' : '';
     if (fn.argumentCount > 0) {
       final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
-      return '#${fn.id.toRadixString(16)}(${args.join(',')})';
+      return '$generic#${fn.id.toRadixString(16)}(${args.join(',')})';
     } else {
-      return '#${fn.id.toRadixString(16)}';
+      return '$generic#${fn.id.toRadixString(16)}';
     }
   }
 

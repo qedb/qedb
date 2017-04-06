@@ -6,7 +6,7 @@ import '../htgen/htgen.dart';
 import '../common.dart';
 import 'templates.dart';
 
-final createSubjectPage = new AdminPage(
+final createSubjectPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'subject', inputs: (data) {
         return [localeSelect(data), formInput('Descriptor', name: 'content')];
@@ -17,21 +17,19 @@ final createSubjectPage = new AdminPage(
         ];
       });
     },
-    postFormat: {
-      'descriptor': {
-        'translations': [
-          {
-            'locale': {'code': 'locale'},
-            'content': 'content'
+    onPost: (data) => {
+          'descriptor': {
+            'translations': [
+              {
+                'locale': {'code': data['locale']},
+                'content': data['content']
+              }
+            ]
           }
-        ]
-      }
-    },
-    additional: {
-      'locales': 'locale/list'
-    });
+        },
+    additional: {'locales': 'locale/list'});
 
-final listSubjectsPage = new AdminPage(template: (data) {
+final listSubjectsPage = new Page(template: (data) {
   return listResourceTemplate(data, 'subject', 'subjects',
       tableHead: [th('ID'), th('Descriptor ID'), th('Translation')],
       row: (subject) {

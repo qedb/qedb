@@ -12,13 +12,15 @@ final allMethods = [
   ['subject/create', 'Create subject'],
   ['category/create', 'Create category'],
   ['function/create', 'Create function'],
+  ['definition/create', 'Create definition'],
   ['descriptor/list', 'List descriptors'],
   ['subject/list', 'List subjects'],
   ['category/list', 'List categories'],
-  ['function/list', 'List functions']
+  ['function/list', 'List functions'],
+  ['definition/list', 'List definitions']
 ];
 
-final homePage = new AdminPage(template: (data) {
+final homePage = new Page(template: (data) {
   return html([
     head([title('EqDB Admin'), defaultHead(data)]),
     body([

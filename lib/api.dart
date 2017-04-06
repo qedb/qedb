@@ -170,6 +170,13 @@ class EqDB {
           new DefinitionResource()
             ..loadRow(await api.createDefinition(s, body), s.data));
 
+  @ApiMethod(path: 'definition/list', method: 'GET')
+  Future<List<DefinitionResource>> listDefinition() =>
+      _runRequestSession<List<DefinitionResource>>((s) async =>
+          (await api.listDefinitions(s))
+              .map((r) => new DefinitionResource()..loadRow(r, s.data))
+              .toList());
+
   @ApiMethod(path: 'expressionLineage/create', method: 'POST')
   Future<ExpressionLineageResource> createLineage(
           ExpressionLineageResource body) =>

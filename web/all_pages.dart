@@ -18,12 +18,15 @@ import 'pages/subject.dart';
 import 'pages/translation.dart';
 import 'pages/category.dart';
 import 'pages/function.dart';
+import 'pages/definition.dart';
 
 import 'pages/templates.dart';
 import 'common.dart';
 
-/// All pages.
-Map<String, AdminPage> pages = {
+/// All pages
+/// TODO: develop mechanism for including CSS and JS snippets.
+/// TODO: develop simple configuration system via env vars.
+Map<String, Page> pages = {
   '/': homePage,
   '/locale/create': createLocalePage,
   '/descriptor/create': createDescriptorPage,
@@ -38,7 +41,9 @@ Map<String, AdminPage> pages = {
   '/category/{id}/category/create': createCategoryPage,
   '/category/{id}/category/list': listSubCategoriesPage,
   '/function/create': createFunctionPage,
-  '/function/list': listFunctionsPage
+  '/function/list': listFunctionsPage,
+  '/definition/create': createDefinitionPage,
+  '/definition/list': listDefinitionsPage
 };
 
 /// Requests constants.
@@ -74,12 +79,12 @@ void routeAllPages(String apiBase, Router router) {
         data.additional[label] = new JsonObject.fromJsonString(response.body);
       }
 
-      if (request.method == 'POST' && page.postFormat != null) {
+      if (request.method == 'POST' && page.onPost != null) {
         // Decode form data.
         final uri = new Uri(query: await request.readAsString());
 
         // Encode post data.
-        data.request = encodePostData(page.postFormat, uri.queryParameters);
+        data.request = page.onPost(uri.queryParameters);
 
         // Get API response.
         final response = await http.post(
@@ -93,7 +98,7 @@ void routeAllPages(String apiBase, Router router) {
             headers: {'Content-Type': 'text/html'});
       } else {
         // Do GET request if no postFormat is specified.
-        if (page.postFormat == null) {
+        if (page.onPost == null) {
           final response =
               await http.get('$apiBase${request.requestedUri.path}');
           data.data = new JsonObject.fromJsonString(response.body);
@@ -104,33 +109,4 @@ void routeAllPages(String apiBase, Router router) {
       }
     });
   });
-}
-
-/// Generate API POST data from a data [format] and [formData].
-dynamic encodePostData(dynamic format, Map<String, String> formData) {
-  if (format is Map) {
-    return new Map.fromIterable(format.keys,
-        key: (key) => key,
-        value: (key) => encodePostData(format[key], formData));
-  } else if (format is List) {
-    return new List.generate(
-        format.length, (i) => encodePostData(format[i], formData));
-  } else if (format is String) {
-    // Format may start with '$type:' to cast it.
-    final parts = format.split(':');
-    final targetName = parts.last;
-    if (formData.containsKey(targetName)) {
-      if (parts.first == 'int') {
-        return int.parse(formData[targetName]);
-      } else if (parts.first == 'bool') {
-        return formData[targetName] == 'true';
-      } else {
-        return formData[targetName];
-      }
-    } else {
-      return format;
-    }
-  } else {
-    return format;
-  }
 }

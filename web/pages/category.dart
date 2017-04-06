@@ -6,7 +6,7 @@ import '../htgen/htgen.dart';
 import '../common.dart';
 import 'templates.dart';
 
-final createCategoryPage = new AdminPage(
+final createCategoryPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'category', inputs: (data) {
         return [
@@ -24,23 +24,21 @@ final createCategoryPage = new AdminPage(
         ];
       });
     },
-    postFormat: {
-      'subject': {
-        'descriptor': {
-          'translations': [
-            {
-              'locale': {'code': 'locale'},
-              'content': 'subject'
+    onPost: (data) => {
+          'subject': {
+            'descriptor': {
+              'translations': [
+                {
+                  'locale': {'code': data['locale']},
+                  'content': data['subject']
+                }
+              ]
             }
-          ]
-        }
-      }
-    },
-    additional: {
-      'locales': 'locale/list'
-    });
+          }
+        },
+    additional: {'locales': 'locale/list'});
 
-final readCategoryPage = new AdminPage(template: (data) {
+final readCategoryPage = new Page(template: (data) {
   final name =
       safe(() => data.data.subject.descriptor.translations[0].content, '');
   return html([
@@ -57,7 +55,7 @@ final readCategoryPage = new AdminPage(template: (data) {
   ]);
 });
 
-final listCategoriesPage = new AdminPage(template: (data) {
+final listCategoriesPage = new Page(template: (data) {
   return listResourceTemplate(data, 'category', 'categories',
       tableHead: [th('ID'), th('Subject'), th('Parent')], row: (category) {
     return [
@@ -80,7 +78,7 @@ final listCategoriesPage = new AdminPage(template: (data) {
   });
 });
 
-final listSubCategoriesPage = new AdminPage(template: (data) {
+final listSubCategoriesPage = new Page(template: (data) {
   return listResourceTemplate(data, 'category', 'categories',
       customTitle: '#${data.pathParameters['id']} subcategories',
       customCreateButton: 'Create subcategory',

@@ -6,13 +6,13 @@ import '../htgen/htgen.dart';
 import '../common.dart';
 import 'templates.dart';
 
-final createTranslationPage = new AdminPage(
+final createTranslationPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'translation', inputs: (data) {
         return [
           input(
               type: 'hidden',
-              name: 'descriptorId',
+              name: 'descriptor-id',
               value: data.pathParameters['id']),
           localeSelect(data),
           formInput('Translation', name: 'content')
@@ -25,11 +25,9 @@ final createTranslationPage = new AdminPage(
         ];
       });
     },
-    postFormat: {
-      'descriptor': {'id': 'descriptorId'},
-      'locale': {'code': 'locale'},
-      'content': 'content'
-    },
-    additional: {
-      'locales': 'locale/list'
-    });
+    onPost: (data) => {
+          'descriptor': {'id': data['descriptor-id']},
+          'locale': {'code': data['locale']},
+          'content': data['content']
+        },
+    additional: {'locales': 'locale/list'});

@@ -6,5 +6,3 @@ ID,Category,Area,"Expression left",,"Expression right"
 5,Algebra,"Basic algebra",?a^1,=,?a
 6,Algebra,"Basic algebra",?a^?n,=,?a*?a^(?n-1)
 7,Algebra,Calculus,"diff(?x,?f(?x))",=,"lim(d(?x),0,(?f(?x+d(?x))-?f(?x))/d(?x))"
-8,Algebra,Calculus,"lim(?a,0,?f(?b+?a))",=,?f(?b)
-9,Algebra,Calculus,"diff(?x,?x^?a)",=,?a*?x^(?a-1)

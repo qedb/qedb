@@ -65,7 +65,19 @@ class ElementBuilder {
     // Convert named parameters to String -> String map.
     final named = invocation.namedArguments;
     final attrs = new Map<String, String>.fromIterable(named.keys,
-        key: (sym) => MirrorSystem.getName(sym).replaceAll('_', ''),
+        key: (sym) {
+          var name = MirrorSystem.getName(sym);
+          if (name.startsWith('_')) {
+            // A starting underscore can be used to include attributes that are
+            // also Dart keywords (such as for).
+            name = name.substring(1);
+          }
+
+          // An underscore is interpreted as dash.
+          name = name.replaceAll('_', '-');
+
+          return name;
+        },
         value: (sym) => named[sym].toString());
 
     // Add parsed ID and classes to attributes.

@@ -47,24 +47,6 @@ Future<db.DefinitionRow> createDefinition(
         'given category does not contain some functions: $missing');
   }
 
-  // Validate that the argument count defined in the expression headers matches
-  // the database.
-  for (var i = 0; i < leftData.functionArgc.length; i++) {
-    final id = leftData.functionId[i], argc = leftData.functionArgc[i];
-    if (intmap[id] != argc) {
-      throw new UnprocessableEntityError(
-          'left expression argument count array does not match the database');
-    }
-  }
-  // Ugly, but functional.
-  for (var i = 0; i < rightData.functionArgc.length; i++) {
-    final id = rightData.functionId[i], argc = rightData.functionArgc[i];
-    if (intmap[id] != argc) {
-      throw new UnprocessableEntityError(
-          'right expression argument count array does not match the database');
-    }
-  }
-
   // Decode expressions.
   final leftDecoded = exprCodecDecode(leftData);
   final rightDecoded = exprCodecDecode(rightData);
@@ -81,4 +63,10 @@ Future<db.DefinitionRow> createDefinition(
 
   // Insert definition.
   return await definitionHelper.insert(s, {'rule_id': rule.id});
+}
+
+Future<List<db.DefinitionRow>> listDefinitions(Session s) async {
+  final definitions = await definitionHelper.select(s, {});
+  await listRules(s, definitions.map((row) => row.ruleId));
+  return definitions;
 }

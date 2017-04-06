@@ -14,3 +14,16 @@ Future<db.RuleRow> createRule(Session s, int categoryId, int leftExpressionId,
     'right_array_data': intarray(right.toArray())
   });
 }
+
+Future<List<db.RuleRow>> listRules(Session s, [List<int> ids]) async {
+  final rules = ids == null
+      ? await ruleHelper.select(s, {})
+      : await ruleHelper.selectIn(s, {'id': ids});
+
+  // Select left and right expressions.
+  final expressionIds = rules.map((row) => row.leftExpressionId).toList()
+    ..addAll(rules.map((row) => row.rightExpressionId));
+  await listExpressions(s, expressionIds);
+
+  return rules;
+}

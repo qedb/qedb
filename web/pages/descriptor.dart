@@ -6,7 +6,7 @@ import '../htgen/htgen.dart';
 import '../common.dart';
 import 'templates.dart';
 
-final createDescriptorPage = new AdminPage(
+final createDescriptorPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'descriptor', inputs: (data) {
         return [localeSelect(data), formInput('Translation', name: 'content')];
@@ -23,19 +23,17 @@ final createDescriptorPage = new AdminPage(
         ];
       });
     },
-    postFormat: {
-      'translations': [
-        {
-          'locale': {'code': 'locale'},
-          'content': 'content'
-        }
-      ]
-    },
-    additional: {
-      'locales': 'locale/list'
-    });
+    onPost: (data) => {
+          'translations': [
+            {
+              'locale': {'code': data['locale']},
+              'content': data['content']
+            }
+          ]
+        },
+    additional: {'locales': 'locale/list'});
 
-final listDescriptorsPage = new AdminPage(template: (data) {
+final listDescriptorsPage = new Page(template: (data) {
   return listResourceTemplate(data, 'descriptor', 'descriptors',
       tableHead: [th('ID'), th('Translation')], row: (descriptor) {
     return [
@@ -46,7 +44,7 @@ final listDescriptorsPage = new AdminPage(template: (data) {
   });
 });
 
-final readDescriptorPage = new AdminPage(template: (data) {
+final readDescriptorPage = new Page(template: (data) {
   var translationNr = 0;
   return html([
     head([title('Descriptor #${data.data.id}'), defaultHead(data)]),
