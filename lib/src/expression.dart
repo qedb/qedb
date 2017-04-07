@@ -9,7 +9,8 @@ ExprCodecData _decodeCodecHeader(String base64Data) =>
     new ExprCodecData.decodeHeader(
         new Uint8List.fromList(BASE64.decode(base64Data)).buffer);
 
-Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
+Future<db.ExpressionRow> _createExpression(Session s, Expr expr,
+    [OperatorConfig ops]) async {
   // Encode expression.
   final codecData = exprCodecEncode(expr);
 
@@ -22,7 +23,7 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
 
   if (codecData.functionId.isNotEmpty) {
     final functions =
-        await functionHelper.selectIn(s, {'id': codecData.functionId});
+        await s.select(db.function, WHERE({'id': IN(codecData.functionId)}));
     for (final fn in functions) {
       // Validate function.
       final fnIdx = codecData.functionId.indexOf(fn.id);
@@ -41,13 +42,19 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
   final base64 = BASE64.encode(codecData.writeToBuffer().asUint8List());
 
   // Check if expression exists.
-  final lookupResult = await expressionHelper.select(s, {
-    'hash':
-        new Sql("digest(decode(@data, 'base64'), 'sha256')", {'data': base64})
-  });
+  final lookupResult = await s.select(
+      db.expression,
+      WHERE({
+        'hash': IS(
+            FUNCTION('digest', FUNCTION('decode', base64, 'base64'), 'sha256'))
+      }));
+
   if (lookupResult.isNotEmpty) {
     return lookupResult.single;
   }
+
+  // Make sure we have a valid operator configuration.
+  final _ops = ops == null ? await _loadOperatorConfig(s) : ops;
 
   // Resolve expression node parameters.
   String nodeType;
@@ -65,27 +72,30 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr) async {
     // Get expression IDs for all arguments.
     nodeArguments = new List<int>();
     for (final arg in expr.arguments) {
-      nodeArguments.add((await _createExpression(s, arg)).id);
+      nodeArguments.add((await _createExpression(s, arg, _ops)).id);
     }
   }
 
   assert(nodeType != null && nodeValue != null && nodeArguments != null);
 
   // Create expression node.
-  final ops = await _loadOperatorConfig(s);
-  return await expressionHelper.insert(s, {
-    'data': new Sql("decode(@data, 'base64')", {'data': base64}),
-    'hash': new Sql("digest(decode(@data, 'base64') ,'sha256')"),
-    'latex': await _renderExpressionLaTeX(s, codecData.functionId, expr, ops),
-    'functions': intarray(codecData.functionId),
-    'node_type': nodeType,
-    'node_value': nodeValue,
-    'node_arguments': intarray(nodeArguments)
-  });
+  return await s.insert(
+      db.expression,
+      VALUES({
+        'data': FUNCTION('decode', base64, 'base64'),
+        'hash':
+            FUNCTION('digest', FUNCTION('decode', base64, 'base64'), 'sha256'),
+        'latex':
+            await _renderExpressionLaTeX(s, codecData.functionId, expr, _ops),
+        'functions': ARRAY(codecData.functionId, 'integer'),
+        'node_type': nodeType,
+        'node_value': nodeValue,
+        'node_arguments': ARRAY(nodeArguments, 'integer')
+      }));
 }
 
 Future<List<db.ExpressionRow>> listExpressions(Session s, List<int> ids) async {
-  final expressions = await expressionHelper.selectIn(s, {'id': ids});
+  final expressions = await s.select(db.expression, WHERE({'id': IN(ids)}));
 
   // Check if there are any NULL latex fields.
   // TODO: implement latex updating
@@ -147,7 +157,8 @@ Future<String> _renderExpressionLaTeX(
   // Retrieve latex templates and populate printer dictionary.
   var getLbl = (int id) => '\\#$id';
   if (functionsInExpr.isNotEmpty) {
-    final functions = await functionHelper.selectIn(s, {'id': functionsInExpr});
+    final functions =
+        await s.select(db.function, WHERE({'id': IN(functionsInExpr)}));
 
     // Create new LaTeX printer and populate dictionary.
     functions.forEach((row) {

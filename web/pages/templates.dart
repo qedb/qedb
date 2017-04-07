@@ -104,7 +104,7 @@ String createResourceTemplate(PageData data, String name,
         br(),
         safe(() => data.data.id != null, false)
             ? [
-                div('.alert.alert-success', 'Successfully created descriptor',
+                div('.alert.alert-success', 'Successfully created $name',
                     role: 'alert'),
                 success(data)
               ]

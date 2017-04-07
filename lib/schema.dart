@@ -5,12 +5,11 @@
 library eqdb.schema;
 
 import 'package:eqdb/utils.dart';
+import 'package:eqdb/sqlbuilder.dart';
 import 'package:postgresql/postgresql.dart' as pg;
 
-/// Base class.
-abstract class Row {
-  int get id;
-}
+part 'src/generated/tables.dart';
+part 'src/generated/session_data.dart';
 
 //------------------------------------------------------------------------------
 // Descriptors and translations

@@ -27,16 +27,16 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
 
   // Get rearrangeable functions.
   final rearrangeable =
-      (await functionHelper.select(s, {'rearrangeable': true}))
-          .map((row) => row.id)
-          .toList();
+      await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
 
   // Get computable functions via operator tables.
   // (it is reasonable to assume +-* are the operator characters)
-  final compOpMap = new Map<String, int>.fromIterable(
-      await operatorHelper.selectIn(s, {
-        'character': ["'+'", "'-'", "'*'"]
-      }),
+  final compOps = await s.select(
+      db.operator,
+      WHERE({
+        'character': IN(['+', '-', '*'])
+      }));
+  final compOpMap = new Map<String, int>.fromIterable(compOps,
       key: (db.OperatorRow row) => row.character,
       value: (db.OperatorRow row) => row.id);
   final computableFnIds = [compOpMap['+'], compOpMap['-'], compOpMap['*']];
@@ -68,24 +68,24 @@ Future<DifferenceBranch> resolveTreeDiff(
     outputBranch.resolved = true;
     return outputBranch;
   } else if (outputBranch.different) {
-    // Get array data SQL statements.
-    final exprLeft = intarray(branch.replaced.left.toArray()).sql;
-    final exprRight = intarray(branch.replaced.right.toArray()).sql;
-    final computableIds = intarray(computableFnIds).sql;
-
-    // Closure around function to find matching rule in the database.
-    final selectRule = (List<String> params) async => await ruleHelper
-        .selectCustom(s, 'expr_match_rule(${params.join(',')}) LIMIT 1', {});
-
     // Try to find rule.
-    final exprParams = [exprLeft, exprRight];
-    final ruleParams = ['left_array_data', 'right_array_data'];
+
+    final exprParams = [
+      ARRAY(branch.replaced.left.toArray(), 'integer'),
+      ARRAY(branch.replaced.right.toArray(), 'integer')
+    ];
+    final ruleParams = [SQL('left_array_data'), SQL('right_array_data')];
+    final computableIds = ARRAY(computableFnIds, 'integer');
 
     for (var i = 0; i < 4; i++) {
-      final rules = await selectRule([]
-        ..addAll(i < 2 ? exprParams : exprParams.reversed.toList())
-        ..addAll(i % 2 == 0 ? ruleParams : ruleParams.reversed.toList())
-        ..add(computableIds));
+      final param12 = i < 2 ? exprParams : exprParams.reversed.toList();
+      final param34 = i % 2 == 0 ? ruleParams : ruleParams.reversed.toList();
+      final rules = await s.select(
+          db.rule,
+          SQL('WHERE'),
+          FUNCTION('expr_match_rule', param12[0], param12[1], param34[0],
+              param34[1], computableIds),
+          LIMIT(1));
 
       if (rules.isNotEmpty) {
         outputBranch.invertRule == !(i % 2 == 0);

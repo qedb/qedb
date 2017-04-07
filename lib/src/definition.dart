@@ -62,11 +62,11 @@ Future<db.DefinitionRow> createDefinition(
       rightExpr.id, leftDecoded, rightDecoded);
 
   // Insert definition.
-  return await definitionHelper.insert(s, {'rule_id': rule.id});
+  return await s.insert(db.definition, VALUES({'rule_id': rule.id}));
 }
 
 Future<List<db.DefinitionRow>> listDefinitions(Session s) async {
-  final definitions = await definitionHelper.select(s, {});
-  await listRules(s, definitions.map((row) => row.ruleId));
+  final definitions = await s.select(db.definition);
+  await listRules(s, definitions.map((row) => row.ruleId).toList());
   return definitions;
 }

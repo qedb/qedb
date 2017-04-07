@@ -6,24 +6,29 @@ part of eqdb;
 
 Future<db.SubjectRow> createSubject(Session s, SubjectResource body) async {
   if (body.descriptor.id != null) {
-    return subjectHelper.insert(s, {'descriptor_id': body.descriptor.id});
+    return s.insert(db.subject, VALUES({'descriptor_id': body.descriptor.id}));
   } else {
-    return subjectHelper.insert(
-        s, {'descriptor_id': (await createDescriptor(s, body.descriptor)).id});
+    return s.insert(
+        db.subject,
+        VALUES({
+          'descriptor_id': (await createDescriptor(s, body.descriptor)).id
+        }));
   }
 }
 
 Future<List<db.SubjectRow>> listSubjects(
     Session s, List<String> locales) async {
-  final subjects = await subjectHelper.select(s, {});
-  final descriptors = await descriptorHelper.selectIn(
-      s, {'id': subjectHelper.ids(subjects, (row) => row.descriptorId)});
+  final subjects = await s.select(db.subject);
+  final descriptors = await s.select(db.descriptor,
+      WHERE({'id': IN(subjects.map((row) => row.descriptorId))}));
 
   // Select all translations.
-  await translationHelper.selectIn(s, {
-    'descriptor_id': getIds(descriptors),
-    'locale_id': await getLocaleIds(s, locales)
-  });
+  await s.select(
+      db.translation,
+      WHERE({
+        'descriptor_id': IN_IDS(descriptors),
+        'locale_id': IN(getLocaleIds(s, locales))
+      }));
 
   return subjects;
 }

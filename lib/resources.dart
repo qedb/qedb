@@ -5,19 +5,19 @@
 library eqdb.resources;
 
 import 'package:rpc/rpc.dart';
-import 'package:eqdb/dbutils.dart';
+import 'package:eqdb/sqlbuilder.dart';
 
 import 'package:eqdb/schema.dart' as db;
 
 /// Boilerplate for resource classes.
-abstract class ResourceBase<T extends db.Row> {
+abstract class ResourceBase<T extends Row> {
   set id(int v);
 
   /// Get database row from the session [data] by [id].
-  Map<int, T> _getTableMap(SessionData data);
+  Map<int, T> _getTableMap(db.SessionData data);
 
   /// Load resource data from session [data] using the specified [targetId].
-  void load(int targetId, SessionData data) {
+  void load(int targetId, db.SessionData data) {
     id = targetId;
     final row = _getTableMap(data)[targetId];
     if (row != null) {
@@ -26,10 +26,10 @@ abstract class ResourceBase<T extends db.Row> {
   }
 
   /// Load remaining resource fiels (only if row was found in the session data).
-  void loadFields(T row, SessionData data) {}
+  void loadFields(T row, db.SessionData data) {}
 
   /// Load from row.
-  void loadRow(T row, SessionData data) {
+  void loadRow(T row, db.SessionData data) {
     id = row.id;
     loadFields(row, data);
   }

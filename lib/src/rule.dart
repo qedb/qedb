@@ -6,19 +6,20 @@ part of eqdb;
 
 Future<db.RuleRow> createRule(Session s, int categoryId, int leftExpressionId,
     int rightExpressionId, Expr left, Expr right) async {
-  return await ruleHelper.insert(s, {
-    'category_id': categoryId,
-    'left_expression_id': leftExpressionId,
-    'right_expression_id': rightExpressionId,
-    'left_array_data': intarray(left.toArray()),
-    'right_array_data': intarray(right.toArray())
-  });
+  return await s.insert(
+      db.rule,
+      VALUES({
+        'category_id': categoryId,
+        'left_expression_id': leftExpressionId,
+        'right_expression_id': rightExpressionId,
+        'left_array_data': ARRAY(left.toArray(), 'integer'),
+        'right_array_data': ARRAY(right.toArray(), 'integer')
+      }));
 }
 
 Future<List<db.RuleRow>> listRules(Session s, [List<int> ids]) async {
-  final rules = ids == null
-      ? await ruleHelper.select(s, {})
-      : await ruleHelper.selectIn(s, {'id': ids});
+  final rules =
+      await s.select(db.rule, ids == null ? null : WHERE({'id': IN(ids)}));
 
   // Select left and right expressions.
   final expressionIds = rules.map((row) => row.leftExpressionId).toList()

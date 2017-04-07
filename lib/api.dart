@@ -11,9 +11,9 @@ import 'package:logging/logging.dart';
 import 'package:postgresql/pool.dart';
 import 'package:postgresql/postgresql.dart';
 
-import 'package:eqdb/dbutils.dart';
 import 'package:eqdb/resources.dart';
 import 'package:eqdb/eqdb.dart' as api;
+import 'package:eqdb/schema.dart' as db;
 
 final log = new Logger('eqdb');
 const defaultLocale = 'en_US';
@@ -32,10 +32,10 @@ class EqDB {
   }
 
   /// Utility to reuse method calling boilerplate.
-  Future<T> _runRequestSession<T>(Future<T> handler(Session s)) {
+  Future<T> _runRequestSession<T>(Future<T> handler(api.Session s)) {
     return _runSandboxed<T>((conn) async {
-      final data = new SessionData();
-      final session = new Session(conn, data);
+      final data = new db.SessionData();
+      final session = new api.Session(conn, data);
 
       // Retrieve all locales.
       // This may seem a bit ridiculous, but the overhead is not actually that
@@ -176,13 +176,6 @@ class EqDB {
           (await api.listDefinitions(s))
               .map((r) => new DefinitionResource()..loadRow(r, s.data))
               .toList());
-
-  @ApiMethod(path: 'expressionLineage/create', method: 'POST')
-  Future<ExpressionLineageResource> createLineage(
-          ExpressionLineageResource body) =>
-      _runRequestSession<ExpressionLineageResource>((s) async =>
-          new ExpressionLineageResource()
-            ..loadRow(await api.createExpressionLineage(s, body), s.data));
 
   @ApiMethod(path: 'expressionDifference/resolve', method: 'POST')
   Future<api.ExpressionDifferenceResource> resolveExpressionDifference(

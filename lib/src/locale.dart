@@ -6,17 +6,19 @@ part of eqdb;
 
 Future<db.LocaleRow> createLocale(Session s, LocaleResource body) async {
   // Prevent primary key gaps for locales (I am a control freak).
-  final localeId = await localeHelper.getId(s, {'code': body.code});
-  return new db.LocaleRow(localeId, body.code);
+  if (await s.exists(db.locale, WHERE({'code': IS(body.code)}))) {
+    throw new UnprocessableEntityError('locale already exists');
+  }
+  return await s.insert(db.locale, VALUES({'code': body.code}));
 }
 
 Future<List<db.LocaleRow>> listLocales(Session s) {
-  return localeHelper.select(s, {});
+  return s.select(db.locale);
 }
 
 /// Return locale IDs for the given locale ISO codes.
 /// Note that all locales should already be loaded.
-Future<List<int>> getLocaleIds(Session s, List<String> locales) async {
+List<int> getLocaleIds(Session s, List<String> locales) {
   final ids = new List<int>();
   for (final locale in s.data.localeTable.values) {
     if (locales.contains(locale.code)) {

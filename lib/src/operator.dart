@@ -5,16 +5,18 @@
 part of eqdb;
 
 Future<db.OperatorRow> createOperator(Session s, OperatorResource body) {
-  return operatorHelper.insert(s, {
-    'function_id': body.function.id,
-    'precedence_level': body.precedenceLevel,
-    'associativity': body.associativity,
-    'operator_type': body.operatorType,
-    'character': body.character,
-    'editor_template': body.editorTemplate
-  });
+  return s.insert(
+      db.operator,
+      VALUES({
+        'function_id': body.function.id,
+        'precedence_level': body.precedenceLevel,
+        'associativity': body.associativity,
+        'operator_type': body.operatorType,
+        'character': body.character,
+        'editor_template': body.editorTemplate
+      }));
 }
 
 Future<List<db.OperatorRow>> listOperators(Session s) {
-  return operatorHelper.select(s, {});
+  return s.select(db.operator);
 }

@@ -15,18 +15,16 @@ Future<db.DescriptorRow> createDescriptor(
   }
 
   // First check if a descriptor with any of the given translations exists.
-  final translations = body.translations.map((t) {
-    return ['(', localeId(s, t.locale), ',', encodeString(t.content), ')']
-        .join();
-  });
-  final existingTranslations = await translationHelper.selectCustom(
-      s, '(locale_id, content) IN (${translations.join(',')})');
+  final translations = body.translations
+      .map((t) => SQL('(${localeId(s, t.locale)},${encodeString(t.content)})'));
+  final existingTranslations = await s.select(
+      db.translation, WHERE({'(locale_id, content)': IN(translations)}));
 
   // If none of the specified translations is in the database, we can create
   // a new descriptor record.
   if (existingTranslations.isEmpty) {
     // Insert descriptor.
-    final descriptor = await descriptorHelper.insert(s, {});
+    final descriptor = await s.insert(db.descriptor, SQL('DEFAULT VALUES'));
 
     // Insert translations.
     for (final translation in body.translations) {
@@ -59,13 +57,15 @@ Future<db.DescriptorRow> createDescriptor(
 
 Future<List<db.DescriptorRow>> listDescriptors(
     Session s, List<String> locales) async {
-  final descriptors = await descriptorHelper.select(s, {});
+  final descriptors = await s.select(db.descriptor);
 
   // Select all translations.
-  await translationHelper.selectIn(s, {
-    'descriptor_id': getIds(descriptors),
-    'locale_id': await getLocaleIds(s, locales)
-  });
+  await s.select(
+      db.translation,
+      WHERE({
+        'descriptor_id': IN_IDS(descriptors),
+        'locale_id': IN(getLocaleIds(s, locales))
+      }));
 
   return descriptors;
 }

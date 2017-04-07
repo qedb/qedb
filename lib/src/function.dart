@@ -12,7 +12,7 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
   }
 
   // Insert function.
-  final insertParameters = {
+  final values = {
     'generic': body.generic,
     'rearrangeable': body.rearrangeable,
     'argument_count': body.argumentCount,
@@ -20,40 +20,40 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
   };
 
   if (notEmpty(body.latexTemplate)) {
-    insertParameters['latex_template'] = body.latexTemplate;
+    values['latex_template'] = body.latexTemplate;
   }
 
   if (notEmpty(body.keyword) && body.keywordType != null) {
-    insertParameters['keyword'] = body.keyword;
-    insertParameters['keyword_type'] = body.keywordType;
+    values['keyword'] = body.keyword;
+    values['keyword_type'] = body.keywordType;
   }
 
   // If a name is specified, add it to the insert parameters.
   if (body.descriptor != null) {
     // Use ID if provided.
     if (body.descriptor.id != null) {
-      insertParameters['descriptor_id'] = body.descriptor.id;
+      values['descriptor_id'] = body.descriptor.id;
     } else {
       // Create descriptor.
-      insertParameters['descriptor_id'] =
-          (await createDescriptor(s, body.descriptor)).id;
+      values['descriptor_id'] = (await createDescriptor(s, body.descriptor)).id;
     }
   }
 
-  return await functionHelper.insert(s, insertParameters);
+  return await s.insert(db.function, VALUES(values));
 }
 
 Future<List<db.FunctionRow>> listFunctions(
     Session s, List<String> locales, int categoryId) async {
-  final functions = await functionHelper.select(s, {});
+  final functions = await s.select(db.function);
 
   // Select all translations.
-  final descriptorIds =
-      functionHelper.ids(functions, (row) => row.descriptorId);
-  await translationHelper.selectIn(s, {
-    'descriptor_id': descriptorIds,
-    'locale_id': await getLocaleIds(s, locales)
-  });
+  final descriptorIds = functions.map((row) => row.descriptorId);
+  await s.select(
+      db.translation,
+      WHERE({
+        'descriptor_id': IN(descriptorIds),
+        'locale_id': IN(getLocaleIds(s, locales))
+      }));
 
   return functions;
 }

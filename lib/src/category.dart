@@ -13,16 +13,16 @@ Future<db.CategoryRow> createCategory(
     final translation = body.subject.descriptor.translations.single;
 
     // Resolve subject ID.
-    final result = await subjectHelper.selectCustom(
-        s,
-        '''
-descriptor_id = (
-  SELECT descriptor_id FROM translation
-  WHERE content = @content AND locale_id = @locale_id)''',
-        {
-          'content': translation.content,
-          'locale_id': localeId(s, translation.locale)
-        });
+    final result = await s.select(
+        db.subject,
+        WHERE({
+          'descriptor_id': IS(SUBQUERY(
+              SQL('SELECT descriptor_id FROM translation'),
+              WHERE({
+                'content': IS(translation.content),
+                'locale_id': IS(localeId(s, translation.locale))
+              })))
+        }));
 
     // If no subject exists, raise an error.
     if (result.isEmpty) {
@@ -34,67 +34,82 @@ descriptor_id = (
   }
 
   // Check if any function subject tag references this subject.
-  if (await functionSubjectTagHelper.exists(s, {'subject_id': subjectId})) {
+  if (await s.exists(
+      db.functionSubjectTag, WHERE({'subject_id': IS(subjectId)}))) {
     throw new UnprocessableEntityError(
         'subject already used by function subject tag');
   }
 
   if (parentId > 0) {
     // First check if parent exists.
-    if (await categoryHelper.exists(s, {'id': parentId})) {
-      return await categoryHelper.insert(s, {
-        'subject_id': subjectId,
-        'parents': new Sql.arrayAppend(
-            '(SELECT parents FROM category WHERE id = @parent_id)',
-            '@parent_id',
-            'integer[]',
-            {'parent_id': parentId})
-      });
+    if (await s.exists(db.category, WHERE({'id': IS(parentId)}))) {
+      return await s.insert(
+          db.category,
+          VALUES({
+            'subject_id': subjectId,
+            'parents': FUNCTION(
+                'array_append::integer[]',
+                SUBQUERY(SQL('SELECT parents FROM category'),
+                    WHERE({'id': IS(parentId)})),
+                parentId)
+          }));
     } else {
       throw new UnprocessableEntityError(
           'parentId not found in category table');
     }
   } else {
-    return await categoryHelper.insert(
-        s, {'subject_id': subjectId, 'parents': new Sql('ARRAY[]::integer[]')});
+    return await s.insert(
+        db.category,
+        VALUES(
+            {'subject_id': subjectId, 'parents': SQL('ARRAY[]::integer[]')}));
   }
 }
 
 Future<db.CategoryRow> readCategory(
     Session s, int id, List<String> locales) async {
-  final category = await categoryHelper.selectOne(s, {'id': id});
-  final subject = await subjectHelper.selectOne(s, {'id': category.subjectId});
-  await translationHelper.selectIn(s, {
-    'descriptor_id': [subject.descriptorId],
-    'locale_id': await getLocaleIds(s, locales)
-  });
+  final category = await s.selectFirst(db.category, WHERE({'id': IS(id)}));
+  final subject =
+      await s.selectFirst(db.subject, WHERE({'id': IS(category.subjectId)}));
+
+  await s.select(
+      db.translation,
+      WHERE({
+        'descriptor_id': IS(subject.descriptorId),
+        'locale_id': IN(getLocaleIds(s, locales))
+      }));
+
   return category;
 }
 
 Future<List<db.CategoryRow>> listCategories(Session s, List<String> locales,
-    [int parentId = -1]) async {
-  final categories = parentId == -1
-      ? await categoryHelper.select(s, {})
-      : await categoryHelper.selectCustom(
-          s,
-          '''parents = array_append(
-            (SELECT parents FROM category WHERE id = @parent_id), @parent_id)''',
-          {'parent_id': parentId});
+    [int parentId = 0]) async {
+  final categories = parentId == 0
+      ? await s.select(db.category)
+      : await s.select(
+          db.category,
+          WHERE({
+            'parents': IS(FUNCTION(
+                'array_append',
+                SUBQUERY(SQL('SELECT parents FROM category'),
+                    WHERE({'id': IS(parentId)})),
+                parentId))
+          }));
 
   if (categories.isEmpty) {
     return [];
   }
 
   // Select all subjects.
-  final subjectIds = categoryHelper.ids(categories, (row) => row.subjectId);
-  final subjects = await subjectHelper.selectIn(s, {'id': subjectIds});
+  final subjects = await s.select(
+      db.subject, WHERE({'id': IN(categories.map((row) => row.subjectId))}));
 
   // Select all translations.
-  final descriptorIds = subjectHelper.ids(subjects, (row) => row.descriptorId);
-  await translationHelper.selectIn(s, {
-    'descriptor_id': descriptorIds,
-    'locale_id': await getLocaleIds(s, locales)
-  });
+  await s.select(
+      db.translation,
+      WHERE({
+        'descriptor_id': IN(subjects.map((row) => row.descriptorId)),
+        'locale_id': IN(getLocaleIds(s, locales))
+      }));
 
   return categories;
 }

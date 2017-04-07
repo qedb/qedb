@@ -11,5 +11,5 @@
 cd "${0%/*}"
 
 mustache data.yaml session_data.mustache > session_data.dart
-mustache data.yaml helpers.mustache > helpers.dart
+mustache data.yaml tables.mustache > tables.dart
 dartfmt -w *.dart
