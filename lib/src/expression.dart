@@ -98,8 +98,7 @@ Future<List<db.ExpressionRow>> listExpressions(Session s, List<int> ids) async {
   final expressions = await s.select(db.expression, WHERE({'id': IN(ids)}));
 
   // Check if there are any NULL latex fields.
-  // TODO: implement latex updating
-  /*final queue = new List<Future>();
+  final queue = new List<Future>();
   final ops = await _loadOperatorConfig(s);
   for (var i = 0; i < expressions.length; i++) {
     final expr = expressions[i];
@@ -107,11 +106,15 @@ Future<List<db.ExpressionRow>> listExpressions(Session s, List<int> ids) async {
       final codecData = _decodeCodecHeader(expr.data);
       final latex = _renderExpressionLaTeX(
           s, codecData.functionId, exprCodecDecode(codecData), ops);
-      queue.add(expressionHelper
-          .set(s, {'latex': latex}).then((row) => expressions[i] = row));
+      queue.add(s
+          .update(
+              db.expression, WHERE({'id': IS(expr.id)}), SET({'latex': latex}))
+          .then((rows) {
+        expressions[i] = rows.single;
+      }));
     }
   }
-  await Future.wait(queue);*/
+  await Future.wait(queue);
 
   return expressions;
 }

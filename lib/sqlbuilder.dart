@@ -154,22 +154,40 @@ Sql UPDATE(TableInfo table, Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
       'UPDATE ${table.tableName} $statements RETURNING ${table.fieldFormat}');
 }
 
-// ignore: non_constant_identifier_names
-Sql WHERE(Map<String, Sql> conditions) {
+/// This code is shared between [WHERE] and [SET].
+Sql _flatten(String prefix, Map<String, dynamic> map, String keyValueSeparator,
+    String itemSeparator) {
+  final converter = new pg.TypeConverter();
   final buffer = new StringBuffer();
-  buffer.write('WHERE ');
+  buffer.write('$prefix ');
 
-  final fields = conditions.keys.toList();
+  final fields = map.keys.toList();
   for (var i = 0; i < fields.length; i++) {
     if (i != 0) {
-      buffer.write(' AND ');
+      buffer.write(' $itemSeparator ');
     }
     buffer.write(fields[i]);
-    buffer.write(' ');
-    buffer.write(conditions[fields[i]]);
+    buffer.write(keyValueSeparator);
+
+    final value = map[fields[i]];
+    if (value is Sql) {
+      buffer.write(value.statement);
+    } else {
+      buffer.write(converter.encode(value, null));
+    }
   }
 
   return SQL(buffer.toString());
+}
+
+// ignore: non_constant_identifier_names
+Sql WHERE(Map<String, Sql> conditions) {
+  return _flatten('WHERE', conditions, ' ', 'AND');
+}
+
+// ignore: non_constant_identifier_names
+Sql SET(Map<String, dynamic> values) {
+  return _flatten('SET', values, '=', ',');
 }
 
 // ignore: non_constant_identifier_names
