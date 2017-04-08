@@ -145,25 +145,19 @@ class LineageEditor {
 
     // Add editor containers.
     final row2 = container.append(div('.lineage-row', c: [
-      div('.row-padding', c: [
-        checkbox(editors.isEmpty ? 'Definition' : 'Rule', (checked) {
-          checkboxValues[checkboxIndex] = checked;
-          if (checkboxIndex == 0) {
-            // Special side effect on initial equation.
-            if (checked) {
-              editors[1].setInfoState(ResolveInfoState.empty);
-            } else {
-              editors[1].resolveDifference(editors[0], db, interface, true);
-            }
-          }
-        })
-      ]),
+      div('.row-padding'),
       div('.lineage-row-left.editex.editex-align-right',
           store: (e) => leftContainer = e),
       div('.equals'),
       div('.lineage-row-right.editex.editex-align-left',
           store: (e) => rightContainer = e),
-      div('.row-padding')
+      div('.row-padding', c: [
+        editors.isEmpty
+            ? null
+            : checkbox('Rule', (checked) {
+                checkboxValues[checkboxIndex] = checked;
+              })
+      ])
     ]));
 
     final left = new ExpressionEditor(editors.length, row1, leftArrow,
@@ -211,10 +205,7 @@ class LineageEditor {
 
     /// Do automatic difference check when an editor is unfocussed.
     editor.container.onBlur.listen((_) {
-      if (editor.index < 2 && checkboxValues.first == true) {
-        // Initial equation is flagged as definition.
-        return;
-      } else if (editor.index == 0) {
+      if (editor.index == 0) {
         editors[1].resolveDifference(editor, db, interface);
       } else if (editor.index == 1) {
         editor.resolveDifference(editors[0], db, interface);
