@@ -30,6 +30,7 @@ part 'src/expression.dart';
 part 'src/rule.dart';
 part 'src/definition.dart';
 part 'src/expression_difference.dart';
+part 'src/lineage.dart';
 
 final log = new Logger('eqdb');
 

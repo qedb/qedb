@@ -238,25 +238,22 @@ class DefinitionResource extends ResourceBase<db.DefinitionRow> {
 // Expression lineages
 //------------------------------------------------------------------------------
 
-/// Expression lineage
-class ExpressionLineageResource extends ResourceBase<db.ExpressionLineageRow> {
-  int id;
-  CategoryResource initialCategory;
-  ExpressionResource initialExpression;
-  List<LineageStepResource> steps;
-
-  Map<int, db.ExpressionLineageRow> _getTableMap(data) =>
-      data.expressionLineageTable;
-}
-
 /// Expression lineage expression
 class LineageStepResource extends ResourceBase<db.LineageStepRow> {
   int id;
   CategoryResource category;
   ExpressionResource expression;
-  RuleResource rule;
-  int sequence;
+
+  @ApiProperty(values: const {
+    'load': 'Load new expression.',
+    'substitute': 'Substitute given rule at position.',
+    'rearrange': 'Rearrange child tree at position.'
+  })
+  String type;
+
   int position;
+  RuleResource rule;
+  List rearrangement;
 
   Map<int, db.LineageStepRow> _getTableMap(data) => data.lineageStepTable;
 }

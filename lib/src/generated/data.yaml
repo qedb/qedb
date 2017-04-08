@@ -35,10 +35,6 @@ tables:
   className:  Expression
   varName:    expression
 
-- tableName:  expression_lineage
-  className:  ExpressionLineage
-  varName:    expressionLineage
-
 - tableName:  lineage_step
   className:  LineageStep
   varName:    lineageStep

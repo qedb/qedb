@@ -208,54 +208,27 @@ CREATE TABLE definition (
 -- Expression lineages
 --------------------------------------------------------------------------------
 
--- Expression lineage
-CREATE TABLE expression_lineage (
-  id                     serial   PRIMARY KEY,
-  initial_category_id    integer  NOT NULL REFERENCES category(id),
-  initial_expression_id  integer  NOT NULL REFERENCES expression(id)
-);
+CREATE TYPE lineage_step_type AS ENUM ('load', 'substitute', 'rearrange');
 
 -- Expression lineage step
 CREATE TABLE lineage_step (
   id             serial    PRIMARY KEY,
-  lineage_id     integer   NOT NULL REFERENCES expression_lineage(id),
+  previous_id    integer   REFERENCES lineage_step(id),
   category_id    integer   NOT NULL REFERENCES category(id),
   expression_id  integer   NOT NULL REFERENCES expression(id),
-  rule_id        integer   NOT NULL REFERENCES rule(id),
-  position       smallint  NOT NULL CHECK (position >= 0),
-  sequence       integer   NOT NULL CHECK (sequence > 0),
 
-  UNIQUE (lineage_id, sequence)
-);
+  -- Expression rewrite parameters
+  type           lineage_step_type  NOT NULL,
+  position       smallint           NOT NULL CHECK (position >= 0),
+  rule_id        integer            REFERENCES rule(id),
+  rearrangement  json,
 
---------------------------------------------------------------------------------
--- Equation lineage
---------------------------------------------------------------------------------
-
--- Equation lineage
-CREATE TYPE equation_initialization AS ENUM ('rule', 'arbitrary');
-CREATE TABLE equation_lineage (
-  id       serial                   PRIMARY KEY,
-  type     equation_initialization  NOT NULL,
-  rule_id  integer                  REFERENCES rule(id)
-);
-
-CREATE TABLE equation_envelope (
-  id           serial   PRIMARY KEY,
-  template_id  integer  NOT NULL REFERENCES expression(id),
-  envelope_id  integer  NOT NULL REFERENCES expression(id)
-);
-
--- Equation lineage expression lineage pairs
-CREATE TABLE lineage_equation (
-  id           serial   PRIMARY KEY,
-  lineage_id   integer  NOT NULL REFERENCES equation_lineage(id),
-  left_id      integer  NOT NULL REFERENCES expression_lineage(id),
-  right_id     integer  NOT NULL REFERENCES expression_lineage(id),
-  envelope_id  integer  REFERENCES equation_envelope(id),
-  sequence     integer  NOT NULL CHECK (sequence > 0),
-
-  UNIQUE (lineage_id, sequence)
+  -- Enforce various constraints.
+  CONSTRAINT valid_type CHECK (
+    (previous_id = NULL AND type = 'load') OR
+    (previous_id != NULL AND (
+      (type = 'substitute' AND rule_id IS NOT NULL) OR
+      (type = 'rearrange'  AND rearrangement IS NOT NULL))))
 );
 
 --------------------------------------------------------------------------------
@@ -280,18 +253,19 @@ CREATE TABLE page_definition (
   sequence       integer  NOT NULL CHECK (sequence > 0)
 );
 
-CREATE TABLE page_equation_lineage (
-  id          serial   PRIMARY KEY,
-  page_id     integer  NOT NULL REFERENCES page(id),
-  lineage_id  integer  NOT NULL REFERENCES equation_lineage(id),
-  sequence    integer  NOT NULL CHECK (sequence > 0)
+CREATE TABLE page_lineage (
+  id                serial   PRIMARY KEY,
+  page_id           integer  NOT NULL REFERENCES page(id),
+  lineage_start_id  integer  NOT NULL REFERENCES lineage_step(id),
+  lineage_end_id    integer  NOT NULL REFERENCES lineage_step(id),
+  sequence          integer  NOT NULL CHECK (sequence > 0)
 );
 
 CREATE TABLE page_illustration (
   id        serial   PRIMARY KEY,
   page_id   integer  NOT NULL REFERENCES page(id),
   sequence  integer  NOT NULL CHECK (sequence > 0),
-  data      jsonb
+  data      json
 );
 
 --------------------------------------------------------------------------------
