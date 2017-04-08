@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 
 import '../htgen/htgen.dart';
-import '../common.dart';
+import '../page.dart';
 import 'templates.dart';
 
 final createFunctionPage = new Page(
@@ -49,12 +49,8 @@ final createFunctionPage = new Page(
                 name: 'argument-count', type: 'number', min: 0, step: 1)
           ]),
           formInput('LaTeX template', name: 'latex-template'),
-          formGroup('Generic', 'generic', [
-            select('#generic.form-control', name: 'generic', c: [
-              option('No', value: 'false', selected: ''),
-              option('Yes', value: 'true')
-            ])
-          ])
+          selectYesNo('Generic', name: 'generic'),
+          selectYesNo('Rearrangeable', name: 'rearrangeable')
         ];
       }, success: (data) {
         return [
@@ -65,16 +61,17 @@ final createFunctionPage = new Page(
     },
     onPost: (data) => {
           'generic': data['generic'] == 'true',
+          'rearrangeable': data['rearrangeable'] == 'true',
           'argumentCount': int.parse(data['argument-count']),
-          'keyword': 'keyword',
-          'keywordType': 'keyword-type',
-          'latexTemplate': 'latex-template',
+          'keyword': data['keyword'],
+          'keywordType': data['keyword-type'],
+          'latexTemplate': data['latex-template'],
           'category': {'id': int.parse(data['category'])},
           'descriptor': {
             'translations': [
               {
-                'locale': {'code': 'name-locale'},
-                'content': 'name'
+                'locale': {'code': data['name-locale']},
+                'content': data['name']
               }
             ]
           }
@@ -107,27 +104,16 @@ final listFunctionsPage = new Page(template: (data) {
       td(safe(() => span('.latex', function.latexTemplate))),
       td(function.generic ? 'yes' : 'no')
     ];
-  }, customHeaderTags: [
+  }, customHeadTags: [
     link(
         rel: 'stylesheet',
         href:
-            'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css')
+            'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css'),
+    style('.katex-display { margin: 0 !important; text-align: left; }')
   ], customBodyTags: [
     script(
         type: 'text/javascript',
         src: 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js'),
-    script(
-        r'''
-var spans = document.getElementsByClassName('latex');
-for (var i = 0; i < spans.length; i++) {
-  var span = spans[i];
-  var latex = span.innerText;
-  latex = latex.replace(/\$([0-9]+)/g, function(match, p1) {
-    return '\\textsf{\\$}' + p1;
-  });
-  katex.render(latex, span, {displayMode: false});
-}
-    ''',
-        type: 'text/javascript')
+    script(data.snippets['render-latex.js'])
   ]);
 });

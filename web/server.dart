@@ -13,7 +13,7 @@ import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_route/shelf_route.dart' as route;
 
-import 'all_pages.dart';
+import 'router.dart';
 
 Future<Null> main() async {
   final log = new Logger('server');
@@ -35,7 +35,7 @@ Future<Null> main() async {
 
   // Create router.
   final router = route.router();
-  routeAllPages(
+  await setupRouter(
       conf.string('API_BASE', 'http://localhost:8080/eqdb/v0/'), router);
 
   // Create shelf handler.

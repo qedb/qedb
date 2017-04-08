@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 
 import '../htgen/htgen.dart';
-import '../common.dart';
+import '../page.dart';
 import 'templates.dart';
 
 final createDefinitionPage = new Page(
@@ -32,32 +32,12 @@ final createDefinitionPage = new Page(
           a('.btn.btn-primary', 'Go to definition overview',
               href: '/definition/list', role: 'button')
         ];
-      }, headAppend: [
-        link(
-            rel: 'stylesheet',
-            href:
-                'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css'),
-        link(
-            rel: 'stylesheet',
-            href: 'http://0.0.0.0:8083/packages/editex/editex.css'),
-        script(
-            type: 'text/javascript',
-            src:
-                'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js'),
-        script(src: 'http://0.0.0.0:8083/notebook/src/editex_form.dart.js'),
-        style('''
-.editex {
-  box-shadow: inset 0 0 3px rgba(0,0,0,.5);
-  border: 1px solid #666;
-  font-size: 1.7em;
-}
-
-.editex:focus {
-  border-color: #2196F3;
-  outline: none;
-  box-shadow: inset 0 0 5px #2196F3;
-}
-''')
+      }, customHeadTags: [
+        link(rel: 'stylesheet', href: data.settings['katex.css.href']),
+        link(rel: 'stylesheet', href: data.settings['editex.css.href']),
+        script(src: data.settings['katex.js.src']),
+        script(src: data.settings['editex_form.dart.js.src']),
+        style(data.snippets['editex.css'])
       ]);
     },
     onPost: (data) => {
@@ -82,33 +62,11 @@ final listDefinitionsPage = new Page(template: (data) {
       td(span('.latex', '=')),
       td(span('.latex', definition.rule.rightExpression.latex))
     ];
-  }, customHeaderTags: [
-    style('''
-td, th {
-  text-align: center;
-  vertical-align: middle !important;
-}
-'''),
-    link(
-        rel: 'stylesheet',
-        href:
-            'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css')
+  }, customHeadTags: [
+    style(data.snippets['definition-table.css']),
+    link(rel: 'stylesheet', href: data.settings['katex.css.href'])
   ], customBodyTags: [
-    script(
-        type: 'text/javascript',
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js'),
-    script(
-        r'''
-var spans = document.getElementsByClassName('latex');
-for (var i = 0; i < spans.length; i++) {
-  var span = spans[i];
-  var latex = span.innerText;
-  latex = latex.replace(/\$([0-9]+)/g, function(match, p1) {
-    return '\\textsf{\\$}' + p1;
-  });
-  katex.render(latex, span, {displayMode: true});
-}
-    ''',
-        type: 'text/javascript')
+    script(src: data.settings['katex.js.src']),
+    script(data.snippets['render-latex.js'])
   ]);
 });

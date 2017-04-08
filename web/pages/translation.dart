@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 
 import '../htgen/htgen.dart';
-import '../common.dart';
+import '../page.dart';
 import 'templates.dart';
 
 final createTranslationPage = new Page(

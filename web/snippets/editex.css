@@ -1,0 +1,16 @@
+/*
+ * Copyright (c) 2017, Herman Bergwerf. All rights reserved.
+ * Use of this source code is governed by an AGPL-3.0-style license
+ * that can be found in the LICENSE file.
+ */
+
+.editex {
+  border: 1px solid rgba(0, 0, 0, .14902);
+  font-size: 1.2em;
+  border-radius: .25rem;
+}
+
+.editex:focus {
+  border-color: #5cb3fd;
+  outline: none;
+}

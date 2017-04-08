@@ -3,9 +3,9 @@
 // that can be found in the LICENSE file.
 
 import '../htgen/htgen.dart';
-import '../common.dart';
+import '../page.dart';
 
-typedef dynamic InlineHtmlBuilder(PageData data);
+typedef dynamic InlineHtmlBuilder(PageSessionData data);
 
 /// SVG logo data.
 final logoSvgContent = [
@@ -14,15 +14,15 @@ final logoSvgContent = [
 ].join();
 
 /// Default HEAD parameters.
-List defaultHead(PageData data) => [
+List defaultHead(PageSessionData data) => [
       meta(charset: 'utf-8'),
       meta(
           name: 'viewport',
           content: 'width=device-width,initial-scale=1,shrink-to-fit=no'),
       link(
           rel: 'stylesheet',
-          href: data.constants['bootstrap.href'],
-          integrity: data.constants['bootstrap.integrity'],
+          href: data.settings['bootstrap.href'],
+          integrity: data.settings['bootstrap.integrity'],
           crossorigin: 'anonymous')
     ];
 
@@ -32,7 +32,7 @@ List defaultHead(PageData data) => [
 final breadcrumbAvailableLinks = [];
 
 /// Path breadcrumb.
-dynamic breadcrumb(PageData data) {
+dynamic breadcrumb(PageSessionData data) {
   return nav('.breadcrumb', [
     a('EqDB', href: '/'),
     span(' / '),
@@ -74,7 +74,7 @@ String formCheck(String labelText, {String name}) {
 }
 
 /// Language locale select form element.
-String localeSelect(PageData data,
+String localeSelect(PageSessionData data,
     {String name: 'locale',
     String customClass: '.custom-select',
     bool inGroup: true}) {
@@ -91,12 +91,23 @@ String localeSelect(PageData data,
   }
 }
 
-String createResourceTemplate(PageData data, String name,
+/// Select with Yes/No options.
+String selectYesNo(String label, {String name}) {
+  return formGroup(label, name, [
+    select('#$name.form-control', name: name, c: [
+      option('No', value: 'false', selected: ''),
+      option('Yes', value: 'true')
+    ])
+  ]);
+}
+
+String createResourceTemplate(PageSessionData data, String name,
     {InlineHtmlBuilder inputs,
     InlineHtmlBuilder success,
-    List headAppend: const []}) {
+    List customHeadTags: const [],
+    List customBodyTags: const []}) {
   return html([
-    head([title('Create $name'), defaultHead(data), headAppend]),
+    head([title('Create $name'), defaultHead(data), customHeadTags]),
     body([
       breadcrumb(data),
       div('.container', [
@@ -122,7 +133,8 @@ String createResourceTemplate(PageData data, String name,
                   button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
                 ])
               ]
-      ])
+      ]),
+      customBodyTags
     ])
   ]);
 }
@@ -130,18 +142,18 @@ String createResourceTemplate(PageData data, String name,
 typedef dynamic HtmlTableRowBuilder(dynamic data);
 
 String listResourceTemplate(
-    PageData data, String nameSingular, String namePlural,
+    PageSessionData data, String nameSingular, String namePlural,
     {String customTitle = '',
     String customCreateButton = '',
     List tableHead,
     HtmlTableRowBuilder row,
-    List customHeaderTags: const [],
+    List customHeadTags: const [],
     List customBodyTags: const []}) {
   return html([
     head([
       title('', customTitle.isEmpty ? 'All $namePlural' : customTitle),
       defaultHead(data),
-      customHeaderTags
+      customHeadTags
     ]),
     body([
       breadcrumb(data),

@@ -3,8 +3,10 @@
 // that can be found in the LICENSE file.
 
 import 'dart:io';
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:yaml/yaml.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_route/shelf_route.dart';
 import 'package:json_object/json_object.dart';
@@ -21,11 +23,9 @@ import 'pages/function.dart';
 import 'pages/definition.dart';
 
 import 'pages/templates.dart';
-import 'common.dart';
+import 'page.dart';
 
 /// All pages
-/// TODO: develop mechanism for including CSS and JS snippets.
-/// TODO: develop simple configuration system via env vars.
 Map<String, Page> pages = {
   '/': homePage,
   '/locale/create': createLocalePage,
@@ -46,15 +46,20 @@ Map<String, Page> pages = {
   '/definition/list': listDefinitionsPage
 };
 
-/// Requests constants.
-final Map<String, String> requestConstants = {
-  'bootstrap.href':
-      'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css',
-  'bootstrap.integrity':
-      'sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ'
-};
+Future<Null> setupRouter(String apiBase, Router router) async {
+  // Read settings file.
+  final settings = loadYaml(await new File('web/settings.yaml').readAsString());
 
-void routeAllPages(String apiBase, Router router) {
+  // Read all snippets.
+  final entities = await new Directory('web/snippets').list().toList();
+  final snippets = new Map<String, String>();
+  for (final entity in entities) {
+    final file = new File.fromUri(entity.uri);
+    if (await file.exists()) {
+      snippets[file.path.split('/').last] = await file.readAsString();
+    }
+  }
+
   // Make sure breadcrumb only points to existing pages.
   breadcrumbAvailableLinks.addAll(pages.keys);
 
@@ -68,7 +73,7 @@ void routeAllPages(String apiBase, Router router) {
   // Add handlers for all pages.
   pages.forEach((path, page) {
     router.add(path, ['GET', 'POST'], (Request request) async {
-      final data = new PageData(requestConstants);
+      final data = new PageSessionData(settings, snippets);
       data.path = request.requestedUri.path.split('/');
       data.path.removeWhere((str) => str.isEmpty);
       data.pathParameters = getPathParameters(request);

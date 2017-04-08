@@ -132,7 +132,8 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   }
 
   bool hasInstantCommand(command) {
-    return extraInstantCommands.containsKey(command) ||
-        operators.any((op) => op.character == command);
+    return command != '/' &&
+        (extraInstantCommands.containsKey(command) ||
+            operators.any((op) => op.character == command));
   }
 }

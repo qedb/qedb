@@ -4,9 +4,10 @@
 
 import 'package:json_object/json_object.dart';
 
-typedef String HtmlBuilder(PageData data);
+typedef String HtmlBuilder(PageSessionData data);
 typedef dynamic PostDataBuilder(Map<String, String> formData);
 
+/// Page information
 class Page {
   final HtmlBuilder template;
   final PostDataBuilder onPost;
@@ -15,17 +16,22 @@ class Page {
   Page({this.template, this.onPost, this.additional: const {}});
 }
 
-class PageData {
-  final Map<String, String> constants;
+/// Page session data
+class PageSessionData {
+  final Map<String, String> settings;
+  final Map<String, String> snippets;
   final additional = new Map<String, JsonObject>();
+
   dynamic request;
   JsonObject data;
+
   List<String> path;
   Map<String, Object> pathParameters;
 
-  PageData(this.constants);
+  PageSessionData(this.settings, this.snippets);
 }
 
+/// Returns return value of [fn], or [fallback] if [fn] errors.
 dynamic safe(Function fn, [dynamic fallback = null]) {
   try {
     return fn();
@@ -34,8 +40,10 @@ dynamic safe(Function fn, [dynamic fallback = null]) {
   }
 }
 
-String ucfirst(String str) => str[0].toUpperCase() + str.substring(1);
+/// Convert first character in the string to upper case.
+String _ucfirst(String str) => str[0].toUpperCase() + str.substring(1);
 
+/// Pretty print error messages for alert box.
 String prettyPrintErrorMessage(String message) {
   // Make quoted parts italics.
   final quotesRegex = new RegExp(r'"([^"]+)"');
@@ -46,8 +54,8 @@ String prettyPrintErrorMessage(String message) {
   final pgpoolRegex = new RegExp(r'pgpool\d+:\d+:\d+\sERROR\s\d+\s(.*)');
   final match = pgpoolRegex.firstMatch(msg);
   if (match != null) {
-    return ucfirst(match.group(1));
+    return _ucfirst(match.group(1));
   } else {
-    return ucfirst(msg);
+    return _ucfirst(msg);
   }
 }
