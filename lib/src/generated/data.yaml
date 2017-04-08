@@ -39,9 +39,9 @@ tables:
   className:  ExpressionLineage
   varName:    expressionLineage
 
-- tableName:  lineage_expression
-  className:  LineageExpression
-  varName:    lineageExpression
+- tableName:  lineage_step
+  className:  LineageStep
+  varName:    lineageStep
 
 - tableName:  rule
   className:  Rule

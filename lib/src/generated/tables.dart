@@ -56,11 +56,11 @@ final expressionLineage = new TableInfo<ExpressionLineageRow, SessionData>(
     ExpressionLineageRow.mapFormat,
     ExpressionLineageRow.map,
     (result, record) => result.expressionLineageTable[record.id] = record);
-final lineageExpression = new TableInfo<LineageExpressionRow, SessionData>(
-    'lineage_expression',
-    LineageExpressionRow.mapFormat,
-    LineageExpressionRow.map,
-    (result, record) => result.lineageExpressionTable[record.id] = record);
+final lineageStep = new TableInfo<LineageStepRow, SessionData>(
+    'lineage_step',
+    LineageStepRow.mapFormat,
+    LineageStepRow.map,
+    (result, record) => result.lineageStepTable[record.id] = record);
 final rule = new TableInfo<RuleRow, SessionData>('rule', RuleRow.mapFormat,
     RuleRow.map, (result, record) => result.ruleTable[record.id] = record);
 final definition = new TableInfo<DefinitionRow, SessionData>(

@@ -241,21 +241,22 @@ class DefinitionResource extends ResourceBase<db.DefinitionRow> {
 /// Expression lineage
 class ExpressionLineageResource extends ResourceBase<db.ExpressionLineageRow> {
   int id;
-  List<LineageExpressionResource> expressions;
+  CategoryResource initialCategory;
+  ExpressionResource initialExpression;
+  List<LineageStepResource> steps;
 
   Map<int, db.ExpressionLineageRow> _getTableMap(data) =>
       data.expressionLineageTable;
 }
 
 /// Expression lineage expression
-class LineageExpressionResource extends ResourceBase<db.LineageExpressionRow> {
+class LineageStepResource extends ResourceBase<db.LineageStepRow> {
   int id;
-  ExpressionLineageResource lineage;
   CategoryResource category;
-  RuleResource rule;
   ExpressionResource expression;
-  int sequence, substitutionPosition;
+  RuleResource rule;
+  int sequence;
+  int position;
 
-  Map<int, db.LineageExpressionRow> _getTableMap(data) =>
-      data.lineageExpressionTable;
+  Map<int, db.LineageStepRow> _getTableMap(data) => data.lineageStepTable;
 }

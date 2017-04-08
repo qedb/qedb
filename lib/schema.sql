@@ -210,18 +210,20 @@ CREATE TABLE definition (
 
 -- Expression lineage
 CREATE TABLE expression_lineage (
-  id  serial  PRIMARY KEY
+  id                     serial   PRIMARY KEY,
+  initial_category_id    integer  NOT NULL REFERENCES category(id),
+  initial_expression_id  integer  NOT NULL REFERENCES expression(id)
 );
 
--- Lineage expression
-CREATE TABLE lineage_expression (
-  id                     serial    PRIMARY KEY,
-  lineage_id             integer   NOT NULL REFERENCES expression_lineage(id),
-  category_id            integer   NOT NULL REFERENCES category(id),
-  rule_id                integer   NOT NULL REFERENCES rule(id),
-  expression_id          integer   NOT NULL REFERENCES expression(id),
-  sequence               integer   NOT NULL CHECK (sequence > 0),
-  substitution_position  smallint  NOT NULL CHECK (substitution_position >= 0),
+-- Expression lineage step
+CREATE TABLE lineage_step (
+  id             serial    PRIMARY KEY,
+  lineage_id     integer   NOT NULL REFERENCES expression_lineage(id),
+  category_id    integer   NOT NULL REFERENCES category(id),
+  expression_id  integer   NOT NULL REFERENCES expression(id),
+  rule_id        integer   NOT NULL REFERENCES rule(id),
+  position       smallint  NOT NULL CHECK (position >= 0),
+  sequence       integer   NOT NULL CHECK (sequence > 0),
 
   UNIQUE (lineage_id, sequence)
 );

@@ -207,27 +207,31 @@ class DefinitionRow implements Row {
 /// Expression lineage
 class ExpressionLineageRow implements Row {
   final int id;
+  final int initialCategoryId;
+  final int initialExpressionId;
 
-  ExpressionLineageRow(this.id);
+  ExpressionLineageRow(
+      this.id, this.initialCategoryId, this.initialExpressionId);
 
   static const mapFormat = '*';
-  static ExpressionLineageRow map(pg.Row r) => new ExpressionLineageRow(r[0]);
+  static ExpressionLineageRow map(pg.Row r) =>
+      new ExpressionLineageRow(r[0], r[1], r[2]);
 }
 
 /// Expression lineage expression
-class LineageExpressionRow implements Row {
-  final int id,
-      lineageId,
-      categoryId,
-      ruleId,
-      expressionId,
-      sequence,
-      substitutionPosition;
+class LineageStepRow implements Row {
+  final int id;
+  final int lineageId;
+  final int categoryId;
+  final int expressionId;
+  final int ruleId;
+  final int position;
+  final int sequence;
 
-  LineageExpressionRow(this.id, this.lineageId, this.categoryId, this.ruleId,
-      this.expressionId, this.sequence, this.substitutionPosition);
+  LineageStepRow(this.id, this.lineageId, this.categoryId, this.expressionId,
+      this.ruleId, this.position, this.sequence);
 
   static const mapFormat = '*';
-  static LineageExpressionRow map(pg.Row r) =>
-      new LineageExpressionRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
+  static LineageStepRow map(pg.Row r) =>
+      new LineageStepRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
 }

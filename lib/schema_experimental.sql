@@ -16,6 +16,18 @@ CREATE TABLE function_property_definition (
   function_property_id  integer  NOT NULL REFERENCES function_property(id)
 );
 
+-- Generic mapping
+-- This is neccesary to close a loophole in expression rewriting:
+-- + f(?x) = ?x + g, g = ?x
+-- + f(2?x) = 2?x + g = 2?x + ?x
+-- + f(?x) = ?x + ?x, f(2?x) = 2?x + 2?x
+CREATE TABLE lineage_step_generic_mapping (
+  id             serial   PRIMARY KEY,
+  step_id        integer  NOT NULL REFERENCES lineage_step(id),
+  generic_id     integer  NOT NULL REFERENCES function(id),
+  expression_id  integer  NOT NULL REFERENCES expression(id)
+);
+
 --------------------------------------------------------------------------------
 -- Empirical values and expression evaluation
 --------------------------------------------------------------------------------
