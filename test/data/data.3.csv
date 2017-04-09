@@ -1,5 +1,5 @@
 ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Arr.,Pre.,Ass.,Char(1),Type,Editor
-1,Algebra,"Basic algebra",Equality,,,2,$0=$1,FALSE,TRUE,1,ltr,=,infix,=
+1,Algebra,"Basic algebra",Equality,,,2,$0=$1,FALSE,FALSE,1,ltr,=,infix,{}={}
 2,Algebra,"Basic algebra",Add,,,2,$0+$1,FALSE,TRUE,2,ltr,+,infix,{}+{}
 3,Algebra,"Basic algebra",Subtract,,,2,$0-$1,FALSE,FALSE,2,ltr,-,infix,{}-{}
 4,Algebra,"Basic algebra",Multiply,,,2,$0$1,FALSE,TRUE,3,ltr,*,infix,{}\cdot{}

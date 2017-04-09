@@ -1,0 +1,54 @@
+// Copyright (c) 2017, Herman Bergwerf. All rights reserved.
+// Use of this source code is governed by an AGPL-3.0-style license
+// that can be found in the LICENSE file.
+
+.lineage-editor {
+  margin: 2em 0;
+}
+
+.lineage-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.lineage-row-number {
+  flex: 0 0 4em;
+  text-align: center;
+  font-family: KaTeX_Main;
+
+  &:before {
+    content: '(';
+  }
+
+  &:after {
+    content: ')';
+  }
+}
+
+.lineage-row-editor {
+  flex: 1;
+}
+
+.lineage-row-status {
+  flex: 0 0 4em;
+  text-align: center;
+}
+
+.lineage-row-editor.editex {
+  border-color: transparent;
+}
+
+.lineage-row-status.status-error:before {
+  content: '!';
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  line-height: 1.2em;
+  border-radius: 50%;
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  background: #e00;
+}

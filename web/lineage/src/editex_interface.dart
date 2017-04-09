@@ -62,6 +62,18 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
     return parseExpression(content, operatorConfig, assignId);
   }
 
+  num compute(int id, List<num> args) {
+    if (id == operatorConfig.id('+')) {
+      return args[0] + args[1];
+    } else if (id == operatorConfig.id('-')) {
+      return args[0] - args[1];
+    } else if (id == operatorConfig.id('*')) {
+      return args[0] * args[1];
+    } else {
+      return double.NAN;
+    }
+  }
+
   String _generateFunctionParseTemplate(FunctionResource fn) {
     final generic = fn.generic ? '?' : '';
     if (fn.argumentCount > 0) {

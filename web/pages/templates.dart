@@ -13,6 +13,8 @@ final logoSvgContent = [
   '<path d="M13 3.9991v11.2598l4.197266-1.7988-.394532-.92L14 13.7413V3.9991h-1z"></path>'
 ].join();
 
+String stylesheet(String href) => link(rel: 'stylesheet', href: href);
+
 /// Default HEAD parameters.
 List defaultHead(PageSessionData data) => [
       meta(charset: 'utf-8'),

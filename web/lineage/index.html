@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="packages/katex_js/extern/katex.min.css">
     <link rel="stylesheet" href="packages/editex/editex.css">
-    <link rel="stylesheet" href="styles/notebook.css">
-	  <script src="katex.min.js"></script>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="../snippets/editex.css">
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js"></script>
   </head>
   <body>
-    <h1>Lineage editor</h1>
+    <h1 style="text-align: center; font-family: KaTeX_Main;">Lineage editor</h1>
     <div id="lineage-editor" class="lineage-editor"></div>
-    <p style="text-align: center;">
-      <button class="ghost-button">Submit</button>
-    </p>
+    <input id="data" type="hidden" name="data" />
     <script src="src/main.dart" type="application/dart"></script>
     <script src="packages/browser/dart.js"></script>
   </body>

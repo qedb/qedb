@@ -105,15 +105,10 @@ final listFunctionsPage = new Page(template: (data) {
       td(function.generic ? 'yes' : 'no')
     ];
   }, customHeadTags: [
-    link(
-        rel: 'stylesheet',
-        href:
-            'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css'),
+    stylesheet(data.settings['katex.css.href']),
     style('.katex-display { margin: 0 !important; text-align: left; }')
   ], customBodyTags: [
-    script(
-        type: 'text/javascript',
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js'),
+    script(src: data.settings['katex.js.src']),
     script(data.snippets['render-latex.js'])
   ]);
 });

@@ -33,11 +33,11 @@ final createDefinitionPage = new Page(
               href: '/definition/list', role: 'button')
         ];
       }, customHeadTags: [
-        link(rel: 'stylesheet', href: data.settings['katex.css.href']),
-        link(rel: 'stylesheet', href: data.settings['editex.css.href']),
+        style(data.snippets['editex.css']),
+        stylesheet(data.settings['katex.css.href']),
+        stylesheet(data.settings['editex.css.href']),
         script(src: data.settings['katex.js.src']),
-        script(src: data.settings['editex_form.dart.js.src']),
-        style(data.snippets['editex.css'])
+        script(src: data.settings['pubserve.root'] + 'src/editex_form.dart.js')
       ]);
     },
     onPost: (data) => {
@@ -59,12 +59,12 @@ final listDefinitionsPage = new Page(template: (data) {
     return [
       td(definition.id.toString()),
       td(span('.latex', definition.rule.leftExpression.latex)),
-      td(span('.latex', '=')),
+      td(span('.latex', r'\rightarrow')),
       td(span('.latex', definition.rule.rightExpression.latex))
     ];
   }, customHeadTags: [
     style(data.snippets['definition-table.css']),
-    link(rel: 'stylesheet', href: data.settings['katex.css.href'])
+    stylesheet(data.settings['katex.css.href'])
   ], customBodyTags: [
     script(src: data.settings['katex.js.src']),
     script(data.snippets['render-latex.js'])

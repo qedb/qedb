@@ -21,6 +21,7 @@ import 'pages/translation.dart';
 import 'pages/category.dart';
 import 'pages/function.dart';
 import 'pages/definition.dart';
+import 'pages/lineage.dart';
 
 import 'pages/templates.dart';
 import 'page.dart';
@@ -43,7 +44,8 @@ Map<String, Page> pages = {
   '/function/create': createFunctionPage,
   '/function/list': listFunctionsPage,
   '/definition/create': createDefinitionPage,
-  '/definition/list': listDefinitionsPage
+  '/definition/list': listDefinitionsPage,
+  '/lineage/create': createLineagePage
 };
 
 Future<Null> setupRouter(String apiBase, Router router) async {
