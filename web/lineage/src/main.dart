@@ -116,12 +116,11 @@ class LineageEditor {
     if (idx >= 0 && idx < editors.length) {
       final editor = editors[idx];
       if (setCursor == -1) {
-        editor.cursorIdx = 0;
+        editor.setCursor(0);
       } else if (setCursor == 1) {
-        editor.cursorIdx = editor.content.length - 1;
+        editor.setCursor(editor.content.length - 1);
       }
 
-      editor.doUpdate = true;
       editor.container.focus();
     }
   }
@@ -143,10 +142,7 @@ class LineageEditor {
 
     /// Do automatic difference check when an editor is unfocussed.
     editor.container.onBlur.listen((_) {
-      if (editor.index == 0) {
-        // TODO: Check if the first expression satisfies the requirements for
-        // building a rule. (equation must be resolvable).
-      } else {
+      if (editor.index > 0) {
         editor.resolveDifference(editors[editor.index - 1], db, interface);
       }
     });
