@@ -182,6 +182,9 @@ CREATE INDEX expression_functions_index on expression USING GIN (functions);
 --------------------------------------------------------------------------------
 
 -- Rule (equation of two expression)
+-- Optimizations that could be implemented in the future:
+-- + Set explicit reversibility (adds ability to force single direction).
+-- + Add index for top level function ID.
 CREATE TABLE rule (
   id                   serial     PRIMARY KEY,
   category_id          integer    NOT NULL REFERENCES category(id),
