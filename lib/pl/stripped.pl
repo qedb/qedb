@@ -6,8 +6,8 @@
 # Modified version of algorithm source that can be used with PL/Perl.
 #
 # Modifications:
-# - Anonymous subroutines (use /[a-z_]+\(/ to find subroutie calls)
-# - Remove debug
+# - Use anonymous subroutines (use /[a-z_]+\(/ to find subroutine calls).
+# - Remove debug calls.
 #
 sub pgsql_function {
 my $EXPR_INTEGER       = 1;
