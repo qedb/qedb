@@ -4,6 +4,7 @@
 
 import 'dart:html';
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:eqlib/eqlib.dart';
 import 'package:editex/editex.dart';
@@ -24,6 +25,7 @@ class ExpressionEditor extends EdiTeX {
   final Node parentRowNode;
   final DivElement resolveState;
   final EqDBEdiTeXInterface _interface;
+  ExpressionDifferenceResource expressionDifference;
   Expr _previousExpression;
 
   ExpressionEditor(this.index, this.parentRowNode, this.resolveState,
@@ -66,14 +68,18 @@ class ExpressionEditor extends EdiTeX {
         final re = right.expression.evaluate(interface.compute);
 
         // Resolve difference via API.
-        final result = await db
-            .resolveExpressionDifference(new ExpressionDifferenceResource()
-              ..left = (new ExpressionResource()..data = le.toBase64())
-              ..right = (new ExpressionResource()..data = re.toBase64()));
+        try {
+          expressionDifference = await db
+              .resolveExpressionDifference(new ExpressionDifferenceResource()
+                ..left = (new ExpressionResource()..data = le.toBase64())
+                ..right = (new ExpressionResource()..data = re.toBase64()));
 
-        setStatus(result.difference.different && !result.difference.resolved
-            ? 'error'
-            : 'resolved');
+          final branch = expressionDifference.branch;
+          setStatus(
+              branch.different && !branch.resolved ? 'error' : 'resolved');
+        } catch (e) {
+          setStatus('error');
+        }
       }
     } else {
       setStatus('empty');
@@ -83,13 +89,18 @@ class ExpressionEditor extends EdiTeX {
 
 class LineageEditor {
   final DivElement container;
-  final InputElement output;
   final EqDBEdiTeXInterface interface;
   final EqdbApi db;
 
   final editors = new List<ExpressionEditor>();
 
-  LineageEditor(this.container, this.output, this.db, this.interface);
+  LineageEditor(this.container, this.db, this.interface);
+
+  LineageCreateData get data => new LineageCreateData()
+    ..steps = (editors
+        .sublist(1)
+        .map((editor) => editor.expressionDifference)
+        .toList()..removeWhere((difference) => difference == null));
 
   void addRow() {
     DivElement editorContainer, resolveStatus;
@@ -133,6 +144,13 @@ class LineageEditor {
       if (e.keyCode == KeyCode.UP) {
         _focusEditor(editor.index - 1, 0);
       } else if (e.keyCode == KeyCode.DOWN || e.keyCode == KeyCode.ENTER) {
+        // If the next editor is empty, copy the expression from this editor.
+        if (editors[editor.index + 1].isEmpty) {
+          editors[editor.index + 1]
+            ..loadData(editor.getData())
+            ..setCursor(editor.cursorPosition);
+        }
+
         _focusEditor(editor.index + 1, 0);
       } else {
         return;
@@ -171,8 +189,17 @@ Future main() async {
   await interface.loadData(db);
 
   // Construct editors.
-  final lineageEditor = new LineageEditor(
-      querySelector('#lineage-editor'), querySelector('#data'), db, interface);
+  final lineageEditor =
+      new LineageEditor(querySelector('#lineage-editor'), db, interface);
   lineageEditor.addRow();
   lineageEditor.addRow();
+
+  // Build form data on submit.
+  final FormElement form = querySelector('form');
+  final InputElement dataInput = querySelector('#data');
+  form.onSubmit.listen((e) {
+    e.preventDefault();
+    dataInput.value = JSON.encode(lineageEditor.data.toJson());
+    form.submit();
+  });
 }

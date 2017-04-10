@@ -62,11 +62,11 @@ final createFunctionPage = new Page(
     onPost: (data) => {
           'generic': data['generic'] == 'true',
           'rearrangeable': data['rearrangeable'] == 'true',
-          'argumentCount': int.parse(data['argument-count']),
+          'argumentCount': int.parse(data['argument-count'], onError: (_) => 0),
           'keyword': data['keyword'],
           'keywordType': data['keyword-type'],
           'latexTemplate': data['latex-template'],
-          'category': {'id': int.parse(data['category'])},
+          'category': {'id': int.parse(data['category'], onError: (_) => 0)},
           'descriptor': {
             'translations': [
               {

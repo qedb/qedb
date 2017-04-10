@@ -4,6 +4,8 @@
 
 library eqdb.resources;
 
+import 'dart:convert';
+
 import 'package:rpc/rpc.dart';
 import 'package:eqdb/sqlbuilder.dart';
 
@@ -238,7 +240,12 @@ class DefinitionResource extends ResourceBase<db.DefinitionRow> {
 // Expression lineages
 //------------------------------------------------------------------------------
 
-/// Expression lineage expression
+/// Lineage
+class LineageResource {
+  List<LineageStepResource> steps;
+}
+
+/// Lineage step
 class LineageStepResource extends ResourceBase<db.LineageStepRow> {
   int id;
   CategoryResource category;
@@ -253,7 +260,16 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
 
   int position;
   RuleResource rule;
-  List rearrangement;
+  String rearrange;
 
   Map<int, db.LineageStepRow> _getTableMap(data) => data.lineageStepTable;
+
+  void loadFields(row, data) {
+    category = new CategoryResource()..load(row.categoryId, data);
+    expression = new ExpressionResource()..load(row.expressionId, data);
+    rule = new RuleResource()..load(row.ruleId, data);
+    type = row.type;
+    position = row.position;
+    rearrange = JSON.encode(row.rearrange);
+  }
 }

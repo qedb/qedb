@@ -7,3 +7,8 @@ part of eqdb;
 class LineageCreateData {
   List<ExpressionDifferenceResource> steps;
 }
+
+Future<LineageResource> createLineage(Session s, LineageCreateData body) async {
+  /// TODO: Implement: validate, insert, return resource.
+  return new LineageResource();
+}

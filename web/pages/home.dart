@@ -35,19 +35,31 @@ final homePage = new Page(template: (data) {
           style: 'background: linear-gradient($gradientStart, #fff);',
           c: [
             div('.container', style: 'text-align: center;', c: [
-              svg(logoSvgContent,
-                  style: 'max-width: 20em; vertical-align: middle;',
+              svg([
+                svgDefs([
+                  svgLinearGradient([
+                    svgStop(offset: '5%', stop_color: '#333'),
+                    svgStop(offset: '95%', stop_color: '#666')
+                  ], id: 'logo-gradient', gradientTransform: 'rotate(90)')
+                ]),
+                logoSvgContent
+              ],
+                  style: buildStyle({
+                    'max-width': '20em',
+                    'vertical-align': 'middle',
+                    'fill': 'url(#logo-gradient)'
+                  }),
                   xmlns: 'http://www.w3.org/2000/svg',
                   viewBox: '0 0 31 16'),
               span('.display-4', 'Admin',
                   style: buildStyle({
                     'vertical-align': 'middle',
                     'padding-left': '.3em',
-                    'font-family': "'Roboto'"
-                  })),
-              div(
-                  style:
-                      "max-width: 30em; height: .4em; margin: 0 auto; margin-top: 2em; background: radial-gradient(#000, transparent, transparent);")
+                    'font-family': "'Roboto'",
+                    'background': '-webkit-linear-gradient(#666, #999)',
+                    '-webkit-background-clip': 'text',
+                    '-webkit-text-fill-color': 'transparent'
+                  }))
             ])
           ]),
       div('.container', [

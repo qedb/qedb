@@ -214,10 +214,10 @@ class LineageStepRow implements Row {
   final String type;
   final int position;
   final int ruleId;
-  final List rearrangement;
+  final List rearrange;
 
   LineageStepRow(this.id, this.previousId, this.categoryId, this.expressionId,
-      this.type, this.position, this.ruleId, this.rearrangement);
+      this.type, this.position, this.ruleId, this.rearrange);
 
   static const mapFormat = '*';
   static LineageStepRow map(pg.Row r) =>

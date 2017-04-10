@@ -224,14 +224,14 @@ CREATE TABLE lineage_step (
   type           lineage_step_type  NOT NULL,
   position       smallint           NOT NULL CHECK (position >= 0),
   rule_id        integer            REFERENCES rule(id),
-  rearrangement  json,
+  rearrange      json,
 
   -- Enforce various constraints.
   CONSTRAINT valid_type CHECK (
     (previous_id = NULL AND type = 'load') OR
     (previous_id != NULL AND (
       (type = 'substitute' AND rule_id IS NOT NULL) OR
-      (type = 'rearrange'  AND rearrangement IS NOT NULL))))
+      (type = 'rearrange'  AND rearrange IS NOT NULL))))
 );
 
 --------------------------------------------------------------------------------

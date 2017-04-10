@@ -104,6 +104,8 @@ Future<Null> setupRouter(String apiBase, Router router) async {
         return new Response.ok(page.template(data),
             headers: {'Content-Type': 'text/html'});
       } else {
+        data.data = new JsonObject();
+
         // Do GET request if no postFormat is specified.
         if (page.onPost == null) {
           final response =

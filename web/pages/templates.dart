@@ -35,44 +35,43 @@ final breadcrumbAvailableLinks = [];
 
 /// Path breadcrumb.
 dynamic breadcrumb(PageSessionData data) {
-  return nav('.breadcrumb', [
-    a('EqDB', href: '/'),
-    span(' / '),
-    new List.generate(data.path.length, (i) {
-      final numberRegex = new RegExp(r'^[0-9]+$');
-      final pathDir = data.path[i];
+  return nav('.breadcrumb',
+      style: 'word-spacing: .3em; margin-bottom: 2em;',
+      c: [
+        a('EqDB', href: '/'),
+        span(' / '),
+        new List.generate(data.path.length, (i) {
+          final numberRegex = new RegExp(r'^[0-9]+$');
+          final pathDir = data.path[i];
 
-      if (i == data.path.length - 1) {
-        return span(pathDir);
-      } else {
-        final suffixCommand = numberRegex.hasMatch(pathDir) ? 'read' : 'list';
-        final href = '/${data.path.sublist(0, i + 1).join('/')}/$suffixCommand';
-        final hrefPattern = href.replaceAll(new RegExp('[0-9]+'), '{id}');
+          if (i == data.path.length - 1) {
+            return span(pathDir);
+          } else {
+            final suffixCommand =
+                numberRegex.hasMatch(pathDir) ? 'read' : 'list';
+            final href =
+                '/${data.path.sublist(0, i + 1).join('/')}/$suffixCommand';
+            final hrefPattern = href.replaceAll(new RegExp('[0-9]+'), '{id}');
 
-        if (breadcrumbAvailableLinks.contains(hrefPattern)) {
-          return [a(pathDir, href: href), ' / '];
-        } else {
-          return '$pathDir / ';
-        }
-      }
-    })
-  ]);
+            if (breadcrumbAvailableLinks.contains(hrefPattern)) {
+              return [a(pathDir, href: href), ' / '];
+            } else {
+              return '$pathDir / ';
+            }
+          }
+        })
+      ]);
 }
 
+/// Bootstrap .form-group
 String formGroup(String labelText, String id, List widget) {
   return div('.form-group', [label(labelText, _for: id), widget]);
 }
 
+/// Shortcut for [formGroup] with input.
 String formInput(String labelText, {String name, String type: 'text'}) {
   return formGroup(
       labelText, name, [input('#$name.form-control', type: type, name: name)]);
-}
-
-String formCheck(String labelText, {String name}) {
-  return div('.form-check', [
-    label('.form-check-label',
-        [input('.form-check-input', type: 'checkbox'), span(labelText)])
-  ]);
 }
 
 /// Language locale select form element.
@@ -103,6 +102,7 @@ String selectYesNo(String label, {String name}) {
   ]);
 }
 
+/// Resource creation page.
 String createResourceTemplate(PageSessionData data, String name,
     {InlineHtmlBuilder inputs,
     InlineHtmlBuilder success,
@@ -115,26 +115,32 @@ String createResourceTemplate(PageSessionData data, String name,
       div('.container', [
         h3('Create $name'),
         br(),
-        safe(() => data.data.id != null, false)
-            ? [
-                div('.alert.alert-success', 'Successfully created $name',
-                    role: 'alert'),
-                success(data)
-              ]
-            : [
-                safe(() => data.data.error != null, false)
-                    ? [
-                        div('.alert.alert-warning',
-                            '${prettyPrintErrorMessage(data.data.error.message)} <strong>(${data.data.error.code})</strong>',
-                            role: 'alert')
-                      ]
-                    : [],
-                form(method: 'POST', c: [
-                  inputs(data),
-                  br(),
-                  button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
-                ])
-              ]
+        safe(() {
+          if (data.data.containsKey('id')) {
+            return [
+              div('.alert.alert-success', 'Successfully created $name',
+                  role: 'alert'),
+              success(data)
+            ];
+          } else {
+            final formHtml = form(method: 'POST', c: [
+              inputs(data),
+              br(),
+              button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
+            ]);
+            if (data.data.containsKey('error')) {
+              return [
+                div('.alert.alert-warning', role: 'alert', c: [
+                  '${prettyPrintErrorMessage(data.data.error.message)} ',
+                  '<strong>(${data.data.error.code})</strong>'
+                ]),
+                formHtml
+              ];
+            } else {
+              return formHtml;
+            }
+          }
+        }, data.data)
       ]),
       customBodyTags
     ])
@@ -143,30 +149,28 @@ String createResourceTemplate(PageSessionData data, String name,
 
 typedef dynamic HtmlTableRowBuilder(dynamic data);
 
+/// Resource listing page.
 String listResourceTemplate(
     PageSessionData data, String nameSingular, String namePlural,
-    {String customTitle = '',
-    String customCreateButton = '',
+    {String customTitle,
+    String customCreateButton,
     List tableHead,
     HtmlTableRowBuilder row,
     List customHeadTags: const [],
     List customBodyTags: const []}) {
   return html([
     head([
-      title('', customTitle.isEmpty ? 'All $namePlural' : customTitle),
+      title('', customTitle ?? 'All $namePlural'),
       defaultHead(data),
       customHeadTags
     ]),
     body([
       breadcrumb(data),
       div('.container', [
-        h3('', customTitle.isEmpty ? 'All $namePlural' : customTitle),
+        h3('', customTitle ?? 'All $namePlural'),
         br(),
-        p(a(
-            '.btn.btn-primary',
-            customCreateButton.isEmpty
-                ? 'Create new $nameSingular'
-                : customCreateButton,
+        p(a('.btn.btn-primary',
+            customCreateButton ?? 'Create new $nameSingular',
             href: 'create')),
         br(),
         table('.table', [
@@ -174,8 +178,7 @@ String listResourceTemplate(
           tbody(data.data.map((resource) {
             return tr(row(resource));
           }).toList())
-        ]),
-        br()
+        ])
       ]),
       customBodyTags
     ])

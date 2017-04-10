@@ -13,6 +13,20 @@ class ElementBuilder {
 
   ElementBuilder(this.tag, this.prepend, this.selfClosing);
 
+  String _symbolToAttributeName(Symbol sym) {
+    var name = MirrorSystem.getName(sym);
+    if (name.startsWith('_')) {
+      // A starting underscore can be used to include attributes that are
+      // also Dart keywords (such as for).
+      name = name.substring(1);
+    }
+
+    // An underscore is interpreted as dash.
+    name = name.replaceAll('_', '-');
+
+    return name;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) {
     final pArgs = invocation.positionalArguments;
@@ -65,20 +79,7 @@ class ElementBuilder {
     // Convert named parameters to String -> String map.
     final named = invocation.namedArguments;
     final attrs = new Map<String, String>.fromIterable(named.keys,
-        key: (sym) {
-          var name = MirrorSystem.getName(sym);
-          if (name.startsWith('_')) {
-            // A starting underscore can be used to include attributes that are
-            // also Dart keywords (such as for).
-            name = name.substring(1);
-          }
-
-          // An underscore is interpreted as dash.
-          name = name.replaceAll('_', '-');
-
-          return name;
-        },
-        value: (sym) => named[sym].toString());
+        key: _symbolToAttributeName, value: (sym) => named[sym].toString());
 
     // Add parsed ID and classes to attributes.
     if (id.isNotEmpty) {
@@ -149,6 +150,7 @@ final br = _getElementBuilder('br', selfClosing: true);
 final button = _getElementBuilder('button');
 final code = _getElementBuilder('code');
 final div = _getElementBuilder('div');
+final footer = _getElementBuilder('footer');
 final form = _getElementBuilder('form');
 final h1 = _getElementBuilder('h1');
 final h2 = _getElementBuilder('h2');
@@ -182,3 +184,8 @@ final thead = _getElementBuilder('thead');
 final title = _getElementBuilder('title');
 final tr = _getElementBuilder('tr');
 final ul = _getElementBuilder('ul');
+
+// Inline SVG.
+final svgDefs = _getElementBuilder('defs');
+final svgLinearGradient = _getElementBuilder('linearGradient');
+final svgStop = _getElementBuilder('stop');

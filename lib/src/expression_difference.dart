@@ -7,7 +7,7 @@ part of eqdb;
 class ExpressionDifferenceResource {
   ExpressionResource left;
   ExpressionResource right;
-  DifferenceBranch difference;
+  DifferenceBranch branch;
 }
 
 class DifferenceBranch {
@@ -46,13 +46,13 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
 
   // Resolve difference tree.
   if (result.numericInequality) {
-    body.difference = new DifferenceBranch()
+    body.branch = new DifferenceBranch()
       ..different = true
       ..resolved = false;
-  } else if (result.diff.different) {
-    body.difference = await resolveTreeDiff(s, result.diff, computableFnIds);
+  } else if (result.branch.different) {
+    body.branch = await resolveTreeDiff(s, result.branch, computableFnIds);
   } else {
-    body.difference = new DifferenceBranch()..different = false;
+    body.branch = new DifferenceBranch()..different = false;
   }
 
   return body;
