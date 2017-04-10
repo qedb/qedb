@@ -48,14 +48,12 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   }
 
   int assignId(String label, bool generic) {
-    // Check if this is a radix label (it is possible that the expression
-    // contains uncompleted commands).
-    if (!label.startsWith('#')) {
-      throw new Exception('expression not complete');
-    }
-
     // We generate radix string labels (see [_generateFunctionParseTemplate]).
-    return int.parse(label.substring(1), radix: 16);
+    try {
+      return int.parse(label.substring(1), radix: 16);
+    } catch (e) {
+      throw new Exception('invalid label');
+    }
   }
 
   Expr parse(String content) {

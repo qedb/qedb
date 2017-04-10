@@ -100,7 +100,9 @@ class LineageEditor {
     ..steps = (editors
         .sublist(1)
         .map((editor) => editor.expressionDifference)
-        .toList()..removeWhere((difference) => difference == null));
+        .toList()
+          // Remove undefined differences.
+          ..removeWhere((difference) => difference == null));
 
   void addRow() {
     DivElement editorContainer, resolveStatus;
@@ -145,7 +147,8 @@ class LineageEditor {
         _focusEditor(editor.index - 1, 0);
       } else if (e.keyCode == KeyCode.DOWN || e.keyCode == KeyCode.ENTER) {
         // If the next editor is empty, copy the expression from this editor.
-        if (editors[editor.index + 1].isEmpty) {
+        // It seems more intuitive to only do this when the enter key is used.
+        if (e.keyCode == KeyCode.ENTER && editors[editor.index + 1].isEmpty) {
           editors[editor.index + 1]
             ..loadData(editor.getData())
             ..setCursor(editor.cursorPosition);

@@ -17,7 +17,7 @@ truncate -s 0 testlog.txt
 export EQDB_API_LOG='testlog.txt'
 
 # Run server.
-dart bin/server.dart > /dev/null 2>&1 &
+dart -c bin/server.dart > /dev/null 2>&1 &
 
 # Wait untill server has started.
 while [ -z "`cat testlog.txt | grep 'Listening at port 8080'`"  ]; do

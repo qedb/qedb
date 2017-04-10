@@ -15,23 +15,20 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr,
   final codecData = exprCodecEncode(expr);
 
   // Expression may not contain floating point numbers.
-  if (codecData.float64Count > 0) {
+  if (codecData.containsFloats()) {
     throw new UnprocessableEntityError('rejected expression')
       ..errors.add(new RpcErrorDetail(
           reason: 'expression contains floating point numbers'));
   }
 
-  if (codecData.functionId.isNotEmpty) {
+  if (codecData.functionIds.isNotEmpty) {
     final functions =
-        await s.select(db.function, WHERE({'id': IN(codecData.functionId)}));
+        await s.select(db.function, WHERE({'id': IN(codecData.functionIds)}));
     for (final fn in functions) {
       // Validate function.
-      final fnIdx = codecData.functionId.indexOf(fn.id);
-      if (codecData.functionArgc[fnIdx] != fn.argumentCount) {
-        throw new UnprocessableEntityError(
-            'expression not compatible with function table');
-      }
-      if (codecData.inGenericRange(fnIdx) != fn.generic) {
+      final fnIdx = codecData.functionIds.indexOf(fn.id);
+      if (codecData.functionArgcs[fnIdx] != fn.argumentCount ||
+          codecData.inGenericRange(fnIdx) != fn.generic) {
         throw new UnprocessableEntityError(
             'expression not compatible with function table');
       }
@@ -86,8 +83,8 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr,
         'hash':
             FUNCTION('digest', FUNCTION('decode', base64, 'base64'), 'sha256'),
         'latex':
-            await _renderExpressionLaTeX(s, codecData.functionId, expr, _ops),
-        'functions': ARRAY(codecData.functionId, 'integer'),
+            await _renderExpressionLaTeX(s, codecData.functionIds, expr, _ops),
+        'functions': ARRAY(codecData.functionIds, 'integer'),
         'node_type': nodeType,
         'node_value': nodeValue,
         'node_arguments': ARRAY(nodeArguments, 'integer')
@@ -105,7 +102,7 @@ Future<List<db.ExpressionRow>> listExpressions(Session s, List<int> ids) async {
     if (expr.latex == null) {
       final codecData = _decodeCodecHeader(expr.data);
       final latex = _renderExpressionLaTeX(
-          s, codecData.functionId, exprCodecDecode(codecData), ops);
+          s, codecData.functionIds, exprCodecDecode(codecData), ops);
       queue.add(s
           .update(
               db.expression, WHERE({'id': IS(expr.id)}), SET({'latex': latex}))

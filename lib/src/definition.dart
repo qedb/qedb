@@ -18,20 +18,8 @@ Future<db.DefinitionRow> createDefinition(
   final leftData = _decodeCodecHeader(body.rule.leftExpression.data);
   final rightData = _decodeCodecHeader(body.rule.rightExpression.data);
 
-  // For now we only accept single byte signed integers in non-evaluated
-  // expressions.
-  if (leftData.float64Count > 0) {
-    throw new UnprocessableEntityError('rejected left expression')
-      ..errors.add(new RpcErrorDetail(
-          reason: 'left expression contains floating point numbers'));
-  } else if (rightData.float64Count > 0) {
-    throw new UnprocessableEntityError('rejected right expression')
-      ..errors.add(new RpcErrorDetail(
-          reason: 'right expression contains floating point numbers'));
-  }
-
   // Retrieve all function IDs that are defined under this category.
-  final allIds = leftData.functionId.toSet()..addAll(rightData.functionId);
+  final allIds = leftData.functionIds.toSet()..addAll(rightData.functionIds);
   // INTERSECT result
   final intres = await s.conn.query(queryIntersectFunctionIds(allIds.toList()),
       {'categoryId': body.rule.category.id}).toList();
@@ -50,8 +38,6 @@ Future<db.DefinitionRow> createDefinition(
   // Decode expressions.
   final leftDecoded = exprCodecDecode(leftData);
   final rightDecoded = exprCodecDecode(rightData);
-
-  log.info('Definition decoded as $leftDecoded = $rightDecoded');
 
   // Insert expressions.
   final leftExpr = await _createExpression(s, leftDecoded);

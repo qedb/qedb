@@ -160,5 +160,5 @@ class EqlibHelper {
           .bytes);
 
   ValueResolver functionIds(ValueResolver<String> expression) =>
-      (row) => _encode(expression, row).functionId;
+      (row) => _encode(expression, row).functionIds;
 }

@@ -13,11 +13,10 @@ void main(List<String> args) {
     final header = new ExprCodecData.decodeHeader(
         new Uint8List.fromList(BASE64.decode(code)).buffer);
     print('Info for: $code');
-    print('int8: ${header.int8List}');
-    print('float64: ${header.float64List}');
-    print('functions: ${header.functionId}');
-    print('argument count: ${header.functionArgc}');
-    print('generic count: ${header.genericCount}');
-    print('expression: ${exprCodecDecode(header)}');
+    print('floating points: ${header.floatingPoints}');
+    print('integers:        ${header.integers}');
+    print('functions:       ${header.functionIds}');
+    print('argument count:  ${header.functionArgcs}');
+    print('generic count:   ${header.genericCount}');
   }
 }
