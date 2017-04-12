@@ -9,7 +9,7 @@ part of eqdb.schema;
 {{# tables}}
 final {{ varName }} = new TableInfo<{{ className }}Row, SessionData>(
     '{{ tableName }}',
-    {{ className }}Row.mapFormat,
+    {{ className }}Row.select,
     {{ className }}Row.map,
     (result, record) => result.{{ varName }}Table[record.id] = record);
 {{/ tables}}

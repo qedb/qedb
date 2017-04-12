@@ -11,11 +11,12 @@ class ExpressionDifferenceResource {
 }
 
 class DifferenceBranch {
+  int position;
   bool resolved;
   bool different;
-  bool rearrange;
   bool invertRule;
   RuleResource rule;
+  List<Rearrangement> rearrangements;
   List<DifferenceBranch> arguments;
 }
 
@@ -26,7 +27,7 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
   final right = new Expr.fromBase64(body.right.data);
 
   // Get rearrangeable functions.
-  final rearrangeable =
+  final rearrangeableIds =
       await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
 
   // Get computable functions via operator tables.
@@ -42,7 +43,7 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
   final computableFnIds = [compOpMap['+'], compOpMap['-'], compOpMap['*']];
 
   // Get difference tree.
-  final result = getExpressionDiff(left, right, rearrangeable);
+  final result = getExpressionDiff(left, right, rearrangeableIds);
 
   // Resolve difference tree.
   if (result.numericInequality) {
@@ -52,7 +53,9 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
   } else if (result.branch.different) {
     body.branch = await resolveTreeDiff(s, result.branch, computableFnIds);
   } else {
-    body.branch = new DifferenceBranch()..different = false;
+    body.branch = new DifferenceBranch()
+      ..different = false
+      ..resolved = true;
   }
 
   return body;
@@ -62,9 +65,9 @@ Future<DifferenceBranch> resolveTreeDiff(
     Session s, ExprDiffBranch branch, List<int> computableFnIds) async {
   final outputBranch = new DifferenceBranch();
   outputBranch.different = branch.different;
-  outputBranch.rearrange = branch.rearranged;
+  outputBranch.rearrangements = branch.rearrangements;
 
-  if (outputBranch.rearrange) {
+  if (outputBranch.rearrangements.isNotEmpty) {
     outputBranch.resolved = true;
     return outputBranch;
   } else if (outputBranch.different) {

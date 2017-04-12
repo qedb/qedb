@@ -185,6 +185,8 @@ CREATE INDEX expression_functions_index on expression USING GIN (functions);
 -- Optimizations that could be implemented in the future:
 -- + Set explicit reversibility (adds ability to force single direction).
 -- + Add index for top level function ID.
+-- Not yet implemented in the code:
+-- + Filter by category ID
 CREATE TABLE rule (
   id                   serial     PRIMARY KEY,
   category_id          integer    NOT NULL REFERENCES category(id),
@@ -211,7 +213,7 @@ CREATE TABLE definition (
 -- Expression lineages
 --------------------------------------------------------------------------------
 
-CREATE TYPE lineage_step_type AS ENUM ('load', 'substitute', 'rearrange');
+CREATE TYPE lineage_step_type AS ENUM ('load', 'rule', 'rearrange');
 
 -- Expression lineage step
 CREATE TABLE lineage_step (
@@ -224,13 +226,14 @@ CREATE TABLE lineage_step (
   type           lineage_step_type  NOT NULL,
   position       smallint           NOT NULL CHECK (position >= 0),
   rule_id        integer            REFERENCES rule(id),
-  rearrange      json,
+  invert_rule    boolean,
+  rearrange      smallint[],
 
   -- Enforce various constraints.
   CONSTRAINT valid_type CHECK (
     (previous_id = NULL AND type = 'load') OR
     (previous_id != NULL AND (
-      (type = 'substitute' AND rule_id IS NOT NULL) OR
+      (type = 'rule' AND rule_id IS NOT NULL) OR
       (type = 'rearrange'  AND rearrange IS NOT NULL))))
 );
 

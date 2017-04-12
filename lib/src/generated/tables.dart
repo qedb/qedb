@@ -8,58 +8,55 @@ part of eqdb.schema;
 
 final descriptor = new TableInfo<DescriptorRow, SessionData>(
     'descriptor',
-    DescriptorRow.mapFormat,
+    DescriptorRow.select,
     DescriptorRow.map,
     (result, record) => result.descriptorTable[record.id] = record);
 final subject = new TableInfo<SubjectRow, SessionData>(
     'subject',
-    SubjectRow.mapFormat,
+    SubjectRow.select,
     SubjectRow.map,
     (result, record) => result.subjectTable[record.id] = record);
-final locale = new TableInfo<LocaleRow, SessionData>(
-    'locale',
-    LocaleRow.mapFormat,
-    LocaleRow.map,
-    (result, record) => result.localeTable[record.id] = record);
+final locale = new TableInfo<LocaleRow, SessionData>('locale', LocaleRow.select,
+    LocaleRow.map, (result, record) => result.localeTable[record.id] = record);
 final translation = new TableInfo<TranslationRow, SessionData>(
     'translation',
-    TranslationRow.mapFormat,
+    TranslationRow.select,
     TranslationRow.map,
     (result, record) => result.translationTable[record.id] = record);
 final category = new TableInfo<CategoryRow, SessionData>(
     'category',
-    CategoryRow.mapFormat,
+    CategoryRow.select,
     CategoryRow.map,
     (result, record) => result.categoryTable[record.id] = record);
 final function = new TableInfo<FunctionRow, SessionData>(
     'function',
-    FunctionRow.mapFormat,
+    FunctionRow.select,
     FunctionRow.map,
     (result, record) => result.functionTable[record.id] = record);
 final functionSubjectTag = new TableInfo<FunctionSubjectTagRow, SessionData>(
     'function_subject_tag',
-    FunctionSubjectTagRow.mapFormat,
+    FunctionSubjectTagRow.select,
     FunctionSubjectTagRow.map,
     (result, record) => result.functionSubjectTagTable[record.id] = record);
 final operator = new TableInfo<OperatorRow, SessionData>(
     'operator',
-    OperatorRow.mapFormat,
+    OperatorRow.select,
     OperatorRow.map,
     (result, record) => result.operatorTable[record.id] = record);
 final expression = new TableInfo<ExpressionRow, SessionData>(
     'expression',
-    ExpressionRow.mapFormat,
+    ExpressionRow.select,
     ExpressionRow.map,
     (result, record) => result.expressionTable[record.id] = record);
 final lineageStep = new TableInfo<LineageStepRow, SessionData>(
     'lineage_step',
-    LineageStepRow.mapFormat,
+    LineageStepRow.select,
     LineageStepRow.map,
     (result, record) => result.lineageStepTable[record.id] = record);
-final rule = new TableInfo<RuleRow, SessionData>('rule', RuleRow.mapFormat,
+final rule = new TableInfo<RuleRow, SessionData>('rule', RuleRow.select,
     RuleRow.map, (result, record) => result.ruleTable[record.id] = record);
 final definition = new TableInfo<DefinitionRow, SessionData>(
     'definition',
-    DefinitionRow.mapFormat,
+    DefinitionRow.select,
     DefinitionRow.map,
     (result, record) => result.definitionTable[record.id] = record);

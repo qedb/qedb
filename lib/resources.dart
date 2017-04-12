@@ -4,8 +4,6 @@
 
 library eqdb.resources;
 
-import 'dart:convert';
-
 import 'package:rpc/rpc.dart';
 import 'package:eqdb/sqlbuilder.dart';
 
@@ -260,7 +258,8 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
 
   int position;
   RuleResource rule;
-  String rearrange;
+  bool invertRule;
+  List<int> rearrange;
 
   Map<int, db.LineageStepRow> _getTableMap(data) => data.lineageStepTable;
 
@@ -270,6 +269,7 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
     rule = new RuleResource()..load(row.ruleId, data);
     type = row.type;
     position = row.position;
-    rearrange = JSON.encode(row.rearrange);
+    rearrange = row.rearrange;
+    invertRule = row.invertRule;
   }
 }

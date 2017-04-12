@@ -11,13 +11,16 @@ import 'package:yaml/yaml.dart';
 /// Check the given String is not null and not empty.
 bool notEmpty(String str) => str != null && str.isNotEmpty;
 
-/// Convert string with comma separated integers to List<int>.
-List<int> intsFromString(String str) {
-  if (str.trim().isEmpty) {
+/// Convert PostgreSQL integer array to List<int>.
+List<int> pgIntArray(String str) {
+  // Remove '{}'.
+  final values = str.substring(1, str.length - 1);
+
+  if (values.isEmpty) {
     return [];
   }
 
-  final parts = str.split(',');
+  final parts = values.split(',');
   return new List<int>.generate(
       parts.length, (i) => int.parse(parts[i].trim()));
 }

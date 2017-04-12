@@ -25,11 +25,11 @@ typedef void DataSaver<R extends Row, D>(D output, R record);
 /// Table information.
 class TableInfo<R, D> {
   final String tableName;
-  final String fieldFormat;
+  final String select;
   final RowMapper<R> mapper;
   final DataSaver<R, D> saver;
 
-  TableInfo(this.tableName, this.fieldFormat, this.mapper, this.saver);
+  TableInfo(this.tableName, this.select, this.mapper, this.saver);
 }
 
 /// SQL snippet (used to distinguish raw sql from variables).
@@ -138,20 +138,19 @@ Sql SQL(String statement) => new Sql(statement);
 Sql INSERT(TableInfo table, Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
   final statements = _collapse(s1, s2, s3, s4, s5);
   return SQL(
-      'INSERT INTO ${table.tableName} $statements RETURNING ${table.fieldFormat}');
+      'INSERT INTO ${table.tableName} $statements RETURNING ${table.select}');
 }
 
 // ignore: non_constant_identifier_names
 Sql SELECT(TableInfo table, [Sql s1, Sql s2, Sql s3, Sql s4, Sql s5]) {
   final statements = _collapse(s1, s2, s3, s4, s5);
-  return SQL('SELECT ${table.fieldFormat} FROM ${table.tableName} $statements');
+  return SQL('SELECT ${table.select} FROM ${table.tableName} $statements');
 }
 
 // ignore: non_constant_identifier_names
 Sql UPDATE(TableInfo table, Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
   final statements = _collapse(s1, s2, s3, s4, s5);
-  return SQL(
-      'UPDATE ${table.tableName} $statements RETURNING ${table.fieldFormat}');
+  return SQL('UPDATE ${table.tableName} $statements RETURNING ${table.select}');
 }
 
 /// This code is shared between [WHERE] and [SET].
