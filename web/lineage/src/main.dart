@@ -20,12 +20,13 @@ class ExpressionState {
   ExpressionState(this.different, this.valid, this.expression);
 }
 
+/// Editor component with some additional data.
 class ExpressionEditor extends EdiTeX {
   final int index;
   final Node parentRowNode;
   final DivElement resolveState;
   final EqDBEdiTeXInterface _interface;
-  ExpressionDifferenceResource expressionDifference;
+  Completer<ExpressionDifferenceResource> _expressionDifference;
   Expr _previousExpression;
 
   ExpressionEditor(this.index, this.parentRowNode, this.resolveState,
@@ -34,12 +35,14 @@ class ExpressionEditor extends EdiTeX {
     resolveState.classes.add('status-none');
   }
 
+  /// Set status for UI appearance.
   void setStatus(String statusName) {
     resolveState.classes
       ..removeWhere((className) => className.startsWith('status-'))
       ..add('status-$statusName');
   }
 
+  /// Re-parse expression, and return result.
   ExpressionState updateState() {
     try {
       final expr = _interface.parse(getParsableContent());
@@ -51,38 +54,50 @@ class ExpressionEditor extends EdiTeX {
     }
   }
 
-  Future resolveDifference(
-      ExpressionEditor compareWith, EqdbApi db, EqDBEdiTeXInterface interface,
-      [bool force = false]) async {
-    if (compareWith.isNotEmpty && this.isNotEmpty) {
-      final left = compareWith.updateState();
+  /// Resolve difference with [leftEditor].
+  Future<ExpressionDifferenceResource> resolveDifference(
+      ExpressionEditor leftEditor, EqdbApi db) async {
+    if (leftEditor.isNotEmpty && this.isNotEmpty) {
+      final left = leftEditor.updateState();
       final right = this.updateState();
 
       if (!left.valid || !right.valid) {
         setStatus('error');
-      } else if (left.different || right.different || force) {
+        return null;
+      } else if (left.different || right.different) {
         setStatus('progress');
 
         // Evaluate both sides.
-        final le = left.expression.evaluate(interface.compute);
-        final re = right.expression.evaluate(interface.compute);
+        final le = left.expression.evaluate(_interface.compute);
+        final re = right.expression.evaluate(_interface.compute);
 
         // Resolve difference via API.
         try {
-          expressionDifference = await db
+          _expressionDifference = new Completer<ExpressionDifferenceResource>();
+          final result = await db
               .resolveExpressionDifference(new ExpressionDifferenceResource()
                 ..left = (new ExpressionResource()..data = le.toBase64())
                 ..right = (new ExpressionResource()..data = re.toBase64()));
-
-          final branch = expressionDifference.branch;
-          setStatus(
-              branch.different && !branch.resolved ? 'error' : 'resolved');
+          _expressionDifference.complete(result);
+          final valid = result.branch.different && !result.branch.resolved;
+          setStatus(valid ? 'error' : 'valid');
+          return result;
         } catch (e) {
           setStatus('error');
+          return null;
         }
+      } else {
+        // Return previously computed difference.
+        /// Uses a Completer to deal with concurrent calls.
+        /// A concurrent call will change the editor states, as a result the
+        /// expressions will not be different anymore in a second call to
+        /// [resolveDifference], returning the future value of the previous
+        /// call.
+        return await _expressionDifference.future;
       }
     } else {
       setStatus('empty');
+      return null;
     }
   }
 }
@@ -96,13 +111,33 @@ class LineageEditor {
 
   LineageEditor(this.container, this.db, this.interface);
 
-  LineageCreateData get data => new LineageCreateData()
-    ..steps = (editors
-        .sublist(1)
-        .map((editor) => editor.expressionDifference)
-        .toList()
-          // Remove undefined differences.
-          ..removeWhere((difference) => difference == null));
+  Future<LineageCreateData> getData() async {
+    final data = new LineageCreateData();
+    data.steps = new List<ExpressionDifferenceResource>();
+
+    // The first editor sets the lineage initial expression and has no
+    // difference data.
+    for (var i = 1; i < editors.length; i++) {
+      final editor = editors[i];
+
+      // Ignore empty editors.
+      // An empty editor between non-empty ones will cause an error at lineage
+      // creation.
+      if (editor.isNotEmpty) {
+        // Resolve difference again to be sure the expressionDifference is
+        // up-to-date (if it already is no API request will be executed, see the
+        // code).
+        final diff = await editor.resolveDifference(editors[i - 1], db);
+        if (diff != null && diff.branch.resolved) {
+          data.steps.add(diff);
+        } else {
+          throw new Exception('lineage is broken');
+        }
+      }
+    }
+
+    return data;
+  }
 
   void addRow() {
     DivElement editorContainer, resolveStatus;
@@ -164,7 +199,7 @@ class LineageEditor {
     /// Do automatic difference check when an editor is unfocussed.
     editor.container.onBlur.listen((_) {
       if (editor.index > 0) {
-        editor.resolveDifference(editors[editor.index - 1], db, interface);
+        editor.resolveDifference(editors[editor.index - 1], db);
       }
     });
 
@@ -202,7 +237,18 @@ Future main() async {
   final InputElement dataInput = querySelector('#data');
   form.onSubmit.listen((e) {
     e.preventDefault();
-    dataInput.value = JSON.encode(lineageEditor.data.toJson());
-    form.submit();
+    submitForm(form, dataInput, lineageEditor);
   });
+}
+
+Future<bool> submitForm(FormElement form, InputElement dataInput,
+    LineageEditor lineageEditor) async {
+  try {
+    dataInput.value = JSON.encode((await lineageEditor.getData()).toJson());
+    form.submit();
+    return true;
+  } catch (e) {
+    window.alert(e.toString());
+    return false;
+  }
 }

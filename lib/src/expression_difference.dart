@@ -50,12 +50,8 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
     body.branch = new DifferenceBranch()
       ..different = true
       ..resolved = false;
-  } else if (result.branch.different) {
-    body.branch = await resolveTreeDiff(s, result.branch, computableFnIds);
   } else {
-    body.branch = new DifferenceBranch()
-      ..different = false
-      ..resolved = true;
+    body.branch = await resolveTreeDiff(s, result.branch, computableFnIds);
   }
 
   return body;
@@ -65,12 +61,10 @@ Future<DifferenceBranch> resolveTreeDiff(
     Session s, ExprDiffBranch branch, List<int> computableFnIds) async {
   final outputBranch = new DifferenceBranch();
   outputBranch.different = branch.different;
+  outputBranch.resolved = true; // Set to false on fail
   outputBranch.rearrangements = branch.rearrangements;
 
-  if (outputBranch.rearrangements.isNotEmpty) {
-    outputBranch.resolved = true;
-    return outputBranch;
-  } else if (outputBranch.different) {
+  if (outputBranch.rearrangements.isEmpty && outputBranch.different) {
     // Try to find rule.
 
     final exprParams = [
@@ -93,8 +87,9 @@ Future<DifferenceBranch> resolveTreeDiff(
       if (rules.isNotEmpty) {
         outputBranch.position = branch.position;
         outputBranch.invertRule == !(i % 2 == 0);
-        outputBranch.resolved = true;
         outputBranch.rule = new RuleResource()..loadRow(rules.single, s.data);
+
+        // Rule found, so return now.
         return outputBranch;
       }
     }
@@ -103,7 +98,6 @@ Future<DifferenceBranch> resolveTreeDiff(
     if (branch.argumentDifference.isNotEmpty) {
       // Attempt to resolve all arguments.
       outputBranch.arguments = [];
-      outputBranch.resolved = true;
 
       for (final argBranch in branch.argumentDifference) {
         if (argBranch.different) {
@@ -114,15 +108,15 @@ Future<DifferenceBranch> resolveTreeDiff(
             outputBranch.resolved = false;
           }
         } else {
-          outputBranch.arguments.add(new DifferenceBranch()..different = false);
+          outputBranch.arguments.add(new DifferenceBranch()
+            ..different = false
+            ..resolved = true);
         }
       }
     } else {
       outputBranch.resolved = false;
     }
-
-    return outputBranch;
-  } else {
-    return outputBranch;
   }
+
+  return outputBranch;
 }
