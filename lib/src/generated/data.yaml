@@ -35,10 +35,6 @@ tables:
   className:  Expression
   varName:    expression
 
-- tableName:  lineage_step
-  className:  LineageStep
-  varName:    lineageStep
-
 - tableName:  rule
   className:  Rule
   varName:    rule
@@ -46,3 +42,11 @@ tables:
 - tableName:  definition
   className:  Definition
   varName:    definition
+
+- tableName:  lineage_step
+  className:  LineageStep
+  varName:    lineageStep
+
+- tableName:  lineage
+  className:  Lineage
+  varName:    lineage

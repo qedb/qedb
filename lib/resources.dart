@@ -238,11 +238,6 @@ class DefinitionResource extends ResourceBase<db.DefinitionRow> {
 // Expression lineages
 //------------------------------------------------------------------------------
 
-/// Lineage
-class LineageResource {
-  List<LineageStepResource> steps;
-}
-
 /// Lineage step
 class LineageStepResource extends ResourceBase<db.LineageStepRow> {
   int id;
@@ -271,5 +266,19 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
     position = row.position;
     rearrange = row.rearrange;
     invertRule = row.invertRule;
+  }
+}
+
+/// Lineage
+class LineageResource extends ResourceBase<db.LineageRow> {
+  int id;
+  List<LineageStepResource> steps;
+
+  Map<int, db.LineageRow> _getTableMap(data) => data.lineageTable;
+
+  void loadFields(row, data) {
+    steps = row.steps
+        .map((id) => new LineageStepResource()..load(id, data))
+        .toList();
   }
 }

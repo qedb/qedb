@@ -22,8 +22,7 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr,
   }
 
   if (codecData.functionIds.isNotEmpty) {
-    final functions =
-        await s.select(db.function, WHERE({'id': IN(codecData.functionIds)}));
+    final functions = await s.selectByIds(db.function, codecData.functionIds);
     for (final fn in functions) {
       // Validate function.
       final fnIdx = codecData.functionIds.indexOf(fn.id);
@@ -91,8 +90,9 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr,
       }));
 }
 
-Future<List<db.ExpressionRow>> listExpressions(Session s, List<int> ids) async {
-  final expressions = await s.select(db.expression, WHERE({'id': IN(ids)}));
+Future<List<db.ExpressionRow>> listExpressions(
+    Session s, Iterable<int> ids) async {
+  final expressions = await s.selectByIds(db.expression, ids);
 
   // Check if there are any NULL latex fields.
   final queue = new List<Future>();
@@ -157,8 +157,7 @@ Future<String> _renderExpressionLaTeX(
   // Retrieve latex templates and populate printer dictionary.
   var getLbl = (int id) => '\\#$id';
   if (functionsInExpr.isNotEmpty) {
-    final functions =
-        await s.select(db.function, WHERE({'id': IN(functionsInExpr)}));
+    final functions = await s.selectByIds(db.function, functionsInExpr);
 
     // Create new LaTeX printer and populate dictionary.
     functions.forEach((row) {

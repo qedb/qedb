@@ -19,8 +19,8 @@ Future<db.SubjectRow> createSubject(Session s, SubjectResource body) async {
 Future<List<db.SubjectRow>> listSubjects(
     Session s, List<String> locales) async {
   final subjects = await s.select(db.subject);
-  final descriptors = await s.select(db.descriptor,
-      WHERE({'id': IN(subjects.map((row) => row.descriptorId))}));
+  final descriptors = await s.selectByIds(
+      db.descriptor, subjects.map((row) => row.descriptorId));
 
   // Select all translations.
   await s.select(

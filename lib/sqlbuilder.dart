@@ -68,9 +68,16 @@ class SessionState<D> {
         .toList();
   }
 
-  Future<T> selectFirst<T extends Row>(TableInfo<T, D> table,
-      [Sql s1, Sql s2, Sql s3, Sql s4, Sql s5]) async {
-    return (await select(table, s1, s2, s3, s4, s5)).single;
+  /// Select records by their 'id' field.
+  Future<List<T>> selectByIds<T extends Row>(
+      TableInfo<T, D> table, Iterable<int> ids) {
+    /// TODO: use cache to reduce queries.
+    return _runMappedQuery<T, D>(
+        this, true, table, SELECT(table, WHERE({'id': IN(ids)})));
+  }
+
+  Future<T> selectById<T extends Row>(TableInfo<T, D> table, int id) async {
+    return (await selectByIds(table, [id])).single;
   }
 
   Future<bool> exists<T extends Row>(TableInfo<T, D> table, Sql s1,
@@ -253,7 +260,7 @@ Sql LIMIT(int limit) {
 }
 
 // ignore: non_constant_identifier_names
-Sql ARRAY(List values, String type) {
+Sql ARRAY(Iterable values, String type) {
   final encoded = _encodeValues(values, new pg.TypeConverter());
   return SQL('ARRAY[${encoded.join(',')}]' + (type == null ? '' : '::$type[]'));
 }

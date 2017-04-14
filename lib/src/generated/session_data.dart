@@ -16,7 +16,8 @@ class SessionData {
   Map<int, FunctionSubjectTagRow> functionSubjectTagTable = {};
   Map<int, OperatorRow> operatorTable = {};
   Map<int, ExpressionRow> expressionTable = {};
-  Map<int, LineageStepRow> lineageStepTable = {};
   Map<int, RuleRow> ruleTable = {};
   Map<int, DefinitionRow> definitionTable = {};
+  Map<int, LineageStepRow> lineageStepTable = {};
+  Map<int, LineageRow> lineageTable = {};
 }

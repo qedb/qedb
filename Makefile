@@ -43,3 +43,6 @@ generate-dot-svg-schema: restart-database
 	mkdir -p doc
 	mv eqdb.dot doc/schema.dot
 	dot -Tsvg doc/schema.dot > doc/schema.svg
+
+open-pgcli:
+	./tool/open-pgcli.sh

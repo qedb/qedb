@@ -213,7 +213,7 @@ CREATE TABLE definition (
 -- Expression lineages
 --------------------------------------------------------------------------------
 
-CREATE TYPE lineage_step_type AS ENUM ('load', 'rule', 'rearrange');
+CREATE TYPE lineage_step_type AS ENUM ('set', 'rule', 'rearrange');
 
 -- Expression lineage step
 CREATE TABLE lineage_step (
@@ -231,10 +231,15 @@ CREATE TABLE lineage_step (
 
   -- Enforce various constraints.
   CONSTRAINT valid_type CHECK (
-    (previous_id = NULL AND type = 'load') OR
+    (previous_id = NULL AND type = 'set') OR
     (previous_id != NULL AND (
       (type = 'rule' AND rule_id IS NOT NULL) OR
       (type = 'rearrange'  AND rearrange IS NOT NULL))))
+);
+
+CREATE TABLE lineage (
+  id     serial     PRIMARY KEY,
+  steps  integer[]  NOT NULL
 );
 
 --------------------------------------------------------------------------------

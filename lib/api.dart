@@ -185,7 +185,8 @@ class EqDB {
 
   @ApiMethod(path: 'lineage/create', method: 'POST')
   Future<LineageResource> createLineage(api.LineageCreateData body) =>
-      _runRequestSession<LineageResource>((s) => api.createLineage(s, body));
+      _runRequestSession<LineageResource>((s) async => new LineageResource()
+        ..loadRow(await api.createLineage(s, body), s.data));
 }
 
 /// Utility to reuse method calling boilerplate.

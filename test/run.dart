@@ -223,7 +223,7 @@ Future main() async {
       'id': pkey.get('definition', col('ID')),
       'rule': {
         'id': pkey.get('rule', col('ID')),
-        'category': {'id': pkey.get('category', col('Category'))},
+        'category': accept(AcceptType.map),
         'leftExpression': {
           'id': pkey.get('expression', col('Expression left')),
           'data': eqlib.data(col('Expression left')),

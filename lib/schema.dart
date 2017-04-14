@@ -204,7 +204,7 @@ class DefinitionRow implements Row {
 // Expression lineages
 //------------------------------------------------------------------------------
 
-/// Expression lineage expression
+/// Lineage step
 class LineageStepRow implements Row {
   final int id;
   final int previousId;
@@ -223,4 +223,15 @@ class LineageStepRow implements Row {
   static const select = '*';
   static LineageStepRow map(pg.Row r) => new LineageStepRow(
       r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], pgIntArray(r[8]));
+}
+
+/// Lineage
+class LineageRow implements Row {
+  final int id;
+  final List<int> steps;
+
+  LineageRow(this.id, this.steps);
+
+  static const select = '*';
+  static LineageRow map(pg.Row r) => new LineageRow(r[0], pgIntArray(r[1]));
 }

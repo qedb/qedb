@@ -67,9 +67,8 @@ Future<db.CategoryRow> createCategory(
 
 Future<db.CategoryRow> readCategory(
     Session s, int id, List<String> locales) async {
-  final category = await s.selectFirst(db.category, WHERE({'id': IS(id)}));
-  final subject =
-      await s.selectFirst(db.subject, WHERE({'id': IS(category.subjectId)}));
+  final category = await s.selectById(db.category, id);
+  final subject = await s.selectById(db.subject, category.subjectId);
 
   await s.select(
       db.translation,
@@ -100,8 +99,8 @@ Future<List<db.CategoryRow>> listCategories(Session s, List<String> locales,
   }
 
   // Select all subjects.
-  final subjects = await s.select(
-      db.subject, WHERE({'id': IN(categories.map((row) => row.subjectId))}));
+  final subjects =
+      await s.selectByIds(db.subject, categories.map((row) => row.subjectId));
 
   // Select all translations.
   await s.select(
@@ -112,4 +111,58 @@ Future<List<db.CategoryRow>> listCategories(Session s, List<String> locales,
       }));
 
   return categories;
+}
+
+/// Find category lineage for [functionIds].
+/// Returns empty list if the functions are not part of a common lineage.
+Future<List<int>> findCategoryLineage(Session s, List<int> functionIds) async {
+  final functions = await s.selectByIds(db.function, functionIds);
+  final categoryIds = functions.map((fn) => fn.categoryId).toList();
+  final categories = await s.selectByIds(db.category, categoryIds);
+
+  // Find common category inheritance line.
+  final parents = _categoryLineageFor(categories.first);
+  for (final category in categories.sublist(1)) {
+    final _parents = _categoryLineageFor(category);
+    // If this category is in the same lineage, [_parents] is either a subset or
+    // a superset of [parents].
+    for (var i = 0; i < _parents.length; i++) {
+      // Compare with, or extend parents.
+      if (i < parents.length) {
+        if (parents[i] != _parents[i]) {
+          return [];
+        }
+      } else {
+        parents.add(_parents[i]);
+      }
+    }
+  }
+
+  return parents;
+}
+
+/// Returns copy of all parent IDs + own ID of the given [category].
+List<int> _categoryLineageFor(db.CategoryRow category) {
+  return new List<int>.from(category.parents)..add(category.id);
+}
+
+/// Get lowest level category of the two specified categories. Returns 0 if
+/// the given categories do not share the same category lineage.
+Future<int> getLowestCategory(Session s, int a, int b) async {
+  // Retrieve parents of both categories.
+  final aParents = _categoryLineageFor(await s.selectById(db.category, a));
+  final bParents = _categoryLineageFor(await s.selectById(db.category, b));
+
+  // The last ID in a must be in b, or the other way around.
+  if (aParents.length > bParents.length) {
+    if (aParents.contains(bParents.last)) {
+      return aParents.last;
+    }
+  } else {
+    if (bParents.contains(aParents.last)) {
+      return bParents.last;
+    }
+  }
+
+  return 0;
 }
