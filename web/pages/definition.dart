@@ -25,20 +25,20 @@ final createDefinitionPage = new Page(
           formGroup('Left expression', 'left',
               [div('#left.editex.editex-align-left', data_name: 'left')]),
           formGroup('Right expression', 'right',
-              [div('#right.editex.editex-align-left', data_name: 'right')])
+              [div('#right.editex.editex-align-left', data_name: 'right')]),
+          style(data.snippets['editex.css']),
+          stylesheet(data.settings['katex.css.href']),
+          stylesheet(data.settings['editex.css.href']),
+          script(src: data.settings['katex.js.src']),
+          script(
+              src: data.settings['pubserve.root'] + 'src/editex_form.dart.js')
         ];
       }, success: (data) {
         return [
           a('.btn.btn-primary', 'Go to definition overview',
               href: '/definition/list', role: 'button')
         ];
-      }, customHeadTags: [
-        style(data.snippets['editex.css']),
-        stylesheet(data.settings['katex.css.href']),
-        stylesheet(data.settings['editex.css.href']),
-        script(src: data.settings['katex.js.src']),
-        script(src: data.settings['pubserve.root'] + 'src/editex_form.dart.js')
-      ]);
+      });
     },
     onPost: (data) => {
           'rule': {

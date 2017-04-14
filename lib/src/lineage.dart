@@ -9,13 +9,14 @@ class LineageCreateData {
 }
 
 Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
-  if (body.steps.length < 2) {
-    throw new UnprocessableEntityError('lineage must have multiple steps');
+  if (body.steps.isEmpty) {
+    throw new UnprocessableEntityError('lineage must have at least one step');
   }
 
   final steps = new List<LineageStepResource>();
   steps.add(new LineageStepResource()
     ..type = 'set'
+    ..position = 0
     ..expression = body.steps.first.left);
 
   var previousExpression = steps.first.expression;
@@ -24,7 +25,7 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
       throw new UnprocessableEntityError('steps do not connect');
     } else {
       steps.addAll(_diffBranchToSteps(difference.branch));
-      steps.last.expression = difference.left;
+      steps.last.expression = difference.right;
       previousExpression = steps.last.expression;
     }
   }
@@ -72,8 +73,8 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
         ? await getLowestCategory(s, exprCategoryId, previousCategoryId)
         : exprCategoryId;
     if (step.rule != null) {
-      step.category.id = await getLowestCategory(
-          s, step.category.id, (await s.selectById(db.rule, step.rule.id)).id);
+      step.category.id = await getLowestCategory(s, step.category.id,
+          (await s.selectById(db.rule, step.rule.id)).categoryId);
     }
 
     previousCategoryId = step.category.id;
@@ -85,18 +86,23 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
   for (var i = 0; i < steps.length; i++) {
     final step = steps[i];
     final expression = await _createExpression(s, stepExpressions[i]);
-    final row = await s.insert(
-        db.lineageStep,
-        VALUES({
-          'previous_id': previousStepId,
-          'category_id': step.category.id,
-          'expression_id': expression.id,
-          'type': step.type,
-          'position': step.position,
-          'rule_id': step.rule != null ? step.rule.id : null,
-          'invert_rule': step.invertRule,
-          'rearrange': step.rearrange
-        }));
+
+    final values = {
+      'previous_id': previousStepId,
+      'category_id': step.category.id,
+      'expression_id': expression.id,
+      'type': step.type,
+      'position': step.position,
+      'invert_rule': step.invertRule
+    };
+    if (step.rule != null) {
+      values['rule_id'] = step.rule.id;
+    }
+    if (step.rearrange != null) {
+      values['rearrange'] = ARRAY(step.rearrange, 'integer');
+    }
+
+    final row = await s.insert(db.lineageStep, VALUES(values));
     rows.add(row);
     previousStepId = row.id;
   }
@@ -142,7 +148,7 @@ List<LineageStepResource> _diffBranchToSteps(DifferenceBranch branch) {
         ..type = 'rule'
         ..position = branch.position
         ..rule = branch.rule
-        ..invertRule = branch.invertRule);
+        ..invertRule = branch.invertRule != null && branch.invertRule);
     } else {
       // Add steps for each argument.
       for (final argument in branch.arguments) {

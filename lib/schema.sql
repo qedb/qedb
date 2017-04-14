@@ -233,50 +233,13 @@ CREATE TABLE lineage_step (
   CONSTRAINT valid_type CHECK (
     (previous_id = NULL AND type = 'set') OR
     (previous_id != NULL AND (
-      (type = 'rule' AND rule_id IS NOT NULL) OR
+      (type = 'rule' AND rule_id IS NOT NULL AND invert_rule IS NOT NULL) OR
       (type = 'rearrange'  AND rearrange IS NOT NULL))))
 );
 
 CREATE TABLE lineage (
   id     serial     PRIMARY KEY,
   steps  integer[]  NOT NULL
-);
-
---------------------------------------------------------------------------------
--- Equation page
---------------------------------------------------------------------------------
-
-CREATE TABLE page_draft (
-  id    serial  PRIMARY KEY,
-  data  jsonb   NOT NULL
-);
-
-CREATE TABLE page (
-  id             serial   PRIMARY KEY,
-  draft_id       integer  NOT NULL REFERENCES page_draft(id),
-  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id)
-);
-
-CREATE TABLE page_definition (
-  id             serial   PRIMARY KEY,
-  page_id        integer  NOT NULL REFERENCES page(id),
-  definition_id  integer  NOT NULL REFERENCES definition(id),
-  sequence       integer  NOT NULL CHECK (sequence > 0)
-);
-
-CREATE TABLE page_lineage (
-  id                serial   PRIMARY KEY,
-  page_id           integer  NOT NULL REFERENCES page(id),
-  lineage_start_id  integer  NOT NULL REFERENCES lineage_step(id),
-  lineage_end_id    integer  NOT NULL REFERENCES lineage_step(id),
-  sequence          integer  NOT NULL CHECK (sequence > 0)
-);
-
-CREATE TABLE page_illustration (
-  id        serial   PRIMARY KEY,
-  page_id   integer  NOT NULL REFERENCES page(id),
-  sequence  integer  NOT NULL CHECK (sequence > 0),
-  data      json
 );
 
 --------------------------------------------------------------------------------

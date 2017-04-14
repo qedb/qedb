@@ -11,5 +11,5 @@ final {{ varName }} = new TableInfo<{{ className }}Row, SessionData>(
     '{{ tableName }}',
     {{ className }}Row.select,
     {{ className }}Row.map,
-    (result, record) => result.{{ varName }}Table[record.id] = record);
+    (data) => data.{{ varName }}Table);
 {{/ tables}}

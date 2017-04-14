@@ -7,29 +7,29 @@ library eqdb.sqlbuilder;
 import 'dart:async';
 
 import 'package:logging/logging.dart';
-import 'package:postgresql/postgresql.dart' as pg;
+import 'package:postgresql/postgresql.dart';
 
 final log = new Logger('sqlbuilder');
 
 /// Class for rows.
-abstract class Row {
+abstract class Record {
   int get id;
 }
 
 /// Object mapping function.
-typedef R RowMapper<R extends Row>(pg.Row r);
+typedef R RowMapper<R extends Record>(Row r);
 
-/// Saves data to correct field in D (session data instance).
-typedef void DataSaver<R extends Row, D>(D output, R record);
+/// Get Map<int, R> where records are saved.
+typedef Map<int, R> TableCacheGetter<R extends Record, D>(D data);
 
 /// Table information.
 class TableInfo<R, D> {
   final String tableName;
   final String select;
-  final RowMapper<R> mapper;
-  final DataSaver<R, D> saver;
+  final RowMapper<R> mapRow;
+  final TableCacheGetter<R, D> getCache;
 
-  TableInfo(this.tableName, this.select, this.mapper, this.saver);
+  TableInfo(this.tableName, this.select, this.mapRow, this.getCache);
 }
 
 /// SQL snippet (used to distinguish raw sql from variables).
@@ -43,25 +43,25 @@ class Sql {
 
 /// Session state
 class SessionState<D> {
-  final pg.Connection conn;
+  final Connection conn;
   final D data;
 
   SessionState(this.conn, this.data);
 
-  Future<T> insert<T>(TableInfo<T, D> table, Sql s1,
+  Future<R> insert<R extends Record>(TableInfo<R, D> table, Sql s1,
       [Sql s2, Sql s3, Sql s4, Sql s5]) async {
-    return (await _runMappedQuery<T, D>(
+    return (await _runMappedQuery<R, D>(
             this, true, table, INSERT(table, s1, s2, s3, s4, s5)))
         .single;
   }
 
-  Future<List<T>> select<T extends Row>(TableInfo<T, D> table,
+  Future<List<R>> select<R extends Record>(TableInfo<R, D> table,
       [Sql s1, Sql s2, Sql s3, Sql s4, Sql s5]) {
-    return _runMappedQuery<T, D>(
+    return _runMappedQuery<R, D>(
         this, true, table, SELECT(table, s1, s2, s3, s4, s5));
   }
 
-  Future<List<int>> selectIds<T extends Row>(TableInfo<T, D> table,
+  Future<List<int>> selectIds<R extends Record>(TableInfo<R, D> table,
       [Sql s1, Sql s2, Sql s3, Sql s4, Sql s5]) async {
     return (await select(table, s1, s2, s3, s4, s5))
         .map((row) => row.id)
@@ -69,35 +69,52 @@ class SessionState<D> {
   }
 
   /// Select records by their 'id' field.
-  Future<List<T>> selectByIds<T extends Row>(
-      TableInfo<T, D> table, Iterable<int> ids) {
-    /// TODO: use cache to reduce queries.
-    return _runMappedQuery<T, D>(
-        this, true, table, SELECT(table, WHERE({'id': IN(ids)})));
+  Future<List<R>> selectByIds<R extends Record>(
+      TableInfo<R, D> table, Iterable<int> ids) async {
+    /// Retrieve all records that are already loaded.
+    final records = new List<R>();
+    final cache = table.getCache(data);
+    final nonCachedIds = new List<int>();
+    ids.forEach((id) {
+      final record = cache[id];
+      if (record != null) {
+        records.add(record);
+      } else {
+        nonCachedIds.add(id);
+      }
+    });
+
+    if (nonCachedIds.isNotEmpty) {
+      final selectedRecords = await _runMappedQuery<R, D>(
+          this, true, table, SELECT(table, WHERE({'id': IN(nonCachedIds)})));
+      records.addAll(selectedRecords);
+    }
+
+    return records;
   }
 
-  Future<T> selectById<T extends Row>(TableInfo<T, D> table, int id) async {
+  Future<R> selectById<R extends Record>(TableInfo<R, D> table, int id) async {
     return (await selectByIds(table, [id])).single;
   }
 
-  Future<bool> exists<T extends Row>(TableInfo<T, D> table, Sql s1,
+  Future<bool> exists<R extends Record>(TableInfo<R, D> table, Sql s1,
       [Sql s2, Sql s3, Sql s4, Sql s5]) async {
     return (await select(table, s1, s2, s3, s4, s5)).isNotEmpty;
   }
 
-  Future<List<T>> update<T>(TableInfo<T, D> table, Sql s1,
+  Future<List<R>> update<R extends Record>(TableInfo<R, D> table, Sql s1,
       [Sql s2, Sql s3, Sql s4, Sql s5]) {
-    return _runMappedQuery<T, D>(
+    return _runMappedQuery<R, D>(
         this, true, table, UPDATE(table, s1, s2, s3, s4, s5));
   }
 }
 
-Future<List<T>> _runMappedQuery<T, D>(
-    SessionState s, bool store, TableInfo<T, D> table, Sql sql) async {
+Future<List<R>> _runMappedQuery<R extends Record, D>(
+    SessionState s, bool store, TableInfo<R, D> table, Sql sql) async {
   log.info(sql.statement);
-  final result = await s.conn.query(sql.statement).map(table.mapper).toList();
+  final result = await s.conn.query(sql.statement).map(table.mapRow).toList();
   if (store) {
-    result.forEach((record) => table.saver(s.data, record));
+    result.forEach((record) => table.getCache(s.data)[record.id] = record);
   }
   return result;
 }
@@ -128,7 +145,7 @@ String _collapse(Sql s1, Sql s2, Sql s3, Sql s4, Sql s5) {
   return buffer.toString();
 }
 
-List<String> _encodeValues(Iterable values, pg.TypeConverter converter) {
+List<String> _encodeValues(Iterable values, TypeConverter converter) {
   return values.map((value) {
     if (value is Sql) {
       return value.statement;
@@ -163,7 +180,7 @@ Sql UPDATE(TableInfo table, Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
 /// This code is shared between [WHERE] and [SET].
 Sql _flatten(String prefix, Map<String, dynamic> map, String keyValueSeparator,
     String itemSeparator) {
-  final converter = new pg.TypeConverter();
+  final converter = new TypeConverter();
   final buffer = new StringBuffer();
   buffer.write('$prefix ');
 
@@ -201,7 +218,7 @@ Sql IS(dynamic value) {
   if (value is Sql) {
     return SQL('= $value');
   } else {
-    final converter = new pg.TypeConverter();
+    final converter = new TypeConverter();
     return SQL('= ${converter.encode(value, null)}');
   }
 }
@@ -211,7 +228,7 @@ Sql IN(dynamic values) {
   if (values is Sql) {
     return SQL('IN $values');
   } else if (values is Iterable) {
-    final encoded = _encodeValues(values, new pg.TypeConverter());
+    final encoded = _encodeValues(values, new TypeConverter());
     return SQL('IN (${encoded.join(',')})');
   } else {
     throw new ArgumentError('values must be Sql or Iterable');
@@ -219,14 +236,14 @@ Sql IN(dynamic values) {
 }
 
 // ignore: non_constant_identifier_names
-Sql IN_IDS(List<Row> rows) {
+Sql IN_IDS(List<Record> rows) {
   final ids = rows.map((row) => row.id).toList();
   return SQL('IN (${ids.join(',')})');
 }
 
 // ignore: non_constant_identifier_names
 Sql VALUES(Map<String, dynamic> values) {
-  final encoded = _encodeValues(values.values, new pg.TypeConverter());
+  final encoded = _encodeValues(values.values, new TypeConverter());
   return SQL('(${values.keys.join(',')}) VALUES (${encoded.join(',')})');
 }
 
@@ -240,7 +257,7 @@ Sql FUNCTION(String functionFormat,
     [dynamic s1, dynamic s2, dynamic s3, dynamic s4, dynamic s5]) {
   final args = [s1, s2, s3, s4, s5];
   args.removeWhere((s) => s == null);
-  final encodedArgs = _encodeValues(args, new pg.TypeConverter());
+  final encodedArgs = _encodeValues(args, new TypeConverter());
 
   final functionInfo = functionFormat.split('::');
   final name = functionInfo.first;
@@ -261,6 +278,6 @@ Sql LIMIT(int limit) {
 
 // ignore: non_constant_identifier_names
 Sql ARRAY(Iterable values, String type) {
-  final encoded = _encodeValues(values, new pg.TypeConverter());
+  final encoded = _encodeValues(values, new TypeConverter());
   return SQL('ARRAY[${encoded.join(',')}]' + (type == null ? '' : '::$type[]'));
 }

@@ -91,6 +91,7 @@ Future<DifferenceBranch> resolveTreeDiff(
           LIMIT(1));
 
       if (rules.isNotEmpty) {
+        outputBranch.position = branch.position;
         outputBranch.invertRule == !(i % 2 == 0);
         outputBranch.resolved = true;
         outputBranch.rule = new RuleResource()..loadRow(rules.single, s.data);

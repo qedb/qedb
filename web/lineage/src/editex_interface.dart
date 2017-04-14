@@ -50,7 +50,7 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   int assignId(String label, bool generic) {
     // We generate radix string labels (see [_generateFunctionParseTemplate]).
     try {
-      return int.parse(label.substring(1), radix: 16);
+      return int.parse(label.substring(1, label.length - 1), radix: 16);
     } catch (e) {
       throw new Exception('invalid label');
     }
@@ -76,9 +76,9 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
     final generic = fn.generic ? '?' : '';
     if (fn.argumentCount > 0) {
       final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
-      return '$generic#${fn.id.toRadixString(16)}(${args.join(',')})';
+      return '$generic#${fn.id.toRadixString(16)}#(${args.join(',')})';
     } else {
-      return '$generic#${fn.id.toRadixString(16)}';
+      return '$generic#${fn.id.toRadixString(16)}#';
     }
   }
 

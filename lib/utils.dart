@@ -11,8 +11,13 @@ import 'package:yaml/yaml.dart';
 /// Check the given String is not null and not empty.
 bool notEmpty(String str) => str != null && str.isNotEmpty;
 
-/// Convert PostgreSQL integer array to List<int>.
+/// Convert PostgreSQL integer array in [str] to List<int>.
+/// If [str] is null this function will also return null.
 List<int> pgIntArray(String str) {
+  if (str == null) {
+    return null;
+  }
+
   // Remove '{}'.
   final values = str.substring(1, str.length - 1);
 
@@ -23,14 +28,6 @@ List<int> pgIntArray(String str) {
   final parts = values.split(',');
   return new List<int>.generate(
       parts.length, (i) => int.parse(parts[i].trim()));
-}
-
-/// Utility for parsing arrays of custom PostgreSQL types while using
-/// `array_to_string(array, '')`.
-List<List<String>> splitPgRowList(String str) {
-  final parts = str.substring(1, str.length - 1).split(')(');
-  return new List<List<String>>.generate(
-      parts.length, (i) => parts[i].split(','));
 }
 
 /// Evironment variables / YAML file configuration helper.

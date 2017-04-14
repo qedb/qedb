@@ -69,3 +69,35 @@ CREATE TABLE evaluation (
   params         evaluation_parameter[]  NOT NULL,
   result         double precision        NOT NULL
 );
+
+--------------------------------------------------------------------------------
+-- Page
+--------------------------------------------------------------------------------
+
+CREATE TABLE page (
+  id             serial   PRIMARY KEY,
+  draft_id       integer  NOT NULL REFERENCES page_draft(id),
+  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id)
+);
+
+CREATE TABLE page_definition (
+  id             serial   PRIMARY KEY,
+  page_id        integer  NOT NULL REFERENCES page(id),
+  definition_id  integer  NOT NULL REFERENCES definition(id),
+  sequence       integer  NOT NULL CHECK (sequence > 0)
+);
+
+CREATE TABLE page_lineage (
+  id                serial   PRIMARY KEY,
+  page_id           integer  NOT NULL REFERENCES page(id),
+  lineage_start_id  integer  NOT NULL REFERENCES lineage_step(id),
+  lineage_end_id    integer  NOT NULL REFERENCES lineage_step(id),
+  sequence          integer  NOT NULL CHECK (sequence > 0)
+);
+
+CREATE TABLE page_illustration (
+  id        serial   PRIMARY KEY,
+  page_id   integer  NOT NULL REFERENCES page(id),
+  sequence  integer  NOT NULL CHECK (sequence > 0),
+  data      json
+);
