@@ -42,7 +42,8 @@ Future<DifferenceBranch> resolveExpressionDifference(
   /// order to match `diff(x,x^(2+1))) => 3x^2` it is necessary to evaluate the
   /// expression first.
 
-  final compute = (id, args) => _exprCompute(id, args, computable);
+  final compute =
+      (int id, List<num> args) => _exprCompute(id, args, computable);
 
   // Get difference tree.
   final result = getExpressionDiff(

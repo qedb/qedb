@@ -94,7 +94,8 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
 
   // Retrieve computable functions.
   final computable = await _loadComputableFunctions(s);
-  final compute = (id, args) => _exprCompute(id, args, computable);
+  final compute =
+      (int id, List<num> args) => _exprCompute(id, args, computable);
 
   // Run through all steps.
   Expr expr;
