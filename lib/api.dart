@@ -178,9 +178,9 @@ class EqDB {
               .toList());
 
   @ApiMethod(path: 'expressionDifference/resolve', method: 'POST')
-  Future<api.ExpressionDifferenceResource> resolveExpressionDifference(
-          api.ExpressionDifferenceResource body) =>
-      _runRequestSession<api.ExpressionDifferenceResource>(
+  Future<api.DifferenceBranch> resolveExpressionDifference(
+          api.DifferenceBranch body) =>
+      _runRequestSession<api.DifferenceBranch>(
           (s) => api.resolveExpressionDifference(s, body));
 
   @ApiMethod(path: 'lineage/create', method: 'POST')

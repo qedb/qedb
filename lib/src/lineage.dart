@@ -5,7 +5,38 @@
 part of eqdb;
 
 class LineageCreateData {
-  List<ExpressionDifferenceResource> steps;
+  List<DifferenceBranch> steps;
+}
+
+enum LineageStepType {
+  setExpression,
+  rearrange,
+  ruleNormal,
+  ruleInvert,
+  ruleMirror,
+  ruleRevert
+}
+
+/// Intermediary data for building a lineage step.
+/// The [DifferenceBranch] is first flattened into this class.
+class LineageStepBuilder {
+  LineageStepType type;
+  int position;
+  int categoryId;
+  Expr subExprRight;
+  Expr expression;
+  List<int> rearrange;
+  int ruleId;
+  Rule rule;
+
+  String get typeString => {
+        LineageStepType.setExpression: 'set',
+        LineageStepType.rearrange: 'rearrange',
+        LineageStepType.ruleNormal: 'rule_normal',
+        LineageStepType.ruleInvert: 'rule_invert',
+        LineageStepType.ruleMirror: 'rule_mirror',
+        LineageStepType.ruleRevert: 'rule_revert'
+      }[type];
 }
 
 Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
@@ -13,146 +44,206 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
     throw new UnprocessableEntityError('lineage must have at least one step');
   }
 
-  final steps = new List<LineageStepResource>();
-  steps.add(new LineageStepResource()
-    ..type = 'set'
+  /// Create intermediary data list.
+  final steps = new List<LineageStepBuilder>();
+  steps.add(new LineageStepBuilder()
     ..position = 0
-    ..expression = body.steps.first.left);
+    ..type = LineageStepType.setExpression
+    ..expression = new Expr.fromBase64(body.steps.first.leftData));
 
-  var previousExpression = steps.first.expression;
-  for (final difference in body.steps) {
-    if (difference.left.data != previousExpression.data) {
+  /// Flatten list of difference branches into a step list.
+  for (final branch in body.steps) {
+    if (new Expr.fromBase64(branch.leftData) != steps.last.expression) {
       throw new UnprocessableEntityError('steps do not connect');
     } else {
-      steps.addAll(_diffBranchToSteps(difference.branch));
-      steps.last.expression = difference.right;
-      previousExpression = steps.last.expression;
+      // Note: reverse flattened list so that position integers are unaffected.
+      steps.addAll(_flattenDifferenceBranch(branch).reversed);
+
+      // Use the right side of the branch to later validate that lineage
+      // reconstruction is correct.
+      steps.last.expression = new Expr.fromBase64(branch.rightData);
     }
   }
 
-  // Retrieve rearrangeable functions.
-  final rearrangeableIds =
-      await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
-
-  // Retrieve all rules that are in the steps.
-  final ruleIds = new List<int>();
-  steps.forEach((step) => step.rule != null ? ruleIds.add(step.rule.id) : null);
+  // Retrieve all rules at once.
+  final ruleIds = steps.where((st) => st.ruleId != null).map((st) => st.ruleId);
   final rules = await s.selectByIds(db.rule, ruleIds);
 
-  // Retrieve all expressions that are in the rules.
+  // Retrieve all rule expressions at once.
   final expressionIds = new List<int>();
-  rules.forEach((rule) =>
-      expressionIds..add(rule.leftExpressionId)..add(rule.rightExpressionId));
+  rules.forEach((rule) {
+    expressionIds.add(rule.leftExpressionId);
+    expressionIds.add(rule.rightExpressionId);
+  });
   final expressions = await s.selectByIds(db.expression, expressionIds);
 
   // Build expression map.
   final expressionMap = new Map<int, Expr>.fromIterable(expressions,
       key: (expr) => expr.id, value: (expr) => new Expr.fromBase64(expr.data));
 
+  // Add parsed rules to steps.
+  steps.where((st) => st.ruleId != null).forEach((step) async {
+    final rule = await s.selectById(db.rule, step.ruleId);
+    step.rule = new Rule(expressionMap[rule.leftExpressionId],
+        expressionMap[rule.rightExpressionId]);
+  });
+
+  // Retrieve rearrangeable functions.
+  final rearrangeableIds =
+      await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
+
+  // Retrieve computable functions.
+  final computable = await _loadComputableFunctions(s);
+  final compute = (id, args) => _exprCompute(id, args, computable);
+
   // Run through all steps.
   Expr expr;
   var previousCategoryId;
-  final stepExpressions = new List<Expr>();
   for (final step in steps) {
-    // Apply step to expr.
-    expr = computeLineageStep(expr, step, expressionMap, rearrangeableIds);
-    stepExpressions.add(expr);
+    // Apply step to [expr].
+    expr = computeLineageStep(expr, step, rearrangeableIds, compute);
 
-    // If an expression is set for this step, check if it is the same.
-    if (step.expression != null && step.expression.data != expr.toBase64()) {
+    // As a convention we evaluate the expression after each step.
+    expr = expr.evaluate(compute);
+
+    if (step.expression != null && step.expression.evaluate(compute) != expr) {
+      // If an expression is already set for this step, it should be the same
+      // after evaluation.
       throw new UnprocessableEntityError('lineage reconstruction failed');
     }
 
-    // Resolve step category.
-    // category ID = lowest{lowest{functions}, previous step, rule category}
-    final functionIds = expr.functionIds.toList();
-    final exprCategoryId = (await findCategoryLineage(s, functionIds)).last;
+    // Set/override the expression.
+    step.expression = expr.clone();
 
-    step.category = new CategoryResource();
-    step.category.id = previousCategoryId != null
-        ? await getLowestCategory(s, exprCategoryId, previousCategoryId)
-        : exprCategoryId;
-    if (step.rule != null) {
-      step.category.id = await getLowestCategory(s, step.category.id,
-          (await s.selectById(db.rule, step.rule.id)).categoryId);
+    // Resolve step category.
+    // category ID = lowest{previous step, rule category}
+    // Note that the lowest category of the expression should not matter because
+    // this is already part of the rule category definition.
+    if (previousCategoryId != null) {
+      if (step.ruleId != null) {
+        step.categoryId = await getLowestCategory(s, previousCategoryId,
+            (await s.selectById(db.rule, step.ruleId)).categoryId);
+      } else {
+        step.categoryId = previousCategoryId;
+      }
+    } else {
+      // Fallback on lowest category based on expression function IDs.
+      final functionIds = expr.functionIds.toList();
+      step.categoryId = (await findCategoryLineage(s, functionIds)).last;
     }
 
-    previousCategoryId = step.category.id;
+    previousCategoryId = step.categoryId;
   }
 
   // Insert all steps into database.
-  var previousStepId;
   final rows = new List<db.LineageStepRow>();
-  for (var i = 0; i < steps.length; i++) {
-    final step = steps[i];
-    final expression = await _createExpression(s, stepExpressions[i]);
+  for (final step in steps) {
+    final expressionRow = await _createExpression(s, step.expression);
 
+    // Create map with insert values.
     final values = {
-      'previous_id': previousStepId,
-      'category_id': step.category.id,
-      'expression_id': expression.id,
-      'type': step.type,
+      'category_id': step.categoryId,
+      'expression_id': expressionRow.id,
       'position': step.position,
-      'invert_rule': step.invertRule
+      'type': step.typeString
     };
-    if (step.rule != null) {
-      values['rule_id'] = step.rule.id;
+    if (rows.isNotEmpty) {
+      values['previous_id'] = rows.last.id;
+    }
+    if (step.ruleId != null) {
+      values['rule_id'] = step.ruleId;
     }
     if (step.rearrange != null) {
       values['rearrange'] = ARRAY(step.rearrange, 'integer');
     }
 
-    final row = await s.insert(db.lineageStep, VALUES(values));
-    rows.add(row);
-    previousStepId = row.id;
+    rows.add(await s.insert(db.lineageStep, VALUES(values)));
   }
 
   return await s.insert(
       db.lineage, VALUES({'steps': ARRAY(rows.map((r) => r.id), 'integer')}));
 }
 
-/// Compute result of applying [step] to [expr].
-Expr computeLineageStep(Expr expr, LineageStepResource step,
-    Map<int, Expr> ruleExpressions, List<int> rearrangeableIds) {
-  if (step.type == 'set') {
-    return new Expr.fromBase64(step.expression.data);
-  } else if (step.type == 'rule') {
-    final l = ruleExpressions[step.rule.leftExpression.id];
-    final r = ruleExpressions[step.rule.rightExpression.id];
-    final rule = step.invertRule ? new Rule(r, l) : new Rule(l, r);
-    return expr.substituteAt(rule, step.position);
-  } else if (step.type == 'rearrange') {
-    return expr.rearrangeAt(step.rearrange, step.position, rearrangeableIds);
-  } else {
-    throw new ArgumentError('unknown step type');
+/// Compute result of applying [step], given the [previous] expression. In some
+/// cases the computation is backwards. This means the substitution that is
+/// applied to [previous] is computed in part based on the resulting expression
+/// (fetched from [DifferenceBranch.rightData]).
+Expr computeLineageStep(Expr previous, LineageStepBuilder step,
+    List<int> rearrangeableIds, ExprCompute compute) {
+  assert(step.type != null);
+  switch (step.type) {
+    case LineageStepType.setExpression:
+      return step.expression;
+
+    case LineageStepType.rearrange:
+      return previous.rearrangeAt(
+          step.rearrange, step.position, rearrangeableIds);
+
+    case LineageStepType.ruleNormal:
+      return previous.substituteAt(step.rule, step.position);
+
+    case LineageStepType.ruleInvert:
+      return previous.substituteAt(step.rule.inverted, step.position);
+
+    case LineageStepType.ruleMirror:
+    case LineageStepType.ruleRevert:
+      final rule = step.type == LineageStepType.ruleMirror
+          ? step.rule
+          : step.rule.inverted;
+
+      // Reversed evaluation means that the right sub-expression at this
+      // position is used to construct the original expression. When evaluated
+      // this must match the expression in [previous] at the step position. From
+      // this a new rule can be constructed to substitute the sub-expression
+      // into [previous].
+
+      final original = step.subExprRight.substituteAt(rule.inverted, 0);
+      return previous.substituteAt(
+          new Rule(original.evaluate(compute), step.subExprRight),
+          step.position);
+
+    default:
+      throw new ArgumentError('unknown step type');
   }
 }
 
 /// Flatten [branch] into a list of lineage steps.
-List<LineageStepResource> _diffBranchToSteps(DifferenceBranch branch) {
+List<LineageStepBuilder> _flattenDifferenceBranch(DifferenceBranch branch) {
   if (!branch.resolved) {
     throw new UnprocessableEntityError('contains unresolved steps');
   } else if (branch.different) {
-    final steps = new List<LineageStepResource>();
+    final steps = new List<LineageStepBuilder>();
     if (branch.rearrangements.isNotEmpty) {
       // Add step for each rearrangement.
       for (final rearrangement in branch.rearrangements) {
-        steps.add(new LineageStepResource()
-          ..type = 'rearrange'
+        steps.add(new LineageStepBuilder()
           ..position = rearrangement.position
+          ..type = LineageStepType.rearrange
           ..rearrange = rearrangement.format);
       }
     } else if (branch.rule != null) {
       // Add single step for rule.
-      steps.add(new LineageStepResource()
-        ..type = 'rule'
+      final step = new LineageStepBuilder()
         ..position = branch.position
-        ..rule = branch.rule
-        ..invertRule = branch.invertRule != null && branch.invertRule);
+        ..ruleId = branch.rule.id
+        ..subExprRight = new Expr.fromBase64(branch.rightData);
+
+      // Determine rule type.
+      if (!branch.reverseRule && !branch.reverseEvaluate) {
+        step.type = LineageStepType.ruleNormal;
+      } else if (branch.reverseRule && !branch.reverseEvaluate) {
+        step.type = LineageStepType.ruleInvert;
+      } else if (branch.reverseRule && branch.reverseEvaluate) {
+        step.type = LineageStepType.ruleMirror;
+      } else {
+        step.type = LineageStepType.ruleRevert;
+      }
+
+      steps.add(step);
     } else {
       // Add steps for each argument.
       for (final argument in branch.arguments) {
-        steps.addAll(_diffBranchToSteps(argument));
+        steps.addAll(_flattenDifferenceBranch(argument));
       }
     }
 

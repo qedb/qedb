@@ -47,8 +47,10 @@ Future<List<db.RuleRow>> listRules(Session s, [Iterable<int> ids]) async {
 
   // Select left and right expressions.
   final expressionIds = new List<int>();
-  rules.forEach((rule) =>
-      expressionIds..add(rule.leftExpressionId)..add(rule.rightExpressionId));
+  rules.forEach((rule) {
+    expressionIds.add(rule.leftExpressionId);
+    expressionIds.add(rule.rightExpressionId);
+  });
   await listExpressions(s, expressionIds);
 
   return rules;

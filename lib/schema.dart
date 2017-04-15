@@ -211,18 +211,17 @@ class LineageStepRow implements Record {
   final int categoryId;
   final int expressionId;
 
-  final String type;
   final int position;
-  final int ruleId;
-  final bool invertRule;
+  final String type;
   final List<int> rearrange;
+  final int ruleId;
 
   LineageStepRow(this.id, this.previousId, this.categoryId, this.expressionId,
-      this.type, this.position, this.ruleId, this.invertRule, this.rearrange);
+      this.position, this.type, this.rearrange, this.ruleId);
 
   static const select = '*';
   static LineageStepRow map(Row r) => new LineageStepRow(
-      r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], pgIntArray(r[8]));
+      r[0], r[1], r[2], r[3], r[4], r[5], pgIntArray(r[6]), r[7]);
 }
 
 /// Lineage

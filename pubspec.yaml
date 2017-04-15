@@ -8,7 +8,7 @@ environment:
 dependencies:
   rpc:          ^0.5.7
   yaml:         ^2.1.12
-  eqlib:        ^0.12.0
+  eqlib:        ^0.13.0
   postgresql:   ^0.3.4+1
   shelf:        ^0.6.7+2
   shelf_rpc:    ^0.0.3+2
@@ -27,7 +27,7 @@ dev_dependencies:
   browser:      ^0.10.0+2
   katex_js:     ^0.1.0+1
   editex:       ^0.1.3
-  eqdb_client:  ^0.0.9
+  eqdb_client:  ^0.0.10
 
 transformers:
 - sass

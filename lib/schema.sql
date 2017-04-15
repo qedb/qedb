@@ -213,7 +213,14 @@ CREATE TABLE definition (
 -- Expression lineages
 --------------------------------------------------------------------------------
 
-CREATE TYPE lineage_step_type AS ENUM ('set', 'rule', 'rearrange');
+CREATE TYPE lineage_step_type AS ENUM (
+  'set',
+  'rearrange',
+  'rule_normal', -- substitute a -> b, evaluate b from a
+  'rule_invert', -- substitute b -> a, evaluate a from b (invert rule sides)
+  'rule_mirror', -- substitute a -> b, evaluate a from b (mirror evaluation)
+  'rule_revert'  -- substitute b -> a, evaluate b from a (invert and mirror)
+);
 
 -- Expression lineage step
 CREATE TABLE lineage_step (
@@ -223,18 +230,16 @@ CREATE TABLE lineage_step (
   expression_id  integer   NOT NULL REFERENCES expression(id),
 
   -- Expression rewrite parameters
-  type           lineage_step_type  NOT NULL,
   position       smallint           NOT NULL CHECK (position >= 0),
-  rule_id        integer            REFERENCES rule(id),
-  invert_rule    boolean,
+  type           lineage_step_type  NOT NULL,
   rearrange      smallint[],
+  rule_id        integer            REFERENCES rule(id),
 
   -- Enforce various constraints.
   CONSTRAINT valid_type CHECK (
     (previous_id = NULL AND type = 'set') OR
     (previous_id != NULL AND (
-      (type = 'rule' AND rule_id IS NOT NULL AND invert_rule IS NOT NULL) OR
-      (type = 'rearrange'  AND rearrange IS NOT NULL))))
+      (type = 'rearrange'  AND rearrange IS NOT NULL) OR rule_id IS NOT NULL)))
 );
 
 CREATE TABLE lineage (

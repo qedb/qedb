@@ -243,18 +243,20 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
   int id;
   CategoryResource category;
   ExpressionResource expression;
+  int position;
 
   @ApiProperty(values: const {
-    'load': 'Load new expression.',
-    'substitute': 'Substitute given rule at position.',
+    'set': 'Set new expression.',
+    'rule_normal': 'substitute a -> b, evaluate b from a',
+    'rule_invert': 'substitute b -> a, evaluate a from b (invert rule sides)',
+    'rule_mirror': 'substitute a -> b, evaluate a from b (mirror evaluation)',
+    'rule_revert': 'substitute b -> a, evaluate b from a (invert and mirror)',
     'rearrange': 'Rearrange child tree at position.'
   })
   String type;
 
-  int position;
-  RuleResource rule;
-  bool invertRule;
   List<int> rearrange;
+  RuleResource rule;
 
   Map<int, db.LineageStepRow> _getTableMap(data) => data.lineageStepTable;
 
@@ -262,10 +264,9 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
     category = new CategoryResource()..load(row.categoryId, data);
     expression = new ExpressionResource()..load(row.expressionId, data);
     rule = new RuleResource()..load(row.ruleId, data);
-    type = row.type;
     position = row.position;
+    type = row.type;
     rearrange = row.rearrange;
-    invertRule = row.invertRule;
   }
 }
 
