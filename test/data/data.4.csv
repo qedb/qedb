@@ -3,5 +3,5 @@ ID,Category,Area,"Expression left",,"Expression right"
 2,Algebra,"Basic algebra",?a*?b+?a*?c,→,?a*(?b+?c)
 3,Algebra,"Basic algebra",-?a,→,-1*?a
 4,Algebra,"Basic algebra",?a^1,→,?a
-5,Algebra,"Basic algebra",?a^?n,→,?a*?a^(?n-1)
+5,Algebra,"Basic algebra",?a^?b*?a^?c,→,?a^(?b+?c)
 6,Algebra,Calculus,"diff(?x,?f(?x))",→,"lim(d(?x),0,(?f(?x+d(?x))-?f(?x))/d(?x))"

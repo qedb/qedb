@@ -10,6 +10,7 @@ require Exporter;
 
 use strict;
 use warnings;
+no warnings 'uninitialized';
 
 use ExprUtils qw(debug expr_hash_mix expr_hash_postprocess);
 
@@ -57,7 +58,7 @@ sub compute_mapped_hash {
 # Evaluate function using the given mapping.
 sub evaluate {
   my ($ptr, $mapping_hash, $computable_ids, $data) = @_;
-  my ($id_add, $id_sub, $id_mul) = @$computable_ids;
+  my ($id_add, $id_sub, $id_mul, $id_neg) = @$computable_ids;
 
   # The stack consists of alternating values: (function ID, 0) or (integer, 1).
   my @stack;
@@ -73,8 +74,16 @@ sub evaluate {
       if ($type == $EXPR_SYMBOL_GEN) {
         if (exists($$mapping_hash{$hash})) {
           my $target = $$mapping_hash{$hash};
+
+          # Reconstruct integer value.
           if ($target & 0x1 == 1) {
-            $argument = $target >> 1;
+            $argument = $target >> 2;
+            if (($target >> 1) & 0x1 == 1) {
+              $argument = -$argument;
+            }
+          } else {
+            # If the generic does not point to an integer, terminate.
+            return (undef, $ptr);
           }
         } else {
           return (undef, $ptr);
@@ -89,15 +98,16 @@ sub evaluate {
       if ($stack[-1] == 1) {
         # Collapse stack.
         do {
-          pop(@stack);                    # Remove type.
+          pop(@stack);                    # Remove first argument flag [1].
           my $other = pop(@stack);        # Get other integer.
-          pop(@stack);                    # Remove computation type.
+          pop(@stack);                    # Remove computation flag [0].
           my $computation = pop(@stack);  # Get computation ID.
 
           # Do computation.
           if ($computation == $id_add)    { $argument = $other + $argument; }
           elsif ($computation == $id_sub) { $argument = $other - $argument; }
           elsif ($computation == $id_mul) { $argument = $other * $argument; }
+          elsif ($computation == $id_neg) { $argument = -$argument; }
 
         } while (@stack && $stack[-1] == 1);
 
@@ -112,13 +122,21 @@ sub evaluate {
         push(@stack, $argument, 1);
       }
     } elsif ($type == $EXPR_FUNCTION) {
-      if ($value == $id_add || $value == $id_sub || $value == $id_mul) {
-        # Push to stack.
+      if ($value == $id_add || $value == $id_sub ||
+          $value == $id_mul || $value == $id_neg) {
+        # Push function ID to stack.
         push(@stack, $value, 0);
 
-        # Skip argument count and content-length (we know there are 2 arguments
-        # in all computable functions).
+        # Skip argument count and content-length (we know the argument length of
+        # all computable functions ahead of time).
         $ptr += 2;
+
+        # If this is the negation function, add a first argument here as an
+        # imposter. This way the negation function can be integrated in the same
+        # code as the binary operators.
+        if ($value == $id_neg) {
+          push(@stack, 0, 1);
+        }
       } else {
         return (undef, $ptr);
       }

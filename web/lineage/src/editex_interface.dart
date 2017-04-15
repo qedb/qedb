@@ -37,12 +37,14 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
                   : OperatorType.postfix));
     }
 
-    // Add default setting for implicit multiplication.
-    // (same precedence level as power operator).
+    // Use the same associativity and precedence as the multiplication operator.
+    // Since the input is already structured (editex), there is no need for
+    // special behavior. In fact this behavior causes problems (e.g. a^b c^d).
+    final multiplyOp = operatorConfig.byId[operatorConfig.id('*')];
     operatorConfig.add(new Operator(
         operatorConfig.implicitMultiplyId,
-        operatorConfig.byId[operatorConfig.id('^')].precedenceLevel,
-        Associativity.rtl,
+        multiplyOp.precedenceLevel,
+        multiplyOp.associativity,
         -1,
         OperatorType.infix));
   }
@@ -61,12 +63,15 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   }
 
   num compute(int id, List<num> args) {
+    // Only do operations that given two integers will always return an integer.
     if (id == operatorConfig.id('+')) {
       return args[0] + args[1];
     } else if (id == operatorConfig.id('-')) {
       return args[0] - args[1];
     } else if (id == operatorConfig.id('*')) {
       return args[0] * args[1];
+    } else if (id == operatorConfig.id('~')) {
+      return -args[0];
     } else {
       return double.NAN;
     }

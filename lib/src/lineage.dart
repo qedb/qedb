@@ -65,7 +65,7 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
 
     // Resolve step category.
     // category ID = lowest{lowest{functions}, previous step, rule category}
-    final functionIds = exprCodecEncode(expr).functionIds;
+    final functionIds = expr.functionIds.toList();
     final exprCategoryId = (await findCategoryLineage(s, functionIds)).last;
 
     step.category = new CategoryResource();

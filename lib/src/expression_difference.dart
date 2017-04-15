@@ -31,16 +31,18 @@ Future<ExpressionDifferenceResource> resolveExpressionDifference(
       await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
 
   // Get computable functions via operator tables.
-  // (it is reasonable to assume +-* are the operator characters)
-  final compOps = await s.select(
-      db.operator,
-      WHERE({
-        'character': IN(['+', '-', '*'])
-      }));
+  // (it is reasonable to assume +-*~ are the operator characters)
+  final compOps =
+      await s.select(db.operator, WHERE({'character': IN('+-*~'.split(''))}));
   final compOpMap = new Map<String, int>.fromIterable(compOps,
       key: (db.OperatorRow row) => row.character,
       value: (db.OperatorRow row) => row.id);
-  final computableFnIds = [compOpMap['+'], compOpMap['-'], compOpMap['*']];
+  final computableFnIds = [
+    compOpMap['+'],
+    compOpMap['-'],
+    compOpMap['*'],
+    compOpMap['~']
+  ];
 
   // Get difference tree.
   final result = getExpressionDiff(left, right, rearrangeableIds);

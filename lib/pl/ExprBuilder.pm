@@ -10,6 +10,7 @@ require Exporter;
 
 use strict;
 use warnings;
+no warnings 'uninitialized';
 
 use ExprUtils qw(expr_hash_mix expr_hash_postprocess expr_hash expr_hash_str);
 
@@ -29,6 +30,7 @@ use ExprUtils qw(expr_hash_mix expr_hash_postprocess expr_hash expr_hash_str);
     '*' => sub { ExprBuilder::expr_function('*', _arrange_args(@_)); },
     '/' => sub { ExprBuilder::expr_function('/', _arrange_args(@_)); },
     '^' => sub { ExprBuilder::expr_function('^', _arrange_args(@_)); },
+    '~' => sub { ExprBuilder::expr_function('~', _arrange_args(@_)); },
     '>>' => sub {
       my ($arg1, $arg2, $swap) = @_;
       return $swap ? [$arg2, $arg1] : [$arg1, $arg2];
@@ -51,7 +53,11 @@ sub _hash_postprocess_non_integer {
 # Shift integer hash.
 sub _hash_postprocess_integer {
   my ($value) = @_;
-  return (($value << 1) & 0x3fffffff) | 0x1;
+  my $hash = ((abs($value) << 2) & 0x3fffffff) | 0x1;
+  if ($value < 0) {
+    $hash = $hash | 0x2;
+  }
+  return $hash;
 }
 
 # Build expression from data array (add hash and bless).
@@ -139,7 +145,7 @@ sub format_expression {
 
   my $hash = $data->[$$ptr++];
   my $type = $data->[$$ptr++];
-  my $value = $data->[$$ptr++];
+  my $value = int($data->[$$ptr++] // 0);
   my $indent_str = $indent ? "\n" . (' ' x ($indent_lvl * 2)) : '';
 
   if ($type == $EXPR_FUNCTION || $type == $EXPR_FUNCTION_GEN) {

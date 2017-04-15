@@ -138,7 +138,7 @@ class EqlibHelper {
         Associativity.rtl, -1, OperatorType.infix));
   }
 
-  ExprCodecData _encode(ValueResolver<String> input, Row row) {
+  Expr _parse(ValueResolver<String> input, Row row) {
     final str = input(row);
     final expr =
         parseExpression(str, operators, (String keyword, bool generic) {
@@ -148,17 +148,17 @@ class EqlibHelper {
         throw new Exception('expression contains unknown keyword: $keyword');
       }
     });
-    return exprCodecEncode(expr);
+    return expr;
   }
 
-  ValueResolver<String> data(ValueResolver<String> expression) => (row) =>
-      BASE64.encode(_encode(expression, row).writeToBuffer().asUint8List());
+  ValueResolver<String> data(ValueResolver<String> expression) =>
+      (row) => BASE64.encode(_parse(expression, row).toBinary().asUint8List());
 
   ValueResolver<String> hash(ValueResolver<String> expression) =>
       (row) => BASE64.encode(sha256
-          .convert(_encode(expression, row).writeToBuffer().asUint8List())
+          .convert(_parse(expression, row).toBinary().asUint8List())
           .bytes);
 
   ValueResolver functionIds(ValueResolver<String> expression) =>
-      (row) => _encode(expression, row).functionIds;
+      (row) => _parse(expression, row).functionIds;
 }
