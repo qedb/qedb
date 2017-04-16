@@ -27,27 +27,8 @@ Future<DifferenceBranch> resolveExpressionDifference(
   final rearrangeableIds =
       await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
 
-  // Get computable functions.
-  final computable = await _loadComputableFunctions(s);
-  final computableIds = '+-*~'.split('').map((c) => computable[c]).toList();
-
-  /// Note: a general conventions is to evaluate expressions before comparing.
-  /// This way a matching rule can be found in more cases. Additionally no
-  /// ambiguous rearrangements will be added.
-  ///
-  /// Background: the rule scanning function can also evaluate expressions, so
-  /// that `diff(x,x^3) => 3x^2` can be matched with
-  /// `diff(?x,?x^?n) => ?n?x^(?n-1)`. However, there is a limitation. The rule
-  /// matching function cannot evaluate generics that map to a function. So in
-  /// order to match `diff(x,x^(2+1))) => 3x^2` it is necessary to evaluate the
-  /// expression first.
-
-  final compute =
-      (int id, List<num> args) => _exprCompute(id, args, computable);
-
   // Get difference tree.
-  final result = getExpressionDiff(
-      left.evaluate(compute), right.evaluate(compute), rearrangeableIds);
+  final result = getExpressionDiff(left, right, rearrangeableIds);
 
   // Resolve difference tree.
   if (result.numericInequality) {
@@ -57,12 +38,16 @@ Future<DifferenceBranch> resolveExpressionDifference(
       ..different = true
       ..resolved = false;
   } else {
-    return await resolveTreeDiff(s, result.branch, computableIds);
+    // Get computable functions.
+    final comp = await _loadComputableFunctions(s);
+    final computableIds = '+-*~'.split('').map((c) => comp[c]).toList();
+    final compute = (int id, List<num> args) => _exprCompute(id, args, comp);
+    return await resolveTreeDiff(s, result.branch, computableIds, compute);
   }
 }
 
-Future<DifferenceBranch> resolveTreeDiff(
-    Session s, ExprDiffBranch branch, List<int> computableIds) async {
+Future<DifferenceBranch> resolveTreeDiff(Session s, ExprDiffBranch branch,
+    List<int> computableIds, ExprCompute compute) async {
   final outputBranch = new DifferenceBranch()
     ..position = branch.position
     ..leftData = branch.left.toBase64()
@@ -80,11 +65,24 @@ Future<DifferenceBranch> resolveTreeDiff(
       outputBranch.resolved = true;
       return outputBranch;
     } else {
+      // Evaluate both sides.
+      final left = branch.left.evaluate(compute);
+      final right = branch.right.evaluate(compute);
+
+      // If both sides are equal after evaluation, this branch is resolved.
+      if (left == right) {
+        outputBranch
+          ..different = false
+          ..resolved = true;
+
+        return outputBranch;
+      }
+
       // Search for a rule.
       // Rule searching parameters:
       final exprParams = [
-        ARRAY(branch.left.toArray(), 'integer'),
-        ARRAY(branch.right.toArray(), 'integer')
+        ARRAY(left.toArray(), 'integer'),
+        ARRAY(right.toArray(), 'integer')
       ];
       final ruleParams = [SQL('left_array_data'), SQL('right_array_data')];
       final computableIdsArray = ARRAY(computableIds, 'integer');
@@ -114,7 +112,7 @@ Future<DifferenceBranch> resolveTreeDiff(
       // Fallback to processing individual arguments.
       if (branch.argumentDifference.isNotEmpty) {
         outputBranch.arguments = await Future.wait(branch.argumentDifference
-            .map((arg) => resolveTreeDiff(s, arg, computableIds)));
+            .map((arg) => resolveTreeDiff(s, arg, computableIds, compute)));
         outputBranch.resolved =
             outputBranch.arguments.every((arg) => arg.resolved);
       }
