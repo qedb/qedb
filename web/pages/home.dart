@@ -20,7 +20,8 @@ final allMethods = [
   ['subject/list', 'List subjects'],
   ['category/list', 'List categories'],
   ['function/list', 'List functions'],
-  ['definition/list', 'List definitions']
+  ['definition/list', 'List definitions'],
+  ['lineage/list', 'List lineages']
 ];
 
 final homePage = new Page(template: (data) {

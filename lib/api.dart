@@ -187,6 +187,18 @@ class EqDB {
   Future<LineageResource> createLineage(api.LineageCreateData body) =>
       _runRequestSession<LineageResource>((s) async => new LineageResource()
         ..loadRow(await api.createLineage(s, body), s.data));
+
+  @ApiMethod(path: 'lineage/list', method: 'GET')
+  Future<List<LineageResource>> listLineages() =>
+      _runRequestSession<List<LineageResource>>((s) async =>
+          (await api.listLineages(s))
+              .map((r) => new LineageResource()..loadRow(r, s.data))
+              .toList());
+
+  @ApiMethod(path: 'lineage/{id}/read', method: 'GET')
+  Future<LineageResource> readLineage(int id) =>
+      _runRequestSession<LineageResource>((s) async =>
+          new LineageResource()..loadRow(await api.readLineage(s, id), s.data));
 }
 
 /// Utility to reuse method calling boilerplate.

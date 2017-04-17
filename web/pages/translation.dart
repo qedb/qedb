@@ -17,12 +17,6 @@ final createTranslationPage = new Page(
           localeSelect(data),
           formInput('Translation', name: 'content')
         ];
-      }, success: (data) {
-        return [
-          a('.btn.btn-primary', 'Return to descriptor',
-              href: '/descriptor/${data.pathParameters['id']}/read',
-              role: 'button')
-        ];
       });
     },
     onPost: (data) => {

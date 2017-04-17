@@ -52,11 +52,6 @@ final createFunctionPage = new Page(
           selectYesNo('Generic', name: 'generic'),
           selectYesNo('Rearrangeable', name: 'rearrangeable')
         ];
-      }, success: (data) {
-        return [
-          a('.btn.btn-primary', 'Go to function overview',
-              href: '/function/list', role: 'button')
-        ];
       });
     },
     onPost: (data) => {
@@ -104,11 +99,10 @@ final listFunctionsPage = new Page(template: (data) {
       td(safe(() => span('.latex', function.latexTemplate))),
       td(function.generic ? 'yes' : 'no')
     ];
-  }, customHeadTags: [
-    stylesheet(data.settings['katex.css.href']),
+  }, headTags: [
     style('.katex-display { margin: 0 !important; text-align: left; }')
-  ], customBodyTags: [
-    script(src: data.settings['katex.js.src']),
+  ], bodyTags: [
+    katexSource(data),
     script(data.snippets['render-latex.js'])
   ]);
 });

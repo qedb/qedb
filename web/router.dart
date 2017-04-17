@@ -45,7 +45,9 @@ Map<String, Page> pages = {
   '/function/list': listFunctionsPage,
   '/definition/create': createDefinitionPage,
   '/definition/list': listDefinitionsPage,
-  '/lineage/create': createLineagePage
+  '/lineage/create': createLineagePage,
+  '/lineage/list': listLineagesPage,
+  '/lineage/{id}/read': readLineagePage
 };
 
 Future<Null> setupRouter(String apiBase, Router router) async {

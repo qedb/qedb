@@ -14,14 +14,6 @@ final createCategoryPage = new Page(
           localeSelect(data),
           formInput('Subject', name: 'subject')
         ];
-      }, success: (data) {
-        return [
-          a('.btn.btn-primary', 'Go to category overview',
-              href: '/category/list', role: 'button'),
-          ' ',
-          a('.btn.btn-secondary', 'Go to created category',
-              href: '/category/${data.data.id}/read', role: 'button')
-        ];
       });
     },
     onPost: (data) => {
@@ -41,17 +33,9 @@ final createCategoryPage = new Page(
 final readCategoryPage = new Page(template: (data) {
   final name =
       safe(() => data.data.subject.descriptor.translations[0].content, '');
-  return html([
-    head([title('$name (#${data.data.id})'), defaultHead(data)]),
-    body([
-      breadcrumb(data),
-      div('.container', [
-        h3('$name (#${data.data.id})'),
-        br(),
-        a('.btn.btn-secondary', 'Sub categories',
-            href: '/category/${data.data.id}/category/list', role: 'button')
-      ])
-    ])
+  return pageTemplate(data, '$name (#${data.data.id})', containerTags: [
+    a('.btn.btn-secondary', 'Sub categories',
+        href: '/category/${data.data.id}/category/list', role: 'button')
   ]);
 });
 

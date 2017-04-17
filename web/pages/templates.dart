@@ -13,55 +13,18 @@ final logoSvgContent = [
   '<path d="M13 3.9991v11.2598l4.197266-1.7988-.394532-.92L14 13.7413V3.9991h-1z"></path>'
 ].join();
 
+/// Shorthand
 String stylesheet(String href) => link(rel: 'stylesheet', href: href);
 
-/// Default HEAD parameters.
-List defaultHead(PageSessionData data) => [
-      meta(charset: 'utf-8'),
-      meta(
-          name: 'viewport',
-          content: 'width=device-width,initial-scale=1,shrink-to-fit=no'),
-      link(
-          rel: 'stylesheet',
-          href: data.settings['bootstrap.href'],
-          integrity: data.settings['bootstrap.integrity'],
-          crossorigin: 'anonymous')
+List editexStyles(PageSessionData data) => [
+      style(data.snippets['editex.css']),
+      stylesheet(data.settings['editex.css.href'])
     ];
 
-/// Paths that should not be linked in the breadcrumb.
-/// Putting this in the global namespace is ugly. But this entire templating
-/// thing is ugly, so who cares.
-final breadcrumbAvailableLinks = [];
-
-/// Path breadcrumb.
-dynamic breadcrumb(PageSessionData data) {
-  return nav('.breadcrumb',
-      style: 'word-spacing: .3em; margin-bottom: 2em;',
-      c: [
-        a('EqDB', href: '/'),
-        span(' / '),
-        new List.generate(data.path.length, (i) {
-          final numberRegex = new RegExp(r'^[0-9]+$');
-          final pathDir = data.path[i];
-
-          if (i == data.path.length - 1) {
-            return span(pathDir);
-          } else {
-            final suffixCommand =
-                numberRegex.hasMatch(pathDir) ? 'read' : 'list';
-            final href =
-                '/${data.path.sublist(0, i + 1).join('/')}/$suffixCommand';
-            final hrefPattern = href.replaceAll(new RegExp('[0-9]+'), '{id}');
-
-            if (breadcrumbAvailableLinks.contains(hrefPattern)) {
-              return [a(pathDir, href: href), ' / '];
-            } else {
-              return '$pathDir / ';
-            }
-          }
-        })
-      ]);
-}
+List katexSource(PageSessionData data) => [
+      stylesheet(data.settings['katex.css.href']),
+      script(src: data.settings['katex.js.src'])
+    ];
 
 /// Bootstrap .form-group
 String formGroup(String labelText, String id, List widget) {
@@ -102,49 +65,107 @@ String selectYesNo(String label, {String name}) {
   ]);
 }
 
+/// Default HEAD parameters.
+List defaultHead(PageSessionData data) => [
+      meta(charset: 'utf-8'),
+      meta(
+          name: 'viewport',
+          content: 'width=device-width,initial-scale=1,shrink-to-fit=no'),
+      link(
+          rel: 'stylesheet',
+          href: data.settings['bootstrap.href'],
+          integrity: data.settings['bootstrap.integrity'],
+          crossorigin: 'anonymous')
+    ];
+
+/// Paths that can be linked in the breadcrumb.
+/// Putting this in the global namespace is ugly. But this entire templating
+/// thing is ugly, so who cares.
+final breadcrumbAvailableLinks = [];
+
+/// Path breadcrumb.
+dynamic breadcrumb(PageSessionData data) {
+  return nav('.breadcrumb',
+      style: 'word-spacing: .3em; margin-bottom: 2em;',
+      c: [
+        a('EqDB', href: '/'),
+        span(' / '),
+        new List.generate(data.path.length, (i) {
+          final numberRegex = new RegExp(r'^[0-9]+$');
+          final pathDir = data.path[i];
+
+          if (i == data.path.length - 1) {
+            return span(pathDir);
+          } else {
+            final suffixCommand =
+                numberRegex.hasMatch(pathDir) ? 'read' : 'list';
+            final href =
+                '/${data.path.sublist(0, i + 1).join('/')}/$suffixCommand';
+            final hrefPattern = href.replaceAll(new RegExp('[0-9]+'), '{id}');
+
+            if (breadcrumbAvailableLinks.contains(hrefPattern)) {
+              return [a(pathDir, href: href), ' / '];
+            } else {
+              return '$pathDir / ';
+            }
+          }
+        })
+      ]);
+}
+
+/// Template for every page.
+String pageTemplate(PageSessionData data, String pageTitle,
+    {InlineHtmlBuilder inputs,
+    List headTags: const [],
+    List containerTags: const [],
+    List bodyTags: const []}) {
+  return html([
+    head([title(pageTitle), defaultHead(data), headTags]),
+    body([
+      breadcrumb(data),
+      div('.container', [h3(pageTitle), br(), containerTags]),
+      bodyTags
+    ])
+  ]);
+}
+
 /// Resource creation page.
 String createResourceTemplate(PageSessionData data, String name,
     {InlineHtmlBuilder inputs,
-    InlineHtmlBuilder success,
-    List customHeadTags: const [],
-    List customBodyTags: const []}) {
-  return html([
-    head([title('Create $name'), defaultHead(data), customHeadTags]),
-    body([
-      breadcrumb(data),
-      div('.container', [
-        h3('Create $name'),
-        br(),
-        safe(() {
-          if (data.data.containsKey('id')) {
-            return [
-              div('.alert.alert-success', 'Successfully created $name',
-                  role: 'alert'),
-              success(data)
-            ];
-          } else {
-            final formHtml = form(method: 'POST', c: [
-              inputs(data),
-              br(),
-              button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
-            ]);
-            if (data.data.containsKey('error')) {
-              return [
-                div('.alert.alert-warning', role: 'alert', c: [
-                  '${prettyPrintErrorMessage(data.data.error.message)} ',
-                  '<strong>(${data.data.error.code})</strong>'
-                ]),
-                formHtml
-              ];
-            } else {
-              return formHtml;
-            }
-          }
-        }, data.data)
-      ]),
-      customBodyTags
-    ])
-  ]);
+    List headTags: const [],
+    List bodyTags: const []}) {
+  // Build form.
+  List containerTags;
+  if (data.data.containsKey('id')) {
+    containerTags = [
+      div('.alert.alert-success', 'Successfully created $name', role: 'alert'),
+      a('.btn.btn-primary', 'Return to $name overview',
+          href: '/$name/list', role: 'button'),
+      a('.btn', 'Create another $name', href: '/$name/create', role: 'button')
+    ];
+    if (breadcrumbAvailableLinks.contains('/$name/{id}/read')) {
+      containerTags.add(a('.btn', 'Go to created $name',
+          href: '/$name/${data.data.id}/read', role: 'button'));
+    }
+  } else {
+    containerTags = form(method: 'POST', c: [
+      inputs(data),
+      br(),
+      button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
+    ]);
+    if (data.data.containsKey('error')) {
+      containerTags = [
+        div('.alert.alert-warning', role: 'alert', c: [
+          '${prettyPrintErrorMessage(data.data.error.message)} ',
+          '<strong>(${data.data.error.code})</strong>'
+        ]),
+        containerTags
+      ];
+    }
+  }
+
+  return pageTemplate(data, 'Create $name',
+      headTags: headTags, bodyTags: bodyTags, containerTags: containerTags);
 }
 
 typedef dynamic HtmlTableRowBuilder(dynamic data);
@@ -156,19 +177,12 @@ String listResourceTemplate(
     String customCreateButton,
     List tableHead,
     HtmlTableRowBuilder row,
-    List customHeadTags: const [],
-    List customBodyTags: const []}) {
-  return html([
-    head([
-      title('', customTitle ?? 'All $namePlural'),
-      defaultHead(data),
-      customHeadTags
-    ]),
-    body([
-      breadcrumb(data),
-      div('.container', [
-        h3('', customTitle ?? 'All $namePlural'),
-        br(),
+    List headTags: const [],
+    List bodyTags: const []}) {
+  return pageTemplate(data, customTitle ?? 'All $namePlural',
+      headTags: headTags,
+      bodyTags: bodyTags,
+      containerTags: [
         p(a('.btn.btn-primary',
             customCreateButton ?? 'Create new $nameSingular',
             href: 'create')),
@@ -179,8 +193,5 @@ String listResourceTemplate(
             return tr(row(resource));
           }).toList())
         ])
-      ]),
-      customBodyTags
-    ])
-  ]);
+      ]);
 }

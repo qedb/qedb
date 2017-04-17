@@ -10,11 +10,6 @@ final createSubjectPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'subject', inputs: (data) {
         return [localeSelect(data), formInput('Descriptor', name: 'content')];
-      }, success: (data) {
-        return [
-          a('.btn.btn-primary', 'Go to subjects overview',
-              href: '/subject/list', role: 'button')
-        ];
       });
     },
     onPost: (data) => {

@@ -26,19 +26,12 @@ final createDefinitionPage = new Page(
               [div('#left.editex.editex-align-left', data_name: 'left')]),
           formGroup('Right expression', 'right',
               [div('#right.editex.editex-align-left', data_name: 'right')]),
-          style(data.snippets['editex.css']),
-          stylesheet(data.settings['katex.css.href']),
-          stylesheet(data.settings['editex.css.href']),
-          script(src: data.settings['katex.js.src']),
-          script(
-              src: data.settings['pubserve.root'] + 'src/editex_form.dart.js')
         ];
-      }, success: (data) {
-        return [
-          a('.btn.btn-primary', 'Go to definition overview',
-              href: '/definition/list', role: 'button')
-        ];
-      });
+      }, bodyTags: [
+        katexSource(data),
+        editexStyles(data),
+        script(src: data.settings['pubserve.root'] + 'src/editex_form.dart.js')
+      ]);
     },
     onPost: (data) => {
           'rule': {
@@ -62,11 +55,9 @@ final listDefinitionsPage = new Page(template: (data) {
       td(span('.latex', r'\rightarrow')),
       td(span('.latex', definition.rule.rightExpression.latex))
     ];
-  }, customHeadTags: [
-    style(data.snippets['definition-table.css']),
-    stylesheet(data.settings['katex.css.href'])
-  ], customBodyTags: [
-    script(src: data.settings['katex.js.src']),
+  }, bodyTags: [
+    katexSource(data),
+    style(data.snippets['latex-table.css']),
     script(data.snippets['render-latex.js'])
   ]);
 });
