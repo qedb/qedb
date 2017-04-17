@@ -25,7 +25,7 @@ abstract class ResourceBase<T extends Record> {
     }
   }
 
-  /// Load remaining resource fiels (only if row was found in the session data).
+  /// Load remaining resource fields (only if row was found in the session data).
   void loadFields(T row, db.SessionData data) {}
 
   /// Load from row.
