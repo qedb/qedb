@@ -60,4 +60,12 @@ class EnvConfig {
       : Platform.environment.containsKey('$envPrefix$label')
           ? int.parse(Platform.environment['$envPrefix$label'])
           : dflt;
+
+  /// Same as [string] but for booleans.
+  bool boolean(String label, [bool dflt = false]) =>
+      _yamlData.containsKey(label)
+          ? _yamlData[label]
+          : Platform.environment.containsKey('$envPrefix$label')
+              ? Platform.environment['$envPrefix$label'] == 'true'
+              : dflt;
 }

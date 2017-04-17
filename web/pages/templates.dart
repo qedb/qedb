@@ -116,9 +116,9 @@ dynamic breadcrumb(PageSessionData data) {
 /// Template for every page.
 String pageTemplate(PageSessionData data, String pageTitle,
     {InlineHtmlBuilder inputs,
-    List headTags: const [],
-    List containerTags: const [],
-    List bodyTags: const []}) {
+    dynamic headTags,
+    dynamic containerTags,
+    dynamic bodyTags}) {
   return html([
     head([title(pageTitle), defaultHead(data), headTags]),
     body([
@@ -131,11 +131,9 @@ String pageTemplate(PageSessionData data, String pageTitle,
 
 /// Resource creation page.
 String createResourceTemplate(PageSessionData data, String name,
-    {InlineHtmlBuilder inputs,
-    List headTags: const [],
-    List bodyTags: const []}) {
+    {InlineHtmlBuilder inputs, dynamic headTags, dynamic bodyTags}) {
   // Build form.
-  List containerTags;
+  dynamic containerTags;
   if (data.data.containsKey('id')) {
     containerTags = [
       div('.alert.alert-success', 'Successfully created $name', role: 'alert'),
@@ -177,8 +175,8 @@ String listResourceTemplate(
     String customCreateButton,
     List tableHead,
     HtmlTableRowBuilder row,
-    List headTags: const [],
-    List bodyTags: const []}) {
+    dynamic headTags,
+    dynamic bodyTags}) {
   return pageTemplate(data, customTitle ?? 'All $namePlural',
       headTags: headTags,
       bodyTags: bodyTags,

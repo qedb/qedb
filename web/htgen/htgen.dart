@@ -107,7 +107,7 @@ class ElementBuilder {
     while (containedLists) {
       containedLists = false;
       for (var i = 0; i < children.length; i++) {
-        if (children[i] is List) {
+        if (children[i] != null && children[i] is List) {
           containedLists = true;
           final list = children.removeAt(i);
 
@@ -120,6 +120,7 @@ class ElementBuilder {
     }
 
     final open = akeys.isEmpty ? tag : '$tag $attrsStr';
+    children.removeWhere((c) => c == null);
     if (children.isNotEmpty) {
       return '$prepend<$open>${children.join()}</$tag>';
     } else if (text.isNotEmpty) {

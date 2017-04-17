@@ -16,6 +16,8 @@ import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_route/shelf_route.dart' as shelf_route;
 
+import 'middleware.dart';
+
 Future<Null> main() async {
   final log = new Logger('server');
   final conf = new EnvConfig('EQDB_', 'dev-config.yaml');
@@ -58,11 +60,20 @@ Future<Null> main() async {
   final apiHandler = shelf_rpc.createRpcHandler(apiServer);
   final apiRouter = shelf_route.router();
   apiRouter.add('', null, apiHandler, exactMatch: false);
-  final handler = const shelf.Pipeline()
-      .addMiddleware(shelf.logRequests(
-          logger: (msg, isError) => isError ? log.severe(msg) : log.info(msg)))
-      .addHandler(apiRouter.handler);
 
+  // Construct pipeline.
+  var pipeline = const shelf.Pipeline();
+  pipeline = pipeline.addMiddleware(shelf.logRequests(
+      logger: (msg, isError) => isError ? log.severe(msg) : log.info(msg)));
+
+  // Log all requests for testing.
+  final testLogFile = new File(conf.string('TEST_LOG'));
+  if (await testLogFile.exists()) {
+    readRequestLog(testLogFile);
+    pipeline = pipeline.addMiddleware(logRequestData(testLogFile));
+  }
+
+  final handler = pipeline.addHandler(apiRouter.handler);
   final server = await shelf_io.serve(handler, '0.0.0.0', srvPort);
   log.info('Listening at port ${server.port}.');
 

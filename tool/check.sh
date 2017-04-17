@@ -6,18 +6,25 @@
 
 set -e
 
-# Regenerate generated files.
-./lib/src/generated/generate.sh
+if [ -z $1 ];
+then
+  # Regenerate generated files.
+  ./lib/src/generated/generate.sh
 
-# Check formatting.
-dartfmt --dry-run --set-exit-if-changed ./
+  # Check formatting.
+  dartfmt --dry-run --set-exit-if-changed ./
 
-# Run analyzer checks.
-dartanalyzer \
---options .analysis_options \
---fatal-hints --fatal-warnings --fatal-lints ./
+  # Run analyzer checks.
+  dartanalyzer \
+  --options .analysis_options \
+  --fatal-hints --fatal-warnings --fatal-lints ./
+fi
+
+# Restart database.
+./tool/restart-db.sh
 
 # Run tests.
+export EQDB_TEST_LOG=''
 ./tool/run-test.sh ./test/run.sh coverage.json
 
 # Run Perl algorithm tests.

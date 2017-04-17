@@ -7,16 +7,17 @@ init:
 build-base-container:
 	docker build -t eqdb-postgres-base:latest ./tool/docker/eqdb-postgres-base/
 
-start-database:
-	./tool/start-db.sh
+restart-database:
+	./tool/restart-db.sh
 
 stop-database:
 	./tool/stop-db.sh
 
-restart-database: stop-database start-database
-
 restart-api-server:
 	./tool/restart-api-server.sh
+
+restart-api-server-log-tests:
+	export EQDB_TEST_LOG='test/logs/main.txt'; ./tool/restart-api-server.sh
 
 restart-web-server:
 	./tool/kill-port.sh 8081

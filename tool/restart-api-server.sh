@@ -8,16 +8,22 @@
 
 # Wait for kill (is async).
 # If the old server is still listening the new server cannot bind.
-sleep 2
+sleep 4
 
-# Empty theca log file.
+# Empty the log file.
 truncate -s 0 testlog.txt
 
 # Set log file.
 export EQDB_API_LOG='testlog.txt'
 
 # Run server.
-dart -c bin/server.dart > /dev/null 2>&1 &
+if [ ! -z $1 ];
+then
+  echo "Observe at :$1"
+  dart --checked --observe=$1 bin/server.dart > /dev/null 2>&1 &
+else
+  dart --checked bin/server.dart > /dev/null 2>&1 &
+fi
 
 # Wait untill server has started.
 while [ -z "`cat testlog.txt | grep 'Listening at port 8080'`"  ]; do

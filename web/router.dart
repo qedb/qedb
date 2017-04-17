@@ -82,6 +82,11 @@ Future<Null> setupRouter(String apiBase, Router router) async {
       data.path.removeWhere((str) => str.isEmpty);
       data.pathParameters = getPathParameters(request);
 
+      if (data.path.isEmpty) {
+        return new Response.ok(page.template(data),
+            headers: {'Content-Type': 'text/html'});
+      }
+
       // Load additional resources.
       for (final label in page.additional.keys) {
         final response = await http.get('$apiBase${page.additional[label]}');
@@ -110,8 +115,8 @@ Future<Null> setupRouter(String apiBase, Router router) async {
 
         // Do GET request if no postFormat is specified.
         if (page.onPost == null) {
-          final response =
-              await http.get('$apiBase${request.requestedUri.path}');
+          final response = await http
+              .get('$apiBase${request.requestedUri.path.substring(1)}');
           data.data = new JsonObject.fromJsonString(response.body);
         }
 
