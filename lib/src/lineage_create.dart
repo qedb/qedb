@@ -22,7 +22,6 @@ enum LineageStepType {
 class LineageStepBuilder {
   LineageStepType type;
   int position;
-  int categoryId;
   Expr subExprRight;
   Expr expression;
   List<int> rearrange;
@@ -99,7 +98,6 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
 
   // Run through all steps.
   Expr expr;
-  var previousCategoryId;
   for (final step in steps) {
     // Apply step to [expr].
     expr = computeLineageStep(expr, step, rearrangeableIds, compute);
@@ -115,25 +113,6 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
 
     // Set/override the expression.
     step.expression = expr.clone();
-
-    // Resolve step category.
-    // category ID = lowest{previous step, rule category}
-    // Note that the lowest category of the expression should not matter because
-    // this is already part of the rule category definition.
-    if (previousCategoryId != null) {
-      if (step.ruleId != null) {
-        step.categoryId = await getLowestCategory(s, previousCategoryId,
-            (await s.selectById(db.rule, step.ruleId)).categoryId);
-      } else {
-        step.categoryId = previousCategoryId;
-      }
-    } else {
-      // Fallback on lowest category based on expression function IDs.
-      final functionIds = expr.functionIds.toList();
-      step.categoryId = (await findCategoryLineage(s, functionIds)).last;
-    }
-
-    previousCategoryId = step.categoryId;
   }
 
   // Insert all steps into database.
@@ -143,7 +122,6 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
 
     // Create map with insert values.
     final values = {
-      'category_id': step.categoryId,
       'expression_id': expressionRow.id,
       'position': step.position,
       'type': step.typeString

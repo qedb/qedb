@@ -81,6 +81,7 @@ List defaultHead(PageSessionData data) => [
 /// Paths that can be linked in the breadcrumb.
 /// Putting this in the global namespace is ugly. But this entire templating
 /// thing is ugly, so who cares.
+/// TODO: make cleaner mechanism for available links
 final breadcrumbAvailableLinks = [];
 
 /// Path breadcrumb.
@@ -138,8 +139,9 @@ String createResourceTemplate(PageSessionData data, String name,
     containerTags = [
       div('.alert.alert-success', 'Successfully created $name', role: 'alert'),
       a('.btn.btn-primary', 'Return to $name overview',
-          href: '/$name/list', role: 'button'),
-      a('.btn', 'Create another $name', href: '/$name/create', role: 'button')
+          href: data.relativeUrl('list'), role: 'button'),
+      a('.btn', 'Create another $name',
+          href: data.relativeUrl('create'), role: 'button')
     ];
     if (breadcrumbAvailableLinks.contains('/$name/{id}/read')) {
       containerTags.add(a('.btn', 'Go to created $name',
@@ -177,13 +179,18 @@ String listResourceTemplate(
     HtmlTableRowBuilder row,
     dynamic headTags,
     dynamic bodyTags}) {
+  String createButton;
+  if (breadcrumbAvailableLinks.contains('/${data.path.first}/create')) {
+    createButton = p(a(
+        '.btn.btn-primary', customCreateButton ?? 'Create new $nameSingular',
+        href: 'create'));
+  }
+
   return pageTemplate(data, customTitle ?? 'All $namePlural',
       headTags: headTags,
       bodyTags: bodyTags,
       containerTags: [
-        p(a('.btn.btn-primary',
-            customCreateButton ?? 'Create new $nameSingular',
-            href: 'create')),
+        createButton,
         br(),
         table('.table', [
           thead([tr(tableHead)]),

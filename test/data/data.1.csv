@@ -1,24 +1,6 @@
-ID,"Translation (en_US)","Translation (nl_NL)",Subject
-1,Algebra,Algebra,TRUE
-2,"Basic Algebra","Basis algebra",TRUE
-3,"Linear Algebra","Lineare algebra",TRUE
-4,Trigonometry,Trigonometrie,TRUE
-5,Calculus,Calculus,TRUE
-6,"Vector Algebra",Vectoralgebra,TRUE
-7,Operator,Operator,FALSE
-8,Circle,Cirkel,FALSE
-9,Vector,Vector,FALSE
-10,"Unit Vector",Eenheidsvector,FALSE
-11,Generic,Generiek,FALSE
-12,Add,Optellen,FALSE
-13,Subtract,Aftrekken,FALSE
-14,Multiply,Vermenigvuldigen,FALSE
-15,Divide,Delen,FALSE
-16,Power,Macht,FALSE
-17,Negate,Omkeren,FALSE
-18,Radius,Radius,FALSE
-19,Theta,Theta,FALSE
-20,Sine,Sinus,FALSE
-21,Cosine,Cosinus,FALSE
-22,"Classical Mechanics","Klassieke mechanica",TRUE
-23,"Circular Motion","Cirkelvormige beweging",TRUE
+ID,Subject
+1,"Basic Algebra"
+2,Combinatorics
+3,"Vector Algebra"
+4,Trigonometry
+5,Calculus

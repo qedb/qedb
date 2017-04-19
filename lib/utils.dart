@@ -11,6 +11,9 @@ import 'package:yaml/yaml.dart';
 /// Check the given String is not null and not empty.
 bool notEmpty(String str) => str != null && str.isNotEmpty;
 
+/// Check if the given value is null (useful with [List.removeWhere]).
+bool isNull(dynamic value) => value == null;
+
 /// Convert PostgreSQL integer array in [str] to List<int>.
 /// If [str] is null this function will also return null.
 List<int> pgIntArray(String str) {

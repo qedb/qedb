@@ -29,6 +29,13 @@ class PageSessionData {
   Map<String, Object> pathParameters;
 
   PageSessionData(this.settings, this.snippets);
+
+  String relativeUrl(String route) {
+    final base = new List<String>.from(path);
+    base.removeLast();
+    final baseUrl = base.join('/');
+    return '/$baseUrl/$route';
+  }
 }
 
 /// Returns return value of [fn], or [fallback] if [fn] errors.

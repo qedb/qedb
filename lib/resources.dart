@@ -35,6 +35,15 @@ abstract class ResourceBase<T extends Record> {
   }
 }
 
+/// Helper for loading [ResourceBase] instance when [id] could be null.
+ResourceBase getResource(int id, db.SessionData data, ResourceBase target) {
+  if (id == null) {
+    return null;
+  } else {
+    return target..load(id, data);
+  }
+}
+
 //------------------------------------------------------------------------------
 // Descriptors and translations
 //------------------------------------------------------------------------------
@@ -70,6 +79,20 @@ class DescriptorResource extends ResourceBase<db.DescriptorRow> {
   }
 }
 
+/// Translation
+class TranslationResource extends ResourceBase<db.TranslationRow> {
+  int id;
+  LocaleResource locale;
+  String content;
+
+  Map<int, db.TranslationRow> _getTableMap(data) => data.translationTable;
+
+  void loadFields(row, data) {
+    locale = new LocaleResource()..load(row.localeId, data);
+    content = row.content;
+  }
+}
+
 /// Subject
 class SubjectResource extends ResourceBase<db.SubjectRow> {
   int id;
@@ -82,41 +105,15 @@ class SubjectResource extends ResourceBase<db.SubjectRow> {
   }
 }
 
-/// Translation
-class TranslationResource extends ResourceBase<db.TranslationRow> {
-  int id;
-  String content;
-  LocaleResource locale;
-
-  Map<int, db.TranslationRow> _getTableMap(data) => data.translationTable;
-
-  void loadFields(row, data) {
-    content = row.content;
-    locale = new LocaleResource()..load(row.localeId, data);
-  }
-}
-
 //------------------------------------------------------------------------------
-// Categories and expression storage
+// Functions and expression storage
 //------------------------------------------------------------------------------
-
-/// Category
-class CategoryResource extends ResourceBase<db.CategoryRow> {
-  int id;
-  List<int> parents;
-  SubjectResource subject;
-
-  Map<int, db.CategoryRow> _getTableMap(data) => data.categoryTable;
-
-  void loadFields(row, data) {
-    parents = row.parents;
-    subject = new SubjectResource()..load(row.subjectId, data);
-  }
-}
 
 /// Function
 class FunctionResource extends ResourceBase<db.FunctionRow> {
   int id;
+  SubjectResource subject;
+  DescriptorResource descriptor;
   bool generic;
   bool rearrangeable;
   int argumentCount;
@@ -132,23 +129,18 @@ class FunctionResource extends ResourceBase<db.FunctionRow> {
   String keywordType;
 
   String latexTemplate;
-  CategoryResource category;
-  DescriptorResource descriptor;
 
   Map<int, db.FunctionRow> _getTableMap(data) => data.functionTable;
 
   void loadFields(row, data) {
+    subject = getResource(row.subjectId, data, new SubjectResource());
+    descriptor = getResource(row.descriptorId, data, new DescriptorResource());
     generic = row.generic;
     rearrangeable = row.rearrangeable;
     argumentCount = row.argumentCount;
     keyword = row.keyword;
     keywordType = row.keywordType;
     latexTemplate = row.latexTemplate;
-
-    category = new CategoryResource()..load(row.categoryId, data);
-    if (row.descriptorId != null) {
-      descriptor = new DescriptorResource()..load(row.descriptorId, data);
-    }
   }
 }
 
@@ -208,14 +200,12 @@ class ExpressionResource extends ResourceBase<db.ExpressionRow> {
 /// Rule
 class RuleResource extends ResourceBase<db.RuleRow> {
   int id;
-  CategoryResource category;
   ExpressionResource leftExpression;
   ExpressionResource rightExpression;
 
   Map<int, db.RuleRow> _getTableMap(data) => data.ruleTable;
 
   void loadFields(row, data) {
-    category = new CategoryResource()..load(row.categoryId, data);
     leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
     rightExpression = new ExpressionResource()
       ..load(row.rightExpressionId, data);
@@ -241,7 +231,6 @@ class DefinitionResource extends ResourceBase<db.DefinitionRow> {
 /// Lineage step
 class LineageStepResource extends ResourceBase<db.LineageStepRow> {
   int id;
-  CategoryResource category;
   ExpressionResource expression;
   int position;
 
@@ -261,7 +250,6 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
   Map<int, db.LineageStepRow> _getTableMap(data) => data.lineageStepTable;
 
   void loadFields(row, data) {
-    category = new CategoryResource()..load(row.categoryId, data);
     expression = new ExpressionResource()..load(row.expressionId, data);
     rule = new RuleResource()..load(row.ruleId, data);
     position = row.position;
@@ -273,11 +261,13 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
 /// Lineage
 class LineageResource extends ResourceBase<db.LineageRow> {
   int id;
+  DescriptorResource descriptor;
   List<LineageStepResource> steps;
 
   Map<int, db.LineageRow> _getTableMap(data) => data.lineageTable;
 
   void loadFields(row, data) {
+    descriptor = getResource(row.descriptorId, data, new DescriptorResource());
     steps = row.steps
         .map((id) => new LineageStepResource()..load(id, data))
         .toList();

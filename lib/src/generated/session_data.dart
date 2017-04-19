@@ -11,9 +11,7 @@ class SessionData {
   Map<int, SubjectRow> subjectTable = {};
   Map<int, LocaleRow> localeTable = {};
   Map<int, TranslationRow> translationTable = {};
-  Map<int, CategoryRow> categoryTable = {};
   Map<int, FunctionRow> functionTable = {};
-  Map<int, FunctionSubjectTagRow> functionSubjectTagTable = {};
   Map<int, OperatorRow> operatorTable = {};
   Map<int, ExpressionRow> expressionTable = {};
   Map<int, RuleRow> ruleTable = {};

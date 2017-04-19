@@ -27,8 +27,8 @@ restart-web-server:
 check:
 	./tool/check.sh
 
-start-dev-environment: restart-web-server
-	./tool/kill-port.sh 8083
+build-dev-environment: restart-web-server
+	./tool/kill-port.sh 8083 force
 	./tool/restart-db.sh
 	export EQDB_TEST_LOG=''; ./tool/run-test.sh ./test/run.sh
 	pub serve --port 8083 > /dev/null 2>&1 &

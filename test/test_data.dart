@@ -11,8 +11,14 @@ Future main() async {
   final pkey = new PrimaryKeyEmulator();
   final eqlib = new EqlibHelper();
 
+  final localesFile = 'data/data.0.csv';
+  final subjectsFile = 'data/data.1.csv';
+  final functionsFile = 'data/data.2.csv';
+  final translationsFile = 'data/data.3.csv';
+  final definitionsFile = 'data/data.4.csv';
+
   // Load function keywords.
-  await eqlib.loadKeywords('data/data.3.csv',
+  await eqlib.loadKeywords(functionsFile,
       id: 'ID',
       keyword: 'Keyword',
       precedenceLevel: 'Pre.',
@@ -21,7 +27,7 @@ Future main() async {
       type: 'Type');
 
   // Locales
-  await csvtest(baseUrl, 'data/data.0.csv', [
+  await csvtest(baseUrl, localesFile, [
     // Create locales.
     route('POST', 'locale/create', request: {
       'code': col('Locale')
@@ -31,131 +37,38 @@ Future main() async {
     })
   ]);
 
-  // Descriptors
-  await csvtest(baseUrl, 'data/data.1.csv', [
-    // Create descriptor.
-    route('POST', 'descriptor/create', request: {
-      'translations': [
-        {
-          'locale': {'code': 'en_US'},
-          'content': col('Translation (en_US)')
-        }
-      ]
-    }, response: {
-      'id': pkey.get('descriptor', col('Translation (en_US)')),
-      'translations': [
-        {
-          'id': pkey.get('translation', col('Translation (en_US)')),
-          'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
-          'content': col('Translation (en_US)')
-        }
-      ]
-    }),
-
-    // Get descriptor translations.
-    route('GET', 'descriptor/{id}/translation/list', url: {
-      'id': col('ID')
-    }, response: [
-      {
-        'id': pkey.get('translation', col('Translation (en_US)')),
-        'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
-        'content': col('Translation (en_US)')
-      }
-    ]),
-
-    // Add Dutch translation to descriptor.
-    route('POST', 'descriptor/{id}/translation/create', url: {
-      'id': col('ID')
-    }, request: {
-      'locale': {'code': 'nl_NL'},
-      'content': col('Translation (nl_NL)')
-    }, response: {
-      'id': pkey.get('translation', col('Translation (nl_NL)')),
-      'locale': {'id': pkey.get('locale', 'nl_NL'), 'code': 'nl_NL'},
-      'content': col('Translation (nl_NL)')
-    }),
-
-    // Get descriptor translations again.
-    route('GET', 'descriptor/{id}/translation/list', url: {
-      'id': col('ID')
-    }, response: [
-      {
-        'id': pkey.get('translation', col('Translation (en_US)')),
-        'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
-        'content': col('Translation (en_US)')
-      },
-      {
-        'id': pkey.get('translation', col('Translation (nl_NL)')),
-        'locale': {'id': pkey.get('locale', 'nl_NL'), 'code': 'nl_NL'},
-        'content': col('Translation (nl_NL)')
-      }
-    ]),
-
-    // Create subject from descriptor.
-    route('POST', 'subject/create', runIf: col('Subject'), request: {
-      'descriptor': {'id': col('ID')}
-    }, response: {
-      'id': pkey.get('subject', col('ID')),
-      'descriptor': {'id': col('ID')}
-    })
-  ]);
-
-  // Categories
-  await csvtest(baseUrl, 'data/data.2.csv', [
-    // Create category.
-    route('POST', 'category/create', runIf: empty(col('Parent ID')), request: {
-      'subject': {
-        'descriptor': {
-          'translations': [
-            {
-              'locale': {'code': 'en_US'},
-              'content': col('Name')
-            }
-          ]
-        }
-      }
-    }, response: {
-      'id': pkey.get('category', col('Name')),
-      'subject': {
-        'id': pkey.get('subject', pkey.get('descriptor', col('Name'))),
-        'descriptor': 'any:map'
-      },
-      'parents': []
-    }),
-
-    // Create subcategory.
-    route('POST', 'category/{id}/category/create',
-        runIf: not(empty(col('Parent ID'))),
-        url: {
-          'id': col('Parent ID')
-        },
-        request: {
-          'subject': {
-            'descriptor': {
-              'translations': [
-                {
-                  'locale': {'code': 'en_US'},
-                  'content': col('Name')
-                }
-              ]
-            }
+  // Subjects
+  await csvtest(baseUrl, subjectsFile, [
+    // Create subject.
+    route('POST', 'subject/create', request: {
+      'descriptor': {
+        'translations': [
+          {
+            'locale': {'code': 'en_US'},
+            'content': col('Subject')
           }
-        },
-        response: {
-          'id': pkey.get('category', col('Name')),
-          'subject': {
-            'id': pkey.get('subject', pkey.get('descriptor', col('Name'))),
-            'descriptor': 'any:map'
-          },
-          'parents': intlist(col('Parents'))
-        })
+        ]
+      }
+    }, response: {
+      'id': col('ID'),
+      'descriptor': {
+        'id': pkey.get('descriptor', col('Subject')),
+        'translations': [
+          {
+            'id': pkey.get('translation', col('Subject'), 'en_US'),
+            'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
+            'content': col('Subject')
+          }
+        ]
+      }
+    }),
   ]);
 
   // Functions
-  await csvtest(baseUrl, 'data/data.3.csv', [
+  await csvtest(baseUrl, functionsFile, [
     // Create function.
     route('POST', 'function/create', request: {
-      'category': {'id': pkey.get('category', col('Category'))},
+      'subject': {'id': pkey.get('subject', col('Subject'))},
       'descriptor': ifNe('Name', {
         'translations': [
           {
@@ -172,12 +85,12 @@ Future main() async {
       'latexTemplate': ifNe('LaTeX template', col('LaTeX template'))
     }, response: {
       'id': col('ID'),
-      'category': {'id': pkey.get('category', col('Category'))},
+      'subject': {'id': pkey.get('subject', col('Subject'))},
       'descriptor': ifNe('Name', {
         'id': pkey.get('descriptor', col('Name')),
         'translations': [
           {
-            'id': pkey.get('translation', col('Name')),
+            'id': pkey.get('translation', col('Name'), 'en_US'),
             'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
             'content': col('Name')
           }
@@ -210,20 +123,33 @@ Future main() async {
     })
   ]);
 
+  // Translations
+  await csvtest(baseUrl, translationsFile, [
+    // Create Dutch translation.
+    route('POST', 'descriptor/{id}/translation/create', url: {
+      'id': pkey.get('descriptor', col('Translation (en_US)'))
+    }, request: {
+      'locale': {'code': 'nl_NL'},
+      'content': col('Translation (nl_NL)')
+    }, response: {
+      'id': pkey.get('translation', col('Translation (nl_NL)'), 'nl_NL'),
+      'locale': {'id': pkey.get('locale', 'nl_NL'), 'code': 'nl_NL'},
+      'content': col('Translation (nl_NL)')
+    }),
+  ]);
+
   // Definitions
-  await csvtest(baseUrl, 'data/data.4.csv', [
+  await csvtest(baseUrl, definitionsFile, [
     // Create definition.
     route('POST', 'definition/create', request: {
       'rule': {
-        'category': {'id': pkey.get('category', col('Category'))},
         'leftExpression': {'data': eqlib.data(col('Expression left'))},
         'rightExpression': {'data': eqlib.data(col('Expression right'))}
       }
     }, response: {
-      'id': pkey.get('definition', col('ID')),
+      'id': col('ID'),
       'rule': {
         'id': pkey.get('rule', col('ID')),
-        'category': accept(AcceptType.map),
         'leftExpression': {
           'id': pkey.get('expression', col('Expression left')),
           'data': eqlib.data(col('Expression left')),

@@ -14,15 +14,8 @@ final locale = new TableInfo<LocaleRow, SessionData>(
     'locale', LocaleRow.select, LocaleRow.map, (data) => data.localeTable);
 final translation = new TableInfo<TranslationRow, SessionData>('translation',
     TranslationRow.select, TranslationRow.map, (data) => data.translationTable);
-final category = new TableInfo<CategoryRow, SessionData>('category',
-    CategoryRow.select, CategoryRow.map, (data) => data.categoryTable);
 final function = new TableInfo<FunctionRow, SessionData>('function',
     FunctionRow.select, FunctionRow.map, (data) => data.functionTable);
-final functionSubjectTag = new TableInfo<FunctionSubjectTagRow, SessionData>(
-    'function_subject_tag',
-    FunctionSubjectTagRow.select,
-    FunctionSubjectTagRow.map,
-    (data) => data.functionSubjectTagTable);
 final operator = new TableInfo<OperatorRow, SessionData>('operator',
     OperatorRow.select, OperatorRow.map, (data) => data.operatorTable);
 final expression = new TableInfo<ExpressionRow, SessionData>('expression',

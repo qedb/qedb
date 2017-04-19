@@ -19,6 +19,7 @@ Future<List<db.LineageRow>> listLineages(Session s) async {
 
 Future<db.LineageRow> readLineage(Session s, int id) async {
   final lineage = await s.selectById(db.lineage, id);
+  // TODO: select descriptor
   await _listLineageSteps(s, lineage.steps);
   return lineage;
 }

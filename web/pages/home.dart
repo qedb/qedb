@@ -10,15 +10,12 @@ import 'templates.dart';
 
 final allMethods = [
   ['locale/create', 'Create locale'],
-  ['descriptor/create', 'Create descriptor'],
   ['subject/create', 'Create subject'],
-  ['category/create', 'Create category'],
   ['function/create', 'Create function'],
   ['definition/create', 'Create definition'],
   ['lineage/create', 'Create lineage'],
   ['descriptor/list', 'List descriptors'],
   ['subject/list', 'List subjects'],
-  ['category/list', 'List categories'],
   ['function/list', 'List functions'],
   ['definition/list', 'List definitions'],
   ['lineage/list', 'List lineages']

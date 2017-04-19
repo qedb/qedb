@@ -65,10 +65,19 @@ ValueResolver ifNeElse(String condCol, dynamic value, dynamic fallback) =>
 class PrimaryKeyEmulator {
   final db = new Map<String, List<int>>();
 
-  ValueResolver<int> get(String table, dynamic value) => (row) {
+  ValueResolver<int> get(String table, dynamic value, [dynamic mixWith]) =>
+      (row) {
         // Get hash code for targeted record.
-        final recordHashCode =
+        var recordHashCode =
             value is ValueResolver ? value(row).hashCode : value.hashCode;
+
+        // Mix with [mixWith] if specified.
+        if (mixWith != null) {
+          final mixWithHashCode = mixWith is ValueResolver
+              ? mixWith(row).hashCode
+              : mixWith.hashCode;
+          recordHashCode = hashCode2(recordHashCode, mixWithHashCode);
+        }
 
         // Make sure table exists.
         db.putIfAbsent(table, () => new List<int>());
@@ -81,15 +90,6 @@ class PrimaryKeyEmulator {
           db[table].add(recordHashCode);
           return db[table].length;
         }
-      };
-
-  ValueResolver<bool> contains(String table, dynamic value) => (row) {
-        // Get hash code for targeted record.
-        final recordHashCode =
-            value is ValueResolver ? value(row).hashCode : value.hashCode;
-        return db.containsKey(table)
-            ? db[table].contains(recordHashCode)
-            : false;
       };
 }
 

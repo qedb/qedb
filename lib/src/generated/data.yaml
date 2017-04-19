@@ -15,17 +15,9 @@ tables:
   className:  Translation
   varName:    translation
 
-- tableName:  category
-  className:  Category
-  varName:    category
-
 - tableName:  function
   className:  Function
   varName:    function
-
-- tableName:  function_subject_tag
-  className:  FunctionSubjectTag
-  varName:    functionSubjectTag
 
 - tableName:  operator
   className:  Operator

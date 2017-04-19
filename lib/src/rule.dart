@@ -8,19 +8,6 @@ Future<db.RuleRow> createRule(Session s, RuleResource body) async {
   // Decode expression headers.
   final leftData = _decodeCodecHeader(body.leftExpression.data);
   final rightData = _decodeCodecHeader(body.rightExpression.data);
-  final allIds = leftData.functionIds.toSet()..addAll(rightData.functionIds);
-
-  // The lowest category in the common lineage must be contained in the parents
-  // of the rule category or be equal to the rule category.
-  final categoryLineage = await findCategoryLineage(s, allIds.toList());
-  if (categoryLineage.isEmpty) {
-    throw new UnprocessableEntityError('no common category lineage');
-  } else if (body.category.id != categoryLineage.last) {
-    final category = await s.selectById(db.category, body.category.id);
-    if (!category.parents.contains(categoryLineage.last)) {
-      throw new UnprocessableEntityError('no common category lineage');
-    }
-  }
 
   // Decode expressions.
   final leftDecoded = exprCodecDecode(leftData);
@@ -33,7 +20,6 @@ Future<db.RuleRow> createRule(Session s, RuleResource body) async {
   return await s.insert(
       db.rule,
       VALUES({
-        'category_id': body.category.id,
         'left_expression_id': leftExpr.id,
         'right_expression_id': rightExpr.id,
         'left_array_data': ARRAY(leftDecoded.toArray(), 'integer'),

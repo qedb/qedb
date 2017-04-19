@@ -18,7 +18,6 @@ import 'pages/locale.dart';
 import 'pages/descriptor.dart';
 import 'pages/subject.dart';
 import 'pages/translation.dart';
-import 'pages/category.dart';
 import 'pages/function.dart';
 import 'pages/definition.dart';
 import 'pages/lineage.dart';
@@ -27,20 +26,15 @@ import 'pages/templates.dart';
 import 'page.dart';
 
 /// All pages
+/// TODO: redirect /descriptor/{id}/translation/list to /descriptor/{id}/read
 Map<String, Page> pages = {
   '/': homePage,
   '/locale/create': createLocalePage,
-  '/descriptor/create': createDescriptorPage,
   '/descriptor/list': listDescriptorsPage,
   '/descriptor/{id}/read': readDescriptorPage,
   '/descriptor/{id}/translation/create': createTranslationPage,
   '/subject/create': createSubjectPage,
   '/subject/list': listSubjectsPage,
-  '/category/create': createCategoryPage,
-  '/category/list': listCategoriesPage,
-  '/category/{id}/read': readCategoryPage,
-  '/category/{id}/category/create': createCategoryPage,
-  '/category/{id}/category/list': listSubCategoriesPage,
   '/function/create': createFunctionPage,
   '/function/list': listFunctionsPage,
   '/definition/create': createDefinitionPage,

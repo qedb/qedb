@@ -21,9 +21,8 @@ import 'package:eqdb/schema.dart' as db;
 
 part 'src/locale.dart';
 part 'src/descriptor.dart';
-part 'src/subject.dart';
 part 'src/translation.dart';
-part 'src/category.dart';
+part 'src/subject.dart';
 part 'src/function.dart';
 part 'src/operator.dart';
 part 'src/expression.dart';

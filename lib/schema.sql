@@ -28,14 +28,6 @@ CREATE TABLE descriptor (
   id  serial  PRIMARY KEY
 );
 
--- Subject
--- A descriptor should be approved to be a subject. Subjects are used for
--- categories and for secundary function grouping.
-CREATE TABLE subject (
-  id             serial   PRIMARY KEY,
-  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id)
-);
-
 -- Translation of a descriptor
 CREATE TABLE translation (
   id             serial   PRIMARY KEY,
@@ -50,19 +42,15 @@ CREATE TABLE translation (
   UNIQUE (locale_id, content)
 );
 
---------------------------------------------------------------------------------
--- Categories and expression storage
---------------------------------------------------------------------------------
-
--- Category
--- The referenced subject can not already be used by any function subject tag.
--- Currently a category must be tied to a subject. This in order to prevent
--- unclarity about the category contents.
-CREATE TABLE category (
-  id          serial     PRIMARY KEY,
-  subject_id  integer    NOT NULL UNIQUE REFERENCES subject(id),
-  parents     integer[]  NOT NULL
+-- Subject
+CREATE TABLE subject (
+  id             serial   PRIMARY KEY,
+  descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id)
 );
+
+--------------------------------------------------------------------------------
+-- Functions and expression storage
+--------------------------------------------------------------------------------
 
 -- Function keyword types
 CREATE TYPE keyword_type AS ENUM (
@@ -86,7 +74,7 @@ CREATE TYPE keyword_type AS ENUM (
 -- Function
 CREATE TABLE function (
   id              serial    PRIMARY KEY,
-  category_id     integer   NOT NULL REFERENCES category(id),
+  subject_id      integer   NOT NULL REFERENCES subject(id),
   descriptor_id   integer   UNIQUE REFERENCES descriptor(id),
   generic         boolean   NOT NULL CHECK (NOT generic OR argument_count < 2),
   rearrangeable   boolean   NOT NULL CHECK (NOT (rearrangeable AND argument_count < 2)),
@@ -102,9 +90,8 @@ CREATE TABLE function (
   -- descriptor can also be used to print this function.
   latex_template  text      CHECK ((latex_template = '') IS NOT TRUE),
 
-  -- At least do not repeat the same LaTeX template within the same direct
-  -- category (does not apply to functions in child categories).
-  UNIQUE (category_id, latex_template),
+  -- Do not repeat the same LaTeX template within the same subject.
+  UNIQUE (subject_id, latex_template),
 
   -- Non-generic function with >0 arguments must have a name.
   -- E.g. functions such as ?a, ?fn(x) or x can be left unnamed.
@@ -121,16 +108,7 @@ CREATE TABLE function (
     (keyword IS NOT NULL OR latex_template IS NOT NULL)
 );
 
-CREATE INDEX function_category_id_index ON function(category_id);
 CREATE INDEX function_keyword_index ON function(keyword);
-
--- Function subject tag
--- The referenced subject can not already be used by a category.
-CREATE TABLE function_subject_tag (
-  id           serial   PRIMARY KEY,
-  function_id  integer  NOT NULL REFERENCES function(id),
-  subject_id   integer  NOT NULL REFERENCES subject(id)
-);
 
 -- Operator evaluation (relevant for printing parentheses)
 CREATE TYPE operator_associativity AS ENUM ('ltr', 'rtl');
@@ -185,11 +163,8 @@ CREATE INDEX expression_functions_index on expression USING GIN (functions);
 -- Optimizations that could be implemented in the future:
 -- + Set explicit reversibility (adds ability to force single direction).
 -- + Add index for top level function ID.
--- Not yet implemented in the code:
--- + Filter by category ID
 CREATE TABLE rule (
   id                   serial     PRIMARY KEY,
-  category_id          integer    NOT NULL REFERENCES category(id),
   left_expression_id   integer    NOT NULL REFERENCES expression(id),
   right_expression_id  integer    NOT NULL REFERENCES expression(id),
   left_array_data      integer[]  NOT NULL,
@@ -198,13 +173,12 @@ CREATE TABLE rule (
   UNIQUE (left_expression_id, right_expression_id)
 );
 
--- A rule definition.
+-- A rule definition
 CREATE TABLE definition (
   id       serial   PRIMARY KEY,
   rule_id  integer  NOT NULL UNIQUE REFERENCES rule(id)
 
   -- TODO:
-  -- + Definition title
   -- + Theoretical definition (mathematical property of functions)
   -- + Empirical definition (physics)
 );
@@ -226,7 +200,6 @@ CREATE TYPE lineage_step_type AS ENUM (
 CREATE TABLE lineage_step (
   id             serial    PRIMARY KEY,
   previous_id    integer   REFERENCES lineage_step(id),
-  category_id    integer   NOT NULL REFERENCES category(id),
   expression_id  integer   NOT NULL REFERENCES expression(id),
 
   -- Expression rewrite parameters
@@ -243,8 +216,9 @@ CREATE TABLE lineage_step (
 );
 
 CREATE TABLE lineage (
-  id     serial     PRIMARY KEY,
-  steps  integer[]  NOT NULL
+  id             serial     PRIMARY KEY,
+  descriptor_id  integer    REFERENCES descriptor(id),
+  steps          integer[]  NOT NULL
 );
 
 --------------------------------------------------------------------------------

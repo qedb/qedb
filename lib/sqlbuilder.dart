@@ -76,11 +76,15 @@ class SessionState<D> {
     final cache = table.getCache(data);
     final nonCachedIds = new List<int>();
     ids.forEach((id) {
-      final record = cache[id];
-      if (record != null) {
-        records.add(record);
-      } else {
-        nonCachedIds.add(id);
+      // Skip null values. This way null values do not have to be filtered out
+      // by client code.
+      if (id != null) {
+        final record = cache[id];
+        if (record != null) {
+          records.add(record);
+        } else {
+          nonCachedIds.add(id);
+        }
       }
     });
 

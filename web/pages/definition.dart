@@ -10,18 +10,6 @@ final createDefinitionPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'definition', inputs: (data) {
         return [
-          formGroup('Category', 'category', [
-            select('#category.custom-select.form-control',
-                name: 'category',
-                c: data.additional['categories'].map((category) {
-                  return option(
-                      safe(
-                          () => category
-                              .subject.descriptor.translations[0].content,
-                          ''),
-                      value: category.id);
-                }).toList())
-          ]),
           formGroup('Left expression', 'left',
               [div('#left.editex.editex-align-left', data_name: 'left')]),
           formGroup('Right expression', 'right',
@@ -35,12 +23,10 @@ final createDefinitionPage = new Page(
     },
     onPost: (data) => {
           'rule': {
-            'category': {'id': int.parse(data['category'])},
             'leftExpression': {'data': data['left']},
             'rightExpression': {'data': data['right']}
           }
-        },
-    additional: {'categories': 'category/list?locale=en_US'});
+        });
 
 final listDefinitionsPage = new Page(template: (data) {
   return listResourceTemplate(data, 'definition', 'definitions', tableHead: [

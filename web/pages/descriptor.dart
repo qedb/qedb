@@ -2,25 +2,22 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
+import 'package:json_object/json_object.dart';
+
 import '../htgen/htgen.dart';
 import '../page.dart';
 import 'templates.dart';
 
-final createDescriptorPage = new Page(
-    template: (data) {
-      return createResourceTemplate(data, 'descriptor', inputs: (data) {
-        return [localeSelect(data), formInput('Translation', name: 'content')];
-      });
-    },
-    onPost: (data) => {
-          'translations': [
-            {
-              'locale': {'code': data['locale']},
-              'content': data['content']
-            }
-          ]
-        },
-    additional: {'locales': 'locale/list'});
+/// Helper for other pages.
+String descriptorHyperlink(JsonObject getDescriptor()) {
+  try {
+    final descriptor = getDescriptor();
+    return a(descriptor.translations[0].content,
+        href: '/descriptor/${descriptor.id}/read', scope: 'row');
+  } catch (e) {
+    return span('.none');
+  }
+}
 
 final listDescriptorsPage = new Page(template: (data) {
   return listResourceTemplate(data, 'descriptor', 'descriptors',

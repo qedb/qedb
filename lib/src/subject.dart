@@ -5,15 +5,10 @@
 part of eqdb;
 
 Future<db.SubjectRow> createSubject(Session s, SubjectResource body) async {
-  if (body.descriptor.id != null) {
-    return s.insert(db.subject, VALUES({'descriptor_id': body.descriptor.id}));
-  } else {
-    return s.insert(
-        db.subject,
-        VALUES({
-          'descriptor_id': (await createDescriptor(s, body.descriptor)).id
-        }));
-  }
+  return s.insert(
+      db.subject,
+      VALUES(
+          {'descriptor_id': (await _createDescriptor(s, body.descriptor)).id}));
 }
 
 Future<List<db.SubjectRow>> listSubjects(

@@ -13,11 +13,15 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
 
   // Insert function.
   final values = {
+    'subject_id': body.subject.id,
     'generic': body.generic,
     'rearrangeable': body.rearrangeable,
-    'argument_count': body.argumentCount,
-    'category_id': body.category.id
+    'argument_count': body.argumentCount
   };
+
+  if (body.descriptor != null) {
+    values['descriptor_id'] = (await _createDescriptor(s, body.descriptor)).id;
+  }
 
   if (notEmpty(body.latexTemplate)) {
     values['latex_template'] = body.latexTemplate;
@@ -28,26 +32,19 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
     values['keyword_type'] = body.keywordType;
   }
 
-  // If a name is specified, add it to the insert parameters.
-  if (body.descriptor != null) {
-    // Use ID if provided.
-    if (body.descriptor.id != null) {
-      values['descriptor_id'] = body.descriptor.id;
-    } else {
-      // Create descriptor.
-      values['descriptor_id'] = (await createDescriptor(s, body.descriptor)).id;
-    }
-  }
-
   return await s.insert(db.function, VALUES(values));
 }
 
 Future<List<db.FunctionRow>> listFunctions(
-    Session s, List<String> locales, int categoryId) async {
+    Session s, List<String> locales) async {
   final functions = await s.select(db.function);
 
-  // Select all translations.
-  final descriptorIds = functions.map((row) => row.descriptorId);
+  // Select all subjects and translations.
+  final subjects =
+      await s.selectByIds(db.subject, functions.map((row) => row.subjectId));
+  final descriptorIds = functions.map((row) => row.descriptorId).toList();
+  subjects.forEach((subject) => descriptorIds.add(subject.descriptorId));
+  descriptorIds.removeWhere(isNull);
   await s.select(
       db.translation,
       WHERE({

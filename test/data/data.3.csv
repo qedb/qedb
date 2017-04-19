@@ -1,26 +1,21 @@
-ID,Category,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Arr.,Pre.,Ass.,Char(1),Type,Editor
-1,Algebra,"Basic algebra",Equality,,,2,$0=$1,FALSE,FALSE,1,ltr,=,infix,{}={}
-2,Algebra,"Basic algebra",Add,,,2,$0+$1,FALSE,TRUE,2,ltr,+,infix,{}+{}
-3,Algebra,"Basic algebra",Subtract,,,2,$0-$1,FALSE,FALSE,2,ltr,-,infix,{}-{}
-4,Algebra,"Basic algebra",Multiply,,,2,$0$1,FALSE,TRUE,3,ltr,*,infix,{}\cdot{}
-5,Algebra,"Basic algebra",Divide,frac,latex,2,\frac{~$0~}{~$1~},FALSE,FALSE,3,ltr,/,infix,{}\div{}
-6,Algebra,"Basic algebra",Power,,,2,$0^{$1},FALSE,FALSE,4,rtl,^,infix,^{$0}
-7,Algebra,"Basic algebra",Negate,,,1,-$0,FALSE,FALSE,5,ltr,~,prefix,-
-8,Algebra,Combinatorics,Factorial,,,1,$0!,FALSE,FALSE,6,rtl,!,postfix,"!\,"
-9,Algebra,"Basic algebra",,a,symbol,0,,TRUE,FALSE,,,,,
-10,Algebra,"Basic algebra",,b,symbol,0,,TRUE,FALSE,,,,,
-11,Algebra,"Basic algebra",,c,symbol,0,,TRUE,FALSE,,,,,
-12,Algebra,"Basic algebra",,n,symbol,0,,TRUE,FALSE,,,,,
-13,Algebra,"Vector algebra",,e1,symbol,0,\hat{i},FALSE,FALSE,,,,,
-14,Algebra,"Vector algebra",,e2,symbol,0,\hat{j},FALSE,FALSE,,,,,
-15,Algebra,"Vector algebra",,e3,symbol,0,\hat{k},FALSE,FALSE,,,,,
-16,Algebra,Trigonometry,Radius,r,symbol,0,,FALSE,FALSE,,,,,
-17,Algebra,Trigonometry,Theta,theta,latex,0,\theta,FALSE,FALSE,,,,,
-18,Algebra,Trigonometry,Sine,sin,latex,1,\sin$0,FALSE,FALSE,,,,,
-19,Algebra,Trigonometry,Cosine,cos,latex,1,\cos$0,FALSE,FALSE,,,,,
-20,Algebra,Calculus,,x,symbol,0,,TRUE,FALSE,,,,,
-21,Algebra,Calculus,,y,symbol,0,,TRUE,FALSE,,,,,
-22,Algebra,Calculus,,f,abbreviation,1,,TRUE,FALSE,,,,,
-23,Algebra,Calculus,Delta,d,symbol,1,\Delta$0,FALSE,FALSE,,,,,
-24,Algebra,Calculus,Limit,lim,latex,3,\lim_{$0\to$1}$2,FALSE,FALSE,,,,,
-25,Algebra,Calculus,Differential,diff,abbreviation,2,\frac{\partial}{\partial$0}$1,FALSE,FALSE,,,,,
+"Translation (en_US)","Translation (nl_NL)"
+"Basic Algebra","Basis algebra"
+Combinatorics,Combinatoriek
+"Vector Algebra",Vectoralgebra
+Trigonometry,Trigonometrie
+Calculus,Calculus
+Equality,Gelijkheid
+Add,Optellen
+Subtract,Aftrekken
+Multiply,Vermenigvuldigen
+Divide,Delen
+Power,Macht
+Negate,Omkeren
+Factorial,Factorial
+Radius,Radius
+Theta,Theta
+Sine,Sinus
+Cosine,Cosinus
+Delta,Delta
+Limit,Limiet
+Differential,Differentiaal

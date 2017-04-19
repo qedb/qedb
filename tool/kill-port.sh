@@ -5,11 +5,17 @@
 # that can be found in the LICENSE file.
 
 PORT=$1
+FORCE=$2
 SERVER_PID=`lsof -n -i :$PORT | grep 'LISTEN' | awk '{print $2}'`
 if [ -n "$SERVER_PID" ]
 then
   echo "Killing server PID $SERVER_PID"
 
-  # Note that the server can handle SIGINT signals.
-  kill -s SIGINT $SERVER_PID
+  if [ -z $FORCE ]
+  then
+    # Note that the server can handle SIGINT signals.
+    kill -s SIGINT $SERVER_PID
+  else
+    kill $SERVER_PID
+  fi
 fi

@@ -5,30 +5,29 @@
 import '../htgen/htgen.dart';
 import '../page.dart';
 import 'templates.dart';
+import 'descriptor.dart';
 
 final createFunctionPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'function', inputs: (data) {
         return [
           input(type: 'hidden', name: 'locale', value: 'en_US'),
-          formGroup('Category', 'category', [
-            select('#category.custom-select.form-control',
-                name: 'category',
-                c: data.additional['categories'].map((category) {
+          formGroup('Subject', 'subject', [
+            select('#subject.custom-select.form-control',
+                name: 'subject',
+                c: data.additional['subjects'].map((subject) {
                   return option(
                       safe(
-                          () => category
-                              .subject.descriptor.translations[0].content,
-                          ''),
-                      value: category.id);
+                          () => subject.descriptor.translations[0].content, ''),
+                      value: subject.id);
                 }).toList())
           ]),
           div('.form-group', [
             label('Name'),
             div('.input-group', [
-              input('.form-control', type: 'text', name: 'name'),
+              input('.form-control', type: 'text', name: 'descriptor'),
               localeSelect(data,
-                  name: 'name-locale', customClass: '', inGroup: false)
+                  name: 'descriptor-locale', customClass: '', inGroup: false)
             ])
           ]),
           div('.form-group', [
@@ -54,32 +53,40 @@ final createFunctionPage = new Page(
         ];
       });
     },
-    onPost: (data) => {
-          'generic': data['generic'] == 'true',
-          'rearrangeable': data['rearrangeable'] == 'true',
-          'argumentCount': int.parse(data['argument-count'], onError: (_) => 0),
-          'keyword': data['keyword'],
-          'keywordType': data['keyword-type'],
-          'latexTemplate': data['latex-template'],
-          'category': {'id': int.parse(data['category'], onError: (_) => 0)},
-          'descriptor': {
-            'translations': [
-              {
-                'locale': {'code': data['name-locale']},
-                'content': data['name']
-              }
-            ]
-          }
+    onPost: (data) {
+      int subjectId;
+      try {
+        subjectId = int.parse(data['subject']);
+      } catch (e) {
+        subjectId = null;
+      }
+      return {
+        'subject': subjectId != null ? {'id': subjectId} : null,
+        'descriptor': {
+          'translations': [
+            {
+              'locale': {'code': data['descriptor-locale']},
+              'content': data['descriptor']
+            }
+          ]
         },
+        'generic': data['generic'] == 'true',
+        'rearrangeable': data['rearrangeable'] == 'true',
+        'argumentCount': int.parse(data['argument-count'], onError: (_) => 0),
+        'keyword': data['keyword'],
+        'keywordType': data['keyword-type'],
+        'latexTemplate': data['latex-template']
+      };
+    },
     additional: {
       'locales': 'locale/list',
-      'categories': 'category/list?locale=en_US'
+      'subjects': 'subject/list?locale=en_US'
     });
 
 final listFunctionsPage = new Page(template: (data) {
   return listResourceTemplate(data, 'function', 'functions', tableHead: [
     th('ID'),
-    th('Category'),
+    th('Subject'),
     th('Descriptor'),
     th('Keyword'),
     th('LaTeX template'),
@@ -87,14 +94,8 @@ final listFunctionsPage = new Page(template: (data) {
   ], row: (function) {
     return [
       td(function.id.toString()),
-      td(a(function.category.id.toString(),
-          href: '/category/${function.category.id}/read')),
-      td(
-        safe(() {
-          return a(function.descriptor.translations[0].content,
-              href: '/descriptor/${function.descriptor.id}/read', scope: 'row');
-        }, ''),
-      ),
+      td(descriptorHyperlink(() => function.subject.descriptor)),
+      td(descriptorHyperlink(() => function.descriptor)),
       td(safe(() => function.keyword.toString(), '')),
       td(safe(() => span('.latex', function.latexTemplate))),
       td(function.generic ? 'yes' : 'no')

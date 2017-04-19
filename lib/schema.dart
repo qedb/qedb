@@ -36,17 +36,6 @@ class DescriptorRow implements Record {
   static DescriptorRow map(Row r) => new DescriptorRow(r[0]);
 }
 
-/// Subject
-class SubjectRow implements Record {
-  final int id;
-  final int descriptorId;
-
-  SubjectRow(this.id, this.descriptorId);
-
-  static const select = '*';
-  static SubjectRow map(Row r) => new SubjectRow(r[0], r[1]);
-}
-
 /// Translation
 class TranslationRow implements Record {
   final int id;
@@ -60,27 +49,25 @@ class TranslationRow implements Record {
       new TranslationRow(r[0], r[1], r[2], r[3]);
 }
 
-//------------------------------------------------------------------------------
-// Categories and expression storage
-//------------------------------------------------------------------------------
-
-/// Category
-class CategoryRow implements Record {
+/// Subject
+class SubjectRow implements Record {
   final int id;
-  final int subjectId;
-  final List<int> parents;
+  final int descriptorId;
 
-  CategoryRow(this.id, this.subjectId, this.parents);
+  SubjectRow(this.id, this.descriptorId);
 
   static const select = '*';
-  static CategoryRow map(Row r) =>
-      new CategoryRow(r[0], r[1], pgIntArray(r[2]));
+  static SubjectRow map(Row r) => new SubjectRow(r[0], r[1]);
 }
+
+//------------------------------------------------------------------------------
+// Functions and expression storage
+//------------------------------------------------------------------------------
 
 /// Function
 class FunctionRow implements Record {
   final int id;
-  final int categoryId;
+  final int subjectId;
   final int descriptorId;
   final bool generic;
   final bool rearrangeable;
@@ -91,7 +78,7 @@ class FunctionRow implements Record {
 
   FunctionRow(
       this.id,
-      this.categoryId,
+      this.subjectId,
       this.descriptorId,
       this.generic,
       this.rearrangeable,
@@ -103,19 +90,6 @@ class FunctionRow implements Record {
   static const select = '*';
   static FunctionRow map(Row r) =>
       new FunctionRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
-}
-
-/// Function subject tag
-class FunctionSubjectTagRow implements Record {
-  final int id;
-  final int functionId;
-  final int subjectId;
-
-  FunctionSubjectTagRow(this.id, this.functionId, this.subjectId);
-
-  static const select = '*';
-  static FunctionSubjectTagRow map(Row r) =>
-      new FunctionSubjectTagRow(r[0], r[1], r[2]);
 }
 
 /// Operator
@@ -177,16 +151,13 @@ class ExpressionRow implements Record {
 /// Note: left_array_data and right_array_data are not included.
 class RuleRow implements Record {
   final int id;
-  final int categoryId;
   final int leftExpressionId;
   final int rightExpressionId;
 
-  RuleRow(
-      this.id, this.categoryId, this.leftExpressionId, this.rightExpressionId);
+  RuleRow(this.id, this.leftExpressionId, this.rightExpressionId);
 
-  static const select =
-      'id, category_id, left_expression_id, right_expression_id';
-  static RuleRow map(Row r) => new RuleRow(r[0], r[1], r[2], r[3]);
+  static const select = 'id, left_expression_id, right_expression_id';
+  static RuleRow map(Row r) => new RuleRow(r[0], r[1], r[2]);
 }
 
 /// Definition
@@ -208,7 +179,6 @@ class DefinitionRow implements Record {
 class LineageStepRow implements Record {
   final int id;
   final int previousId;
-  final int categoryId;
   final int expressionId;
 
   final int position;
@@ -216,21 +186,22 @@ class LineageStepRow implements Record {
   final List<int> rearrange;
   final int ruleId;
 
-  LineageStepRow(this.id, this.previousId, this.categoryId, this.expressionId,
-      this.position, this.type, this.rearrange, this.ruleId);
+  LineageStepRow(this.id, this.previousId, this.expressionId, this.position,
+      this.type, this.rearrange, this.ruleId);
 
   static const select = '*';
-  static LineageStepRow map(Row r) => new LineageStepRow(
-      r[0], r[1], r[2], r[3], r[4], r[5], pgIntArray(r[6]), r[7]);
+  static LineageStepRow map(Row r) =>
+      new LineageStepRow(r[0], r[1], r[2], r[3], r[4], pgIntArray(r[5]), r[6]);
 }
 
 /// Lineage
 class LineageRow implements Record {
   final int id;
+  final int descriptorId;
   final List<int> steps;
 
-  LineageRow(this.id, this.steps);
+  LineageRow(this.id, this.descriptorId, this.steps);
 
   static const select = '*';
-  static LineageRow map(Row r) => new LineageRow(r[0], pgIntArray(r[1]));
+  static LineageRow map(Row r) => new LineageRow(r[0], r[1], pgIntArray(r[2]));
 }
