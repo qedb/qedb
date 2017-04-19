@@ -30,7 +30,7 @@ final createDefinitionPage = new Page(
       }, bodyTags: [
         katexSource(data),
         editexStyles(data),
-        script(src: data.settings['pubserve.root'] + 'src/editex_form.dart.js')
+        script(src: data.settings['lineagesrc'] + 'src/editex_form.dart.js')
       ]);
     },
     onPost: (data) => {

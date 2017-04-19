@@ -14,7 +14,7 @@ stop-database:
 	./tool/stop-db.sh
 
 restart-api-server:
-	./tool/restart-api-server.sh
+	export EQDB_TEST_LOG=''; ./tool/restart-api-server.sh
 
 restart-api-server-log-tests:
 	export EQDB_TEST_LOG='test/logs/main.txt'; ./tool/restart-api-server.sh
@@ -26,6 +26,12 @@ restart-web-server:
 
 check:
 	./tool/check.sh
+
+start-dev-environment: restart-web-server
+	./tool/kill-port.sh 8083
+	./tool/restart-db.sh
+	export EQDB_TEST_LOG=''; ./tool/run-test.sh ./test/run.sh
+	pub serve --port 8083 > /dev/null 2>&1 &
 
 generate-discovery-doc: restart-database restart-api-server
 	mkdir -p doc

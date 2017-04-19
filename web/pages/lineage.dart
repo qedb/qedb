@@ -18,8 +18,8 @@ final createLineagePage = new Page(
       }, bodyTags: [
         katexSource(data),
         editexStyles(data),
-        stylesheet(data.settings['pubserve.root'] + 'styles/main.css'),
-        script(src: data.settings['pubserve.root'] + 'src/main.dart.js')
+        stylesheet(data.settings['lineagesrc'] + 'styles/main.css'),
+        script(src: data.settings['lineagesrc'] + 'src/main.dart.js')
       ]);
     },
     onPost: (data) => JSON.decode(data['data']));

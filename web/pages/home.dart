@@ -69,7 +69,9 @@ final homePage = new Page(template: (data) {
               .map((method) => li(
                   '.list-group-item', a(method.last, href: '/${method.first}')))
               .toList()
-        ])
+        ]),
+        br(),
+        br()
       ])
     ])
   ]);

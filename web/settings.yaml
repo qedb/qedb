@@ -8,5 +8,5 @@ katex.css.href:
   https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css
 editex.css.href:
   http://0.0.0.0:8083/packages/editex/editex.css
-pubserve.root:
+lineagesrc:
   http://0.0.0.0:8083/lineage/
