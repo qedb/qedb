@@ -22,7 +22,6 @@ import 'pages/function.dart';
 import 'pages/definition.dart';
 import 'pages/lineage.dart';
 
-import 'pages/templates.dart';
 import 'page.dart';
 
 /// All pages
@@ -57,9 +56,6 @@ Future<Null> setupRouter(String apiBase, Router router) async {
     }
   }
 
-  // Make sure breadcrumb only points to existing pages.
-  breadcrumbAvailableLinks.addAll(pages.keys);
-
   // Serve favicon.
   final faviconData = new File('web/favicon.ico').readAsBytesSync();
   router.get('/favicon.ico', (_) {
@@ -70,7 +66,7 @@ Future<Null> setupRouter(String apiBase, Router router) async {
   // Add handlers for all pages.
   pages.forEach((path, page) {
     router.add(path, ['GET', 'POST'], (Request request) async {
-      final data = new PageSessionData(settings, snippets);
+      final data = new PageSessionData(settings, snippets, pages.keys.toSet());
       data.path = request.requestedUri.path.split('/');
       data.path.removeWhere((str) => str.isEmpty);
       data.pathParameters = getPathParameters(request);

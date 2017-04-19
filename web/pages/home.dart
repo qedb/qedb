@@ -8,23 +8,22 @@ import '../htgen/htgen.dart';
 import '../page.dart';
 import 'templates.dart';
 
-final allMethods = [
-  ['language/create', 'Create language'],
-  ['subject/create', 'Create subject'],
-  ['function/create', 'Create function'],
-  ['definition/create', 'Create definition'],
-  ['lineage/create', 'Create lineage'],
-  ['descriptor/list', 'List descriptors'],
-  ['subject/list', 'List subjects'],
-  ['function/list', 'List functions'],
-  ['definition/list', 'List definitions'],
-  ['lineage/list', 'List lineages']
-];
-
 final homePage = new Page(template: (s) {
+  // Create page top gradient.
   final randomShade = () => new Random().nextBool() ? 'f' : 'd';
   var gradientStart = '#${randomShade()}${randomShade()}${randomShade()}';
   gradientStart = gradientStart == '#fff' ? '#ddd' : gradientStart;
+
+  // Generate action list from available routes.
+  final actions = s.allRoutes
+      .map((str) => str.split('/').sublist(1))
+      .where((parts) =>
+          parts.length == 2 && ['create', 'list'].contains(parts.last))
+      .map((parts) => [
+            parts.join('/'),
+            ucfirst(parts.reversed.join(' ')) +
+                (parts.last == 'list' ? 's' : '')
+          ]);
 
   return html([
     head([title('EqDB Admin'), defaultHead(s)]),
@@ -62,9 +61,9 @@ final homePage = new Page(template: (s) {
           ]),
       div('.container', [
         ul('.list-group', [
-          allMethods
-              .map((method) => li(
-                  '.list-group-item', a(method.last, href: '/${method.first}')))
+          actions
+              .map((action) => li(
+                  '.list-group-item', a(action.last, href: '/${action.first}')))
               .toList()
         ]),
         br(),

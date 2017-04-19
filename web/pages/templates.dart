@@ -78,11 +78,6 @@ List defaultHead(PageSessionData s) => [
           crossorigin: 'anonymous')
     ];
 
-/// Paths that can be linked in the breadcrumb.
-/// Putting this in the global namespace is ugly. But this entire templating
-/// thing is ugly, so who cares.
-final breadcrumbAvailableLinks = [];
-
 /// Path breadcrumb.
 dynamic breadcrumb(PageSessionData s) {
   return nav('.breadcrumb',
@@ -103,7 +98,7 @@ dynamic breadcrumb(PageSessionData s) {
                 '/${s.path.sublist(0, i + 1).join('/')}/$suffixCommand';
             final hrefPattern = href.replaceAll(new RegExp('[0-9]+'), '{id}');
 
-            if (breadcrumbAvailableLinks.contains(hrefPattern)) {
+            if (s.allRoutes.contains(hrefPattern)) {
               return [a(pathDir, href: href), ' / '];
             } else {
               return '$pathDir / ';
@@ -145,7 +140,7 @@ String createResourceTemplate(PageSessionData s, String name,
       a('.btn', 'Create another $name',
           href: s.relativeUrl('create'), role: 'button')
     ];
-    if (breadcrumbAvailableLinks.contains('/$name/{id}/read')) {
+    if (s.allRoutes.contains('/$name/{id}/read')) {
       containerTags.add(a('.btn', 'Go to created $name',
           href: '/$name/${s.response.id}/read', role: 'button'));
     }
@@ -182,7 +177,7 @@ String listResourceTemplate(
     dynamic headTags,
     dynamic bodyTags}) {
   String createButton;
-  if (breadcrumbAvailableLinks.contains('/${s.path.first}/create')) {
+  if (s.allRoutes.contains('/${s.path.first}/create')) {
     createButton = p(a(
         '.btn.btn-primary', customCreateButton ?? 'Create new $nameSingular',
         href: 'create'));

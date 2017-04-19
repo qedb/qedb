@@ -17,19 +17,20 @@ class Page {
 }
 
 /// Page session data
-/// TODO: add map of available routes (can be used by home and breadcrumb)
 class PageSessionData {
   final Map<String, String> settings;
   final Map<String, String> snippets;
+  final Map<String, JsonObject> additional;
+  final Set<String> allRoutes;
 
-  dynamic request;
+  JsonObject request;
   JsonObject response;
-  final additional = new Map<String, JsonObject>();
 
   List<String> path;
   Map<String, Object> pathParameters;
 
-  PageSessionData(this.settings, this.snippets);
+  PageSessionData(this.settings, this.snippets, this.allRoutes)
+      : additional = new Map<String, JsonObject>();
 
   String relativeUrl(String route) {
     final base = new List<String>.from(path);
@@ -49,7 +50,7 @@ dynamic safe(Function fn, [dynamic fallback = null]) {
 }
 
 /// Convert first character in the string to upper case.
-String _ucfirst(String str) => str[0].toUpperCase() + str.substring(1);
+String ucfirst(String str) => str[0].toUpperCase() + str.substring(1);
 
 /// Pretty print error messages for alert box.
 String prettyPrintErrorMessage(String message) {
@@ -62,8 +63,8 @@ String prettyPrintErrorMessage(String message) {
   final pgpoolRegex = new RegExp(r'pgpool\d+:\d+:\d+\sERROR\s\d+\s(.*)');
   final match = pgpoolRegex.firstMatch(msg);
   if (match != null) {
-    return _ucfirst(match.group(1));
+    return ucfirst(match.group(1));
   } else {
-    return _ucfirst(msg);
+    return ucfirst(msg);
   }
 }
