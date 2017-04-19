@@ -12,14 +12,6 @@ final createLineagePage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'lineage', inputs: (data) {
         return [
-          div('.form-group', [
-            label('Title'),
-            div('.input-group', [
-              input('.form-control', type: 'text', name: 'descriptor'),
-              localeSelect(data,
-                  name: 'descriptor-locale', customClass: '', inGroup: false)
-            ])
-          ]),
           div('#lineage-editor'),
           input('#data', type: 'hidden', name: 'data')
         ];
@@ -30,8 +22,7 @@ final createLineagePage = new Page(
         script(src: data.settings['lineagesrc'] + 'src/main.dart.js')
       ]);
     },
-    onPost: (data) => JSON.decode(data['data']),
-    additional: {'locales': 'locale/list'});
+    onPost: (data) => JSON.decode(data['data']));
 
 final readLineagePage = new Page(template: (data) {
   return pageTemplate(data, 'Lineage ${data.data.id}',

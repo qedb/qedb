@@ -101,7 +101,8 @@ final listFunctionsPage = new Page(template: (data) {
       td(function.generic ? 'yes' : 'no')
     ];
   }, headTags: [
-    style('.katex-display { margin: 0 !important; text-align: left; }')
+    style('.katex-display { margin: 0 !important; text-align: left; }'
+        'tr { line-height: 3em; }')
   ], bodyTags: [
     katexSource(data),
     script(data.snippets['render-latex.js'])
