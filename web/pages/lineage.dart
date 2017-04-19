@@ -52,7 +52,7 @@ final readLineagePage = new Page(template: (data) {
 });
 
 final listLineagesPage = new Page(template: (data) {
-  return listResourceTemplate(data, 'lineage', 'linaeges',
+  return listResourceTemplate(data, 'lineage', 'lineages',
       tableHead: [th('ID'), th('First'), th('Last')], row: (lineage) {
     return [
       td(a(lineage.id.toString(), href: '/lineage/${lineage.id}/read')),

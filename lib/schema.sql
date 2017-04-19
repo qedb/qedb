@@ -216,9 +216,8 @@ CREATE TABLE lineage_step (
 );
 
 CREATE TABLE lineage (
-  id             serial     PRIMARY KEY,
-  descriptor_id  integer    REFERENCES descriptor(id),
-  steps          integer[]  NOT NULL
+  id     serial     PRIMARY KEY,
+  steps  integer[]  NOT NULL
 );
 
 --------------------------------------------------------------------------------

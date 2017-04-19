@@ -11,8 +11,7 @@ Future<db.SubjectRow> createSubject(Session s, SubjectResource body) async {
           {'descriptor_id': (await _createDescriptor(s, body.descriptor)).id}));
 }
 
-Future<List<db.SubjectRow>> listSubjects(
-    Session s, List<String> locales) async {
+Future<List<db.SubjectRow>> listSubjects(Session s) async {
   final subjects = await s.select(db.subject);
   final descriptors = await s.selectByIds(
       db.descriptor, subjects.map((row) => row.descriptorId));
@@ -20,10 +19,8 @@ Future<List<db.SubjectRow>> listSubjects(
   // Select all translations.
   await s.select(
       db.translation,
-      WHERE({
-        'descriptor_id': IN_IDS(descriptors),
-        'locale_id': IN(getLocaleIds(s, locales))
-      }));
+      WHERE(
+          {'descriptor_id': IN_IDS(descriptors), 'locale_id': IN(s.locales)}));
 
   return subjects;
 }

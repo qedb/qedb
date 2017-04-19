@@ -26,17 +26,14 @@ Future<db.DescriptorRow> _createDescriptor(
   return descriptor;
 }
 
-Future<List<db.DescriptorRow>> listDescriptors(
-    Session s, List<String> locales) async {
+Future<List<db.DescriptorRow>> listDescriptors(Session s) async {
   final descriptors = await s.select(db.descriptor);
 
   // Select all translations.
   await s.select(
       db.translation,
-      WHERE({
-        'descriptor_id': IN_IDS(descriptors),
-        'locale_id': IN(getLocaleIds(s, locales))
-      }));
+      WHERE(
+          {'descriptor_id': IN_IDS(descriptors), 'locale_id': IN(s.locales)}));
 
   return descriptors;
 }

@@ -35,7 +35,11 @@ part 'src/lineage_read.dart';
 final log = new Logger('eqdb');
 
 class Session extends SessionState<db.SessionData> {
-  Session(Connection conn, db.SessionData data) : super(conn, data);
+  // Targeted locales.
+  final List<int> locales;
+
+  Session(Connection conn, db.SessionData data, this.locales)
+      : super(conn, data);
 }
 
 class UnprocessableEntityError extends RpcError {

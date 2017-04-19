@@ -261,13 +261,11 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
 /// Lineage
 class LineageResource extends ResourceBase<db.LineageRow> {
   int id;
-  DescriptorResource descriptor;
   List<LineageStepResource> steps;
 
   Map<int, db.LineageRow> _getTableMap(data) => data.lineageTable;
 
   void loadFields(row, data) {
-    descriptor = getResource(row.descriptorId, data, new DescriptorResource());
     steps = row.steps
         .map((id) => new LineageStepResource()..load(id, data))
         .toList();

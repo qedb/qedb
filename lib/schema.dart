@@ -197,11 +197,10 @@ class LineageStepRow implements Record {
 /// Lineage
 class LineageRow implements Record {
   final int id;
-  final int descriptorId;
   final List<int> steps;
 
-  LineageRow(this.id, this.descriptorId, this.steps);
+  LineageRow(this.id, this.steps);
 
   static const select = '*';
-  static LineageRow map(Row r) => new LineageRow(r[0], r[1], pgIntArray(r[2]));
+  static LineageRow map(Row r) => new LineageRow(r[0], pgIntArray(r[1]));
 }

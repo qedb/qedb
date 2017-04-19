@@ -139,8 +139,10 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
     rows.add(await s.insert(db.lineageStep, VALUES(values)));
   }
 
-  return await s.insert(
-      db.lineage, VALUES({'steps': ARRAY(rows.map((r) => r.id), 'integer')}));
+  final Map<String, dynamic> values = {
+    'steps': ARRAY(rows.map((r) => r.id), 'integer')
+  };
+  return await s.insert(db.lineage, VALUES(values));
 }
 
 /// Compute result of applying [step], given the [previous] expression. In some

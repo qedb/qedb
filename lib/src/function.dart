@@ -35,8 +35,7 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
   return await s.insert(db.function, VALUES(values));
 }
 
-Future<List<db.FunctionRow>> listFunctions(
-    Session s, List<String> locales) async {
+Future<List<db.FunctionRow>> listFunctions(Session s) async {
   final functions = await s.select(db.function);
 
   // Select all subjects and translations.
@@ -45,12 +44,8 @@ Future<List<db.FunctionRow>> listFunctions(
   final descriptorIds = functions.map((row) => row.descriptorId).toList();
   subjects.forEach((subject) => descriptorIds.add(subject.descriptorId));
   descriptorIds.removeWhere(isNull);
-  await s.select(
-      db.translation,
-      WHERE({
-        'descriptor_id': IN(descriptorIds),
-        'locale_id': IN(getLocaleIds(s, locales))
-      }));
+  await s.select(db.translation,
+      WHERE({'descriptor_id': IN(descriptorIds), 'locale_id': IN(s.locales)}));
 
   return functions;
 }

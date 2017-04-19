@@ -10,12 +10,11 @@ Future<db.TranslationRow> createTranslation(
       db.translation,
       VALUES({
         'descriptor_id': descriptorId,
-        'locale_id': localeId(s, body.locale),
+        'locale_id': getLocaleId(s, body.locale),
         'content': body.content
       }));
 }
 
 Future<List<db.TranslationRow>> listTranslations(Session s, int descriptorId) {
-  return s.select(db.translation,
-      descriptorId == null ? null : WHERE({'descriptor_id': IS(descriptorId)}));
+  return s.select(db.translation, WHERE({'descriptor_id': IS(descriptorId)}));
 }

@@ -30,7 +30,7 @@ List<int> getLocaleIds(Session s, List<String> locales) {
 
 /// Get ID from the given locale.
 /// This assumes all locales are loaded into the session data.
-int localeId(Session s, LocaleResource locale) {
+int getLocaleId(Session s, LocaleResource locale) {
   if (locale.id == null) {
     return s.data.localeTable.values
         .singleWhere((r) => r.code == locale.code)
