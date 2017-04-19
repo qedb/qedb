@@ -7,8 +7,8 @@ import '../page.dart';
 import 'templates.dart';
 
 final createSubjectPage = new Page(
-    template: (data) {
-      return createResourceTemplate(data, 'subject', inputs: (data) {
+    template: (s) {
+      return createResourceTemplate(s, 'subject', inputs: (data) {
         return [languageSelect(data), formInput('Descriptor', name: 'content')];
       });
     },
@@ -24,8 +24,8 @@ final createSubjectPage = new Page(
         },
     additional: {'languages': 'language/list'});
 
-final listSubjectsPage = new Page(template: (data) {
-  return listResourceTemplate(data, 'subject', 'subjects',
+final listSubjectsPage = new Page(template: (s) {
+  return listResourceTemplate(s, 'subject', 'subjects',
       tableHead: [th('ID'), th('Descriptor ID'), th('Translation')],
       row: (subject) {
     return [

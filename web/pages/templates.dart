@@ -5,7 +5,7 @@
 import '../htgen/htgen.dart';
 import '../page.dart';
 
-typedef dynamic InlineHtmlBuilder(PageSessionData data);
+typedef dynamic InlineHtmlBuilder(PageSessionData s);
 
 /// SVG logo data.
 final logoSvgContent = [
@@ -16,14 +16,14 @@ final logoSvgContent = [
 /// Shorthand
 String stylesheet(String href) => link(rel: 'stylesheet', href: href);
 
-List editexStyles(PageSessionData data) => [
-      style(data.snippets['editex.css']),
-      stylesheet(data.settings['editex.css.href'])
+List editexStyles(PageSessionData s) => [
+      style(s.snippets['editex.css']),
+      stylesheet(s.settings['editex.css.href'])
     ];
 
-List katexSource(PageSessionData data) => [
-      stylesheet(data.settings['katex.css.href']),
-      script(src: data.settings['katex.js.src'])
+List katexSource(PageSessionData s) => [
+      stylesheet(s.settings['katex.css.href']),
+      script(src: s.settings['katex.js.src'])
     ];
 
 /// Bootstrap .form-group
@@ -38,13 +38,13 @@ String formInput(String labelText, {String name, String type: 'text'}) {
 }
 
 /// Language language select form element.
-String languageSelect(PageSessionData data,
+String languageSelect(PageSessionData s,
     {String name: 'language',
     String customClass: '.custom-select',
     bool inGroup: true}) {
   final selectHtml = select('#$name$customClass.form-control',
       name: name,
-      c: data.additional['languages'].map((language) {
+      c: s.additional['languages'].map((language) {
         return option(language.code, value: language.code);
       }).toList());
 
@@ -66,42 +66,41 @@ String selectYesNo(String label, {String name}) {
 }
 
 /// Default HEAD parameters.
-List defaultHead(PageSessionData data) => [
+List defaultHead(PageSessionData s) => [
       meta(charset: 'utf-8'),
       meta(
           name: 'viewport',
           content: 'width=device-width,initial-scale=1,shrink-to-fit=no'),
       link(
           rel: 'stylesheet',
-          href: data.settings['bootstrap.href'],
-          integrity: data.settings['bootstrap.integrity'],
+          href: s.settings['bootstrap.href'],
+          integrity: s.settings['bootstrap.integrity'],
           crossorigin: 'anonymous')
     ];
 
 /// Paths that can be linked in the breadcrumb.
 /// Putting this in the global namespace is ugly. But this entire templating
 /// thing is ugly, so who cares.
-/// TODO: make cleaner mechanism for available links
 final breadcrumbAvailableLinks = [];
 
 /// Path breadcrumb.
-dynamic breadcrumb(PageSessionData data) {
+dynamic breadcrumb(PageSessionData s) {
   return nav('.breadcrumb',
       style: 'word-spacing: .3em; margin-bottom: 2em;',
       c: [
         a('EqDB', href: '/'),
         span(' / '),
-        new List.generate(data.path.length, (i) {
+        new List.generate(s.path.length, (i) {
           final numberRegex = new RegExp(r'^[0-9]+$');
-          final pathDir = data.path[i];
+          final pathDir = s.path[i];
 
-          if (i == data.path.length - 1) {
+          if (i == s.path.length - 1) {
             return span(pathDir);
           } else {
             final suffixCommand =
                 numberRegex.hasMatch(pathDir) ? 'read' : 'list';
             final href =
-                '/${data.path.sublist(0, i + 1).join('/')}/$suffixCommand';
+                '/${s.path.sublist(0, i + 1).join('/')}/$suffixCommand';
             final hrefPattern = href.replaceAll(new RegExp('[0-9]+'), '{id}');
 
             if (breadcrumbAvailableLinks.contains(hrefPattern)) {
@@ -115,15 +114,15 @@ dynamic breadcrumb(PageSessionData data) {
 }
 
 /// Template for every page.
-String pageTemplate(PageSessionData data, String pageTitle,
+String pageTemplate(PageSessionData s, String pageTitle,
     {InlineHtmlBuilder inputs,
     dynamic headTags,
     dynamic containerTags,
     dynamic bodyTags}) {
   return html([
-    head([title(pageTitle), defaultHead(data), headTags]),
+    head([title(pageTitle), defaultHead(s), headTags]),
     body([
-      breadcrumb(data),
+      breadcrumb(s),
       div('.container', [h3(pageTitle), br(), containerTags]),
       bodyTags
     ])
@@ -131,43 +130,43 @@ String pageTemplate(PageSessionData data, String pageTitle,
 }
 
 /// Resource creation page.
-String createResourceTemplate(PageSessionData data, String name,
+String createResourceTemplate(PageSessionData s, String name,
     {InlineHtmlBuilder inputs,
     dynamic headTags,
     dynamic bodyTags,
     String overviewRoute}) {
   // Build form.
   dynamic containerTags;
-  if (data.data.containsKey('id')) {
+  if (s.response.containsKey('id')) {
     containerTags = [
       div('.alert.alert-success', 'Successfully created $name', role: 'alert'),
       a('.btn.btn-primary', 'Return to $name overview',
-          href: overviewRoute ?? data.relativeUrl('list'), role: 'button'),
+          href: overviewRoute ?? s.relativeUrl('list'), role: 'button'),
       a('.btn', 'Create another $name',
-          href: data.relativeUrl('create'), role: 'button')
+          href: s.relativeUrl('create'), role: 'button')
     ];
     if (breadcrumbAvailableLinks.contains('/$name/{id}/read')) {
       containerTags.add(a('.btn', 'Go to created $name',
-          href: '/$name/${data.data.id}/read', role: 'button'));
+          href: '/$name/${s.response.id}/read', role: 'button'));
     }
   } else {
     containerTags = form(method: 'POST', c: [
-      inputs(data),
+      inputs(s),
       br(),
       button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
     ]);
-    if (data.data.containsKey('error')) {
+    if (s.response.containsKey('error')) {
       containerTags = [
         div('.alert.alert-warning', role: 'alert', c: [
-          '${prettyPrintErrorMessage(data.data.error.message)} ',
-          '<strong>(${data.data.error.code})</strong>'
+          '${prettyPrintErrorMessage(s.response.error.message)} ',
+          '<strong>(${s.response.error.code})</strong>'
         ]),
         containerTags
       ];
     }
   }
 
-  return pageTemplate(data, 'Create $name',
+  return pageTemplate(s, 'Create $name',
       headTags: headTags, bodyTags: bodyTags, containerTags: containerTags);
 }
 
@@ -175,7 +174,7 @@ typedef dynamic HtmlTableRowBuilder(dynamic data);
 
 /// Resource listing page.
 String listResourceTemplate(
-    PageSessionData data, String nameSingular, String namePlural,
+    PageSessionData s, String nameSingular, String namePlural,
     {String customTitle,
     String customCreateButton,
     List tableHead,
@@ -183,13 +182,13 @@ String listResourceTemplate(
     dynamic headTags,
     dynamic bodyTags}) {
   String createButton;
-  if (breadcrumbAvailableLinks.contains('/${data.path.first}/create')) {
+  if (breadcrumbAvailableLinks.contains('/${s.path.first}/create')) {
     createButton = p(a(
         '.btn.btn-primary', customCreateButton ?? 'Create new $nameSingular',
         href: 'create'));
   }
 
-  return pageTemplate(data, customTitle ?? 'All $namePlural',
+  return pageTemplate(s, customTitle ?? 'All $namePlural',
       headTags: headTags,
       bodyTags: bodyTags,
       containerTags: [
@@ -197,7 +196,7 @@ String listResourceTemplate(
         br(),
         table('.table', [
           thead([tr(tableHead)]),
-          tbody(data.data.map((resource) {
+          tbody(s.response.map((resource) {
             return tr(row(resource));
           }).toList())
         ])

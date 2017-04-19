@@ -8,14 +8,14 @@ import 'templates.dart';
 import 'descriptor.dart';
 
 final createFunctionPage = new Page(
-    template: (data) {
-      return createResourceTemplate(data, 'function', inputs: (data) {
+    template: (s) {
+      return createResourceTemplate(s, 'function', inputs: (_) {
         return [
           input(type: 'hidden', name: 'language', value: 'en_US'),
           formGroup('Subject', 'subject', [
             select('#subject.custom-select.form-control',
                 name: 'subject',
-                c: data.additional['subjects'].map((subject) {
+                c: s.additional['subjects'].map((subject) {
                   return option(
                       safe(
                           () => subject.descriptor.translations[0].content, ''),
@@ -26,7 +26,7 @@ final createFunctionPage = new Page(
             label('Name'),
             div('.input-group', [
               input('.form-control', type: 'text', name: 'descriptor'),
-              languageSelect(data,
+              languageSelect(s,
                   name: 'descriptor-language', customClass: '', inGroup: false)
             ])
           ]),
@@ -83,8 +83,8 @@ final createFunctionPage = new Page(
       'subjects': 'subject/list?language=en_US'
     });
 
-final listFunctionsPage = new Page(template: (data) {
-  return listResourceTemplate(data, 'function', 'functions', tableHead: [
+final listFunctionsPage = new Page(template: (s) {
+  return listResourceTemplate(s, 'function', 'functions', tableHead: [
     th('ID'),
     th('Subject'),
     th('Descriptor'),
@@ -104,7 +104,7 @@ final listFunctionsPage = new Page(template: (data) {
     style('.katex-display { margin: 0 !important; text-align: left; }'
         'tr { line-height: 3em; }')
   ], bodyTags: [
-    katexSource(data),
-    script(data.snippets['render-latex.js'])
+    katexSource(s),
+    script(s.snippets['render-latex.js'])
   ]);
 });

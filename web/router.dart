@@ -98,19 +98,19 @@ Future<Null> setupRouter(String apiBase, Router router) async {
             '$apiBase${request.requestedUri.path.substring(1)}',
             headers: {'Content-Type': 'application/json'},
             body: JSON.encode(data.request));
-        data.data = new JsonObject.fromJsonString(response.body);
+        data.response = new JsonObject.fromJsonString(response.body);
 
         // Render page.
         return new Response.ok(page.template(data),
             headers: {'Content-Type': 'text/html'});
       } else {
-        data.data = new JsonObject();
+        data.response = new JsonObject();
 
         // Do GET request if no postFormat is specified.
         if (page.onPost == null) {
           final response = await http
               .get('$apiBase${request.requestedUri.path.substring(1)}');
-          data.data = new JsonObject.fromJsonString(response.body);
+          data.response = new JsonObject.fromJsonString(response.body);
         }
 
         return new Response.ok(page.template(data),

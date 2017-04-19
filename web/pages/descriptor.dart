@@ -19,8 +19,8 @@ String descriptorHyperlink(JsonObject getDescriptor()) {
   }
 }
 
-final listDescriptorsPage = new Page(template: (data) {
-  return listResourceTemplate(data, 'descriptor', 'descriptors',
+final listDescriptorsPage = new Page(template: (s) {
+  return listResourceTemplate(s, 'descriptor', 'descriptors',
       tableHead: [th('ID'), th('Translation')], row: (descriptor) {
     return [
       th(a(descriptor.id.toString(), href: '/descriptor/${descriptor.id}/read'),
@@ -30,15 +30,15 @@ final listDescriptorsPage = new Page(template: (data) {
   });
 });
 
-final readDescriptorPage = new Page(template: (data) {
+final readDescriptorPage = new Page(template: (s) {
   var translationNr = 0;
-  return pageTemplate(data, 'Descriptor #${data.data.id}', containerTags: [
+  return pageTemplate(s, 'Descriptor #${s.response.id}', containerTags: [
     h4('Translations'),
     table('.table', [
       thead([
         tr([th('#'), th('Content'), th('Language')])
       ]),
-      tbody(data.data.translations.map((translation) {
+      tbody(s.response.translations.map((translation) {
         return tr([
           th((++translationNr).toString(), scope: 'row'),
           td(translation.content),
@@ -48,6 +48,6 @@ final readDescriptorPage = new Page(template: (data) {
     ]),
     br(),
     a('.btn.btn-secondary', 'Add translation',
-        href: '/descriptor/${data.data.id}/translation/create', role: 'button')
+        href: '/descriptor/${s.response.id}/translation/create', role: 'button')
   ]);
 });

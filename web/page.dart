@@ -4,7 +4,7 @@
 
 import 'package:json_object/json_object.dart';
 
-typedef String HtmlBuilder(PageSessionData data);
+typedef String HtmlBuilder(PageSessionData s);
 typedef dynamic PostDataBuilder(Map<String, String> formData);
 
 /// Page information
@@ -17,13 +17,14 @@ class Page {
 }
 
 /// Page session data
+/// TODO: add map of available routes (can be used by home and breadcrumb)
 class PageSessionData {
   final Map<String, String> settings;
   final Map<String, String> snippets;
-  final additional = new Map<String, JsonObject>();
 
   dynamic request;
-  JsonObject data;
+  JsonObject response;
+  final additional = new Map<String, JsonObject>();
 
   List<String> path;
   Map<String, Object> pathParameters;

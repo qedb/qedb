@@ -7,8 +7,8 @@ import '../page.dart';
 import 'templates.dart';
 
 final createDefinitionPage = new Page(
-    template: (data) {
-      return createResourceTemplate(data, 'definition', inputs: (data) {
+    template: (s) {
+      return createResourceTemplate(s, 'definition', inputs: (_) {
         return [
           formGroup('Left expression', 'left',
               [div('#left.editex.editex-align-left', data_name: 'left')]),
@@ -16,9 +16,9 @@ final createDefinitionPage = new Page(
               [div('#right.editex.editex-align-left', data_name: 'right')]),
         ];
       }, bodyTags: [
-        katexSource(data),
-        editexStyles(data),
-        script(src: data.settings['lineagesrc'] + 'src/editex_form.dart.js')
+        katexSource(s),
+        editexStyles(s),
+        script(src: s.settings['lineagesrc'] + 'src/editex_form.dart.js')
       ]);
     },
     onPost: (data) => {
@@ -28,8 +28,8 @@ final createDefinitionPage = new Page(
           }
         });
 
-final listDefinitionsPage = new Page(template: (data) {
-  return listResourceTemplate(data, 'definition', 'definitions', tableHead: [
+final listDefinitionsPage = new Page(template: (s) {
+  return listResourceTemplate(s, 'definition', 'definitions', tableHead: [
     th('ID'),
     th('Left', style: 'text-align: center;'),
     th(''),
@@ -42,8 +42,8 @@ final listDefinitionsPage = new Page(template: (data) {
       td(span('.latex', definition.rule.rightExpression.latex))
     ];
   }, bodyTags: [
-    katexSource(data),
-    style(data.snippets['latex-table.css']),
-    script(data.snippets['render-latex.js'])
+    katexSource(s),
+    style(s.snippets['latex-table.css']),
+    script(s.snippets['render-latex.js'])
   ]);
 });

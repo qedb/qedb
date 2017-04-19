@@ -21,13 +21,13 @@ final allMethods = [
   ['lineage/list', 'List lineages']
 ];
 
-final homePage = new Page(template: (data) {
+final homePage = new Page(template: (s) {
   final randomShade = () => new Random().nextBool() ? 'f' : 'd';
   var gradientStart = '#${randomShade()}${randomShade()}${randomShade()}';
   gradientStart = gradientStart == '#fff' ? '#ddd' : gradientStart;
 
   return html([
-    head([title('EqDB Admin'), defaultHead(data)]),
+    head([title('EqDB Admin'), defaultHead(s)]),
     body([
       div('.jumbotron',
           style: 'background: linear-gradient($gradientStart, #fff);',

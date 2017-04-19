@@ -6,8 +6,8 @@ import '../page.dart';
 import 'templates.dart';
 
 final createLanguagePage = new Page(
-    template: (data) {
-      return createResourceTemplate(data, 'language', inputs: (data) {
+    template: (s) {
+      return createResourceTemplate(s, 'language', inputs: (data) {
         return [formInput('Language ISO code', name: 'code')];
       });
     },
