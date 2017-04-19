@@ -16,6 +16,7 @@ part 'src/generated/session_data.dart';
 //------------------------------------------------------------------------------
 
 /// Locale
+/// TODO: rename to language
 class LocaleRow implements Record {
   final int id;
   final String code;

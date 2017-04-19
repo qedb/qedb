@@ -8,7 +8,8 @@ import 'templates.dart';
 
 final createTranslationPage = new Page(
     template: (data) {
-      return createResourceTemplate(data, 'translation', inputs: (data) {
+      return createResourceTemplate(data, 'translation',
+          overviewRoute: data.relativeUrl('../read'), inputs: (data) {
         return [
           input(
               type: 'hidden',

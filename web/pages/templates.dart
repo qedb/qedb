@@ -132,14 +132,17 @@ String pageTemplate(PageSessionData data, String pageTitle,
 
 /// Resource creation page.
 String createResourceTemplate(PageSessionData data, String name,
-    {InlineHtmlBuilder inputs, dynamic headTags, dynamic bodyTags}) {
+    {InlineHtmlBuilder inputs,
+    dynamic headTags,
+    dynamic bodyTags,
+    String overviewRoute}) {
   // Build form.
   dynamic containerTags;
   if (data.data.containsKey('id')) {
     containerTags = [
       div('.alert.alert-success', 'Successfully created $name', role: 'alert'),
       a('.btn.btn-primary', 'Return to $name overview',
-          href: data.relativeUrl('list'), role: 'button'),
+          href: overviewRoute ?? data.relativeUrl('list'), role: 'button'),
       a('.btn', 'Create another $name',
           href: data.relativeUrl('create'), role: 'button')
     ];

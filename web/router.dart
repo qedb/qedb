@@ -26,7 +26,6 @@ import 'pages/templates.dart';
 import 'page.dart';
 
 /// All pages
-/// TODO: redirect /descriptor/{id}/translation/list to /descriptor/{id}/read
 Map<String, Page> pages = {
   '/': homePage,
   '/locale/create': createLocalePage,
