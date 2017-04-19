@@ -29,7 +29,11 @@ final readLineagePage = new Page(template: (data) {
       containerTags: ol(
           '.lineage',
           data.data.steps
-              .map((step) => li('.latex', step.expression.latex))
+              .map((step) => li([
+                    span('.latex', step.expression.latex),
+                    ' ',
+                    span('.stepid', step.id.toRadixString(36).padLeft(6, '0'))
+                  ]))
               .toList()),
       bodyTags: [
         style(data.snippets['lineage.css']),
