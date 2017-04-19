@@ -26,11 +26,13 @@ final createLineagePage = new Page(
 
 final readLineagePage = new Page(template: (data) {
   return pageTemplate(data, 'Lineage ${data.data.id}',
-      containerTags: ol(data.data.steps
-          .map((step) => li('.latex', step.expression.latex))
-          .toList()),
+      containerTags: ol(
+          '.lineage',
+          data.data.steps
+              .map((step) => li('.latex', step.expression.latex))
+              .toList()),
       bodyTags: [
-        style('.katex-display{text-align: left!important; padding-left: 1em;}'),
+        style(data.snippets['lineage.css']),
         katexSource(data),
         script(data.snippets['render-latex.js'])
       ]);
@@ -45,8 +47,8 @@ final listLineagesPage = new Page(template: (data) {
       td(span('.latex', lineage.steps.last.expression.latex))
     ];
   }, bodyTags: [
-    katexSource(data),
     style(data.snippets['latex-table.css']),
+    katexSource(data),
     script(data.snippets['render-latex.js'])
   ]);
 });
