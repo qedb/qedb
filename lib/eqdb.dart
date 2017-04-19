@@ -19,7 +19,7 @@ import 'package:eqdb/sqlbuilder.dart';
 import 'package:eqdb/resources.dart';
 import 'package:eqdb/schema.dart' as db;
 
-part 'src/locale.dart';
+part 'src/language.dart';
 part 'src/descriptor.dart';
 part 'src/translation.dart';
 part 'src/subject.dart';
@@ -35,10 +35,10 @@ part 'src/lineage_read.dart';
 final log = new Logger('eqdb');
 
 class Session extends SessionState<db.SessionData> {
-  // Targeted locales.
-  final List<int> locales;
+  // Targeted languages.
+  final List<int> languages;
 
-  Session(Connection conn, db.SessionData data, this.locales)
+  Session(Connection conn, db.SessionData data, this.languages)
       : super(conn, data);
 }
 

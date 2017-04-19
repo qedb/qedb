@@ -5,10 +5,10 @@
 import '../page.dart';
 import 'templates.dart';
 
-final createLocalePage = new Page(
+final createLanguagePage = new Page(
     template: (data) {
-      return createResourceTemplate(data, 'locale', inputs: (data) {
-        return [formInput('Locale ISO code', name: 'code')];
+      return createResourceTemplate(data, 'language', inputs: (data) {
+        return [formInput('Language ISO code', name: 'code')];
       });
     },
     onPost: (data) => {'code': data['code']});

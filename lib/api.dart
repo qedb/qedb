@@ -16,7 +16,7 @@ import 'package:eqdb/eqdb.dart' as api;
 import 'package:eqdb/schema.dart' as db;
 
 final log = new Logger('eqdb');
-const defaultLocale = 'en_US';
+const defaultLanguage = 'en_US';
 
 @ApiClass(name: 'eqdb', version: 'v0', description: 'EqDB read/write API')
 class EqDB {
@@ -32,49 +32,49 @@ class EqDB {
   }
 
   /// Utility to reuse method calling boilerplate.
-  /// Each select call should allow the specification of locale codes and pass
-  /// them to [localeIsoCodes].
+  /// Each select call should allow the specification of language codes and pass
+  /// them to [languageIsoCodes].
   Future<T> _runRequestSession<T>(Future<T> handler(api.Session s),
-      [List<String> localeIsoCodes = const []]) {
+      [List<String> languageIsoCodes = const []]) {
     return _runSandboxed<T>((conn) async {
       final data = new db.SessionData();
       final session = new api.Session(conn, data, []);
 
-      // Retrieve all locales.
+      // Retrieve all languages.
       // This may seem a bit ridiculous, but the overhead is not actually that
       // big. Additionally, this makes the rest of the code more convenient, and
-      // locale codes can be included in all responses for free. A TTL spanning
-      // multiple sessions might be used to optimize this in the future.
-      await api.listLocales(session);
+      // language codes can be included in all responses for free. A TTL
+      // spanning multiple sessions could be used to optimize this.
+      await api.listLanguages(session);
 
-      // Resolve locale codes.
-      session.locales.addAll(api.getLocaleIds(session, localeIsoCodes));
+      // Resolve language codes.
+      session.languages.addAll(api.getLanguageIds(session, languageIsoCodes));
 
       return handler(session);
     }, pool);
   }
 
-  @ApiMethod(path: 'locale/create', method: 'POST')
-  Future<LocaleResource> createLocale(LocaleResource body) =>
-      _runRequestSession<LocaleResource>((s) async => new LocaleResource()
-        ..load((await api.createLocale(s, body)).id, s.data));
+  @ApiMethod(path: 'language/create', method: 'POST')
+  Future<LanguageResource> createLanguage(LanguageResource body) =>
+      _runRequestSession<LanguageResource>((s) async => new LanguageResource()
+        ..load((await api.createLanguage(s, body)).id, s.data));
 
-  @ApiMethod(path: 'locale/list', method: 'GET')
-  Future<List<LocaleResource>> listLocales() =>
-      // Note that all locales are loaded for each session.
-      _runRequestSession<List<LocaleResource>>((s) async => s
-          .data.localeTable.values
-          .map((r) => new LocaleResource()..loadRow(r, s.data))
+  @ApiMethod(path: 'language/list', method: 'GET')
+  Future<List<LanguageResource>> listLanguages() =>
+      // Note that all languages are loaded for each session.
+      _runRequestSession<List<LanguageResource>>((s) async => s
+          .data.languageTable.values
+          .map((r) => new LanguageResource()..loadRow(r, s.data))
           .toList());
 
   @ApiMethod(path: 'descriptor/list', method: 'GET')
   Future<List<DescriptorResource>> listDescriptors(
-          {String locale: defaultLocale}) async =>
+          {String language: defaultLanguage}) async =>
       _runRequestSession<List<DescriptorResource>>(
           (s) async => (await api.listDescriptors(s))
               .map((r) => new DescriptorResource()..load(r.id, s.data))
               .toList(),
-          [locale]);
+          [language]);
 
   @ApiMethod(path: 'descriptor/{id}/read', method: 'GET')
   Future<DescriptorResource> readDescriptor(int id) async =>
@@ -102,12 +102,13 @@ class EqDB {
         ..loadRow(await api.createSubject(s, body), s.data));
 
   @ApiMethod(path: 'subject/list', method: 'GET')
-  Future<List<SubjectResource>> listSubjects({String locale: defaultLocale}) =>
+  Future<List<SubjectResource>> listSubjects(
+          {String language: defaultLanguage}) =>
       _runRequestSession<List<SubjectResource>>(
           (s) async => (await api.listSubjects(s))
               .map((r) => new SubjectResource()..load(r.id, s.data))
               .toList(),
-          [locale]);
+          [language]);
 
   @ApiMethod(path: 'function/create', method: 'POST')
   Future<FunctionResource> createFunction(FunctionResource body) =>
@@ -116,12 +117,12 @@ class EqDB {
 
   @ApiMethod(path: 'function/list', method: 'GET')
   Future<List<FunctionResource>> listFunctions(
-          {String locale: defaultLocale}) =>
+          {String language: defaultLanguage}) =>
       _runRequestSession<List<FunctionResource>>(
           (s) async => (await api.listFunctions(s))
               .map((r) => new FunctionResource()..loadRow(r, s.data))
               .toList(),
-          [locale]);
+          [language]);
 
   @ApiMethod(path: 'operator/create', method: 'POST')
   Future<OperatorResource> createOperator(OperatorResource body) =>
@@ -143,12 +144,12 @@ class EqDB {
 
   @ApiMethod(path: 'definition/list', method: 'GET')
   Future<List<DefinitionResource>> listDefinition(
-          {String locale: defaultLocale}) =>
+          {String language: defaultLanguage}) =>
       _runRequestSession<List<DefinitionResource>>(
           (s) async => (await api.listDefinitions(s))
               .map((r) => new DefinitionResource()..loadRow(r, s.data))
               .toList(),
-          [locale]);
+          [language]);
 
   @ApiMethod(path: 'expressionDifference/resolve', method: 'POST')
   Future<api.DifferenceBranch> resolveExpressionDifference(
@@ -162,12 +163,13 @@ class EqDB {
         ..loadRow(await api.createLineage(s, body), s.data));
 
   @ApiMethod(path: 'lineage/list', method: 'GET')
-  Future<List<LineageResource>> listLineages({String locale: defaultLocale}) =>
+  Future<List<LineageResource>> listLineages(
+          {String language: defaultLanguage}) =>
       _runRequestSession<List<LineageResource>>(
           (s) async => (await api.listLineages(s))
               .map((r) => new LineageResource()..loadRow(r, s.data))
               .toList(),
-          [locale]);
+          [language]);
 
   @ApiMethod(path: 'lineage/{id}/read', method: 'GET')
   Future<LineageResource> readLineage(int id) =>

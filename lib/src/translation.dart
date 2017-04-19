@@ -10,7 +10,7 @@ Future<db.TranslationRow> createTranslation(
       db.translation,
       VALUES({
         'descriptor_id': descriptorId,
-        'locale_id': getLocaleId(s, body.locale),
+        'language_id': getLanguageId(s, body.language),
         'content': body.content
       }));
 }

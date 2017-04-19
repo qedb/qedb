@@ -11,7 +11,7 @@ Future main() async {
   final pkey = new PrimaryKeyEmulator();
   final eqlib = new EqlibHelper();
 
-  final localesFile = 'data/data.0.csv';
+  final languagesFile = 'data/data.0.csv';
   final subjectsFile = 'data/data.1.csv';
   final functionsFile = 'data/data.2.csv';
   final translationsFile = 'data/data.3.csv';
@@ -26,14 +26,14 @@ Future main() async {
       character: 'Char(1)',
       type: 'Type');
 
-  // Locales
-  await csvtest(baseUrl, localesFile, [
-    // Create locales.
-    route('POST', 'locale/create', request: {
-      'code': col('Locale')
+  // Languages
+  await csvtest(baseUrl, languagesFile, [
+    // Create languages.
+    route('POST', 'language/create', request: {
+      'code': col('Language code')
     }, response: {
-      'id': pkey.get('locale', col('Locale')),
-      'code': col('Locale')
+      'id': pkey.get('language', col('Language code')),
+      'code': col('Language code')
     })
   ]);
 
@@ -44,7 +44,7 @@ Future main() async {
       'descriptor': {
         'translations': [
           {
-            'locale': {'code': 'en_US'},
+            'language': {'code': 'en_US'},
             'content': col('Subject')
           }
         ]
@@ -56,7 +56,7 @@ Future main() async {
         'translations': [
           {
             'id': pkey.get('translation', col('Subject'), 'en_US'),
-            'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
+            'language': {'id': pkey.get('language', 'en_US'), 'code': 'en_US'},
             'content': col('Subject')
           }
         ]
@@ -72,7 +72,7 @@ Future main() async {
       'descriptor': ifNe('Name', {
         'translations': [
           {
-            'locale': {'code': 'en_US'},
+            'language': {'code': 'en_US'},
             'content': col('Name')
           }
         ]
@@ -91,7 +91,7 @@ Future main() async {
         'translations': [
           {
             'id': pkey.get('translation', col('Name'), 'en_US'),
-            'locale': {'id': pkey.get('locale', 'en_US'), 'code': 'en_US'},
+            'language': {'id': pkey.get('language', 'en_US'), 'code': 'en_US'},
             'content': col('Name')
           }
         ]
@@ -129,11 +129,11 @@ Future main() async {
     route('POST', 'descriptor/{id}/translation/create', url: {
       'id': pkey.get('descriptor', col('Translation (en_US)'))
     }, request: {
-      'locale': {'code': 'nl_NL'},
+      'language': {'code': 'nl_NL'},
       'content': col('Translation (nl_NL)')
     }, response: {
       'id': pkey.get('translation', col('Translation (nl_NL)'), 'nl_NL'),
-      'locale': {'id': pkey.get('locale', 'nl_NL'), 'code': 'nl_NL'},
+      'language': {'id': pkey.get('language', 'nl_NL'), 'code': 'nl_NL'},
       'content': col('Translation (nl_NL)')
     }),
   ]);

@@ -19,8 +19,10 @@ Future<List<db.SubjectRow>> listSubjects(Session s) async {
   // Select all translations.
   await s.select(
       db.translation,
-      WHERE(
-          {'descriptor_id': IN_IDS(descriptors), 'locale_id': IN(s.locales)}));
+      WHERE({
+        'descriptor_id': IN_IDS(descriptors),
+        'language_id': IN(s.languages)
+      }));
 
   return subjects;
 }

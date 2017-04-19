@@ -15,11 +15,11 @@ CREATE EXTENSION pgcrypto;
 -- Descriptors and translations
 --------------------------------------------------------------------------------
 
--- Locale
-CREATE TABLE locale (
+-- Language
+CREATE TABLE language (
   id    serial  PRIMARY KEY,
   code  text    NOT NULL UNIQUE
-    CHECK (code ~ '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$') -- Match validate ISO locale code format.
+    CHECK (code ~ '^[a-z]{2}(_([a-zA-Z]{2}){1,2})?_[A-Z]{2}$') -- Validate ISO language code format.
 );
 
 -- Descriptor
@@ -32,14 +32,14 @@ CREATE TABLE descriptor (
 CREATE TABLE translation (
   id             serial   PRIMARY KEY,
   descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
-  locale_id      integer  NOT NULL REFERENCES locale(id),
+  language_id      integer  NOT NULL REFERENCES language(id),
   content        text     NOT NULL
     CHECK (content ~ E'^(?:[^\\s]+ )*[^\\s]+$'), -- Check for repeated spaces in the regex.
   
   -- Translations should have a unique meaning. If there are translations that
   -- can mean different things, the translation should be further specified.
   -- (as in Wikipedia page titles)
-  UNIQUE (locale_id, content)
+  UNIQUE (language_id, content)
 );
 
 -- Subject

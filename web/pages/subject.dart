@@ -9,20 +9,20 @@ import 'templates.dart';
 final createSubjectPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'subject', inputs: (data) {
-        return [localeSelect(data), formInput('Descriptor', name: 'content')];
+        return [languageSelect(data), formInput('Descriptor', name: 'content')];
       });
     },
     onPost: (data) => {
           'descriptor': {
             'translations': [
               {
-                'locale': {'code': data['locale']},
+                'language': {'code': data['language']},
                 'content': data['content']
               }
             ]
           }
         },
-    additional: {'locales': 'locale/list'});
+    additional: {'languages': 'language/list'});
 
 final listSubjectsPage = new Page(template: (data) {
   return listResourceTemplate(data, 'subject', 'subjects',

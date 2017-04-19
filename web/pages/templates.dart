@@ -37,19 +37,19 @@ String formInput(String labelText, {String name, String type: 'text'}) {
       labelText, name, [input('#$name.form-control', type: type, name: name)]);
 }
 
-/// Language locale select form element.
-String localeSelect(PageSessionData data,
-    {String name: 'locale',
+/// Language language select form element.
+String languageSelect(PageSessionData data,
+    {String name: 'language',
     String customClass: '.custom-select',
     bool inGroup: true}) {
   final selectHtml = select('#$name$customClass.form-control',
       name: name,
-      c: data.additional['locales'].map((locale) {
-        return option(locale.code, value: locale.code);
+      c: data.additional['languages'].map((language) {
+        return option(language.code, value: language.code);
       }).toList());
 
   if (inGroup) {
-    return formGroup('Locale', name, [selectHtml]);
+    return formGroup('Language', name, [selectHtml]);
   } else {
     return selectHtml;
   }

@@ -7,9 +7,9 @@ tables:
   className:  Subject
   varName:    subject
 
-- tableName:  locale
-  className:  Locale
-  varName:    locale
+- tableName:  language
+  className:  Language
+  varName:    language
 
 - tableName:  translation
   className:  Translation

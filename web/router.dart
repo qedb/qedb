@@ -14,7 +14,7 @@ import 'package:json_object/json_object.dart';
 import 'package:http/http.dart' as http;
 
 import 'pages/home.dart';
-import 'pages/locale.dart';
+import 'pages/language.dart';
 import 'pages/descriptor.dart';
 import 'pages/subject.dart';
 import 'pages/translation.dart';
@@ -28,7 +28,7 @@ import 'page.dart';
 /// All pages
 Map<String, Page> pages = {
   '/': homePage,
-  '/locale/create': createLocalePage,
+  '/language/create': createLanguagePage,
   '/descriptor/list': listDescriptorsPage,
   '/descriptor/{id}/read': readDescriptorPage,
   '/descriptor/{id}/translation/create': createTranslationPage,

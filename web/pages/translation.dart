@@ -15,14 +15,14 @@ final createTranslationPage = new Page(
               type: 'hidden',
               name: 'descriptor-id',
               value: data.pathParameters['id']),
-          localeSelect(data),
+          languageSelect(data),
           formInput('Translation', name: 'content')
         ];
       });
     },
     onPost: (data) => {
           'descriptor': {'id': data['descriptor-id']},
-          'locale': {'code': data['locale']},
+          'language': {'code': data['language']},
           'content': data['content']
         },
-    additional: {'locales': 'locale/list'});
+    additional: {'languages': 'language/list'});

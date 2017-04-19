@@ -11,7 +11,7 @@ final createFunctionPage = new Page(
     template: (data) {
       return createResourceTemplate(data, 'function', inputs: (data) {
         return [
-          input(type: 'hidden', name: 'locale', value: 'en_US'),
+          input(type: 'hidden', name: 'language', value: 'en_US'),
           formGroup('Subject', 'subject', [
             select('#subject.custom-select.form-control',
                 name: 'subject',
@@ -26,8 +26,8 @@ final createFunctionPage = new Page(
             label('Name'),
             div('.input-group', [
               input('.form-control', type: 'text', name: 'descriptor'),
-              localeSelect(data,
-                  name: 'descriptor-locale', customClass: '', inGroup: false)
+              languageSelect(data,
+                  name: 'descriptor-language', customClass: '', inGroup: false)
             ])
           ]),
           div('.form-group', [
@@ -65,7 +65,7 @@ final createFunctionPage = new Page(
         'descriptor': {
           'translations': [
             {
-              'locale': {'code': data['descriptor-locale']},
+              'language': {'code': data['descriptor-language']},
               'content': data['descriptor']
             }
           ]
@@ -79,8 +79,8 @@ final createFunctionPage = new Page(
       };
     },
     additional: {
-      'locales': 'locale/list',
-      'subjects': 'subject/list?locale=en_US'
+      'languages': 'language/list',
+      'subjects': 'subject/list?language=en_US'
     });
 
 final listFunctionsPage = new Page(template: (data) {

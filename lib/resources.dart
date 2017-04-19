@@ -48,12 +48,12 @@ ResourceBase getResource(int id, db.SessionData data, ResourceBase target) {
 // Descriptors and translations
 //------------------------------------------------------------------------------
 
-/// Locale
-class LocaleResource extends ResourceBase<db.LocaleRow> {
+/// Language
+class LanguageResource extends ResourceBase<db.LanguageRow> {
   int id;
   String code;
 
-  Map<int, db.LocaleRow> _getTableMap(data) => data.localeTable;
+  Map<int, db.LanguageRow> _getTableMap(data) => data.languageTable;
 
   void loadFields(row, data) {
     code = row.code;
@@ -82,13 +82,13 @@ class DescriptorResource extends ResourceBase<db.DescriptorRow> {
 /// Translation
 class TranslationResource extends ResourceBase<db.TranslationRow> {
   int id;
-  LocaleResource locale;
+  LanguageResource language;
   String content;
 
   Map<int, db.TranslationRow> _getTableMap(data) => data.translationTable;
 
   void loadFields(row, data) {
-    locale = new LocaleResource()..load(row.localeId, data);
+    language = new LanguageResource()..load(row.languageId, data);
     content = row.content;
   }
 }

@@ -9,7 +9,7 @@ import '../page.dart';
 import 'templates.dart';
 
 final allMethods = [
-  ['locale/create', 'Create locale'],
+  ['language/create', 'Create language'],
   ['subject/create', 'Create subject'],
   ['function/create', 'Create function'],
   ['definition/create', 'Create definition'],

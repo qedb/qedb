@@ -9,7 +9,7 @@ part of eqdb.schema;
 class SessionData {
   Map<int, DescriptorRow> descriptorTable = {};
   Map<int, SubjectRow> subjectTable = {};
-  Map<int, LocaleRow> localeTable = {};
+  Map<int, LanguageRow> languageTable = {};
   Map<int, TranslationRow> translationTable = {};
   Map<int, FunctionRow> functionTable = {};
   Map<int, OperatorRow> operatorTable = {};

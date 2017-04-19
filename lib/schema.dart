@@ -15,16 +15,15 @@ part 'src/generated/session_data.dart';
 // Descriptors and translations
 //------------------------------------------------------------------------------
 
-/// Locale
-/// TODO: rename to language
-class LocaleRow implements Record {
+/// Language
+class LanguageRow implements Record {
   final int id;
   final String code;
 
-  LocaleRow(this.id, this.code);
+  LanguageRow(this.id, this.code);
 
   static const select = '*';
-  static LocaleRow map(Row r) => new LocaleRow(r[0], r[1]);
+  static LanguageRow map(Row r) => new LanguageRow(r[0], r[1]);
 }
 
 /// Descriptor
@@ -40,10 +39,10 @@ class DescriptorRow implements Record {
 /// Translation
 class TranslationRow implements Record {
   final int id;
-  final int descriptorId, localeId;
+  final int descriptorId, languageId;
   final String content;
 
-  TranslationRow(this.id, this.descriptorId, this.localeId, this.content);
+  TranslationRow(this.id, this.descriptorId, this.languageId, this.content);
 
   static const select = '*';
   static TranslationRow map(Row r) =>

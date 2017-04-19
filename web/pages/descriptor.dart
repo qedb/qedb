@@ -36,13 +36,13 @@ final readDescriptorPage = new Page(template: (data) {
     h4('Translations'),
     table('.table', [
       thead([
-        tr([th('#'), th('Content'), th('Locale')])
+        tr([th('#'), th('Content'), th('Language')])
       ]),
       tbody(data.data.translations.map((translation) {
         return tr([
           th((++translationNr).toString(), scope: 'row'),
           td(translation.content),
-          td(code(translation.locale.code))
+          td(code(translation.language.code))
         ]);
       }).toList())
     ]),
