@@ -198,8 +198,9 @@ CREATE TYPE step_type AS ENUM (
 );
 
 CREATE TABLE proof (
-  id     serial     PRIMARY KEY,
-  steps  integer[]  NOT NULL
+  id             serial   PRIMARY KEY,
+  first_step_id  integer  NOT NULL,
+  last_step_id   integer  NOT NULL
 );
 
 -- Expression manipulation step
@@ -223,6 +224,10 @@ CREATE TABLE step (
       (step_type = 'rearrange' AND rearrange IS NOT NULL) OR
       (rule_id IS NOT NULL))))
 );
+
+-- Add proof step constraints.
+ALTER TABLE proof ADD FOREIGN KEY(first_step_id) REFERENCES step(id);
+ALTER TABLE proof ADD FOREIGN KEY(last_step_id) REFERENCES step(id);
 
 --------------------------------------------------------------------------------
 -- Create user and restrict access.

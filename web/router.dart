@@ -9,7 +9,6 @@ import 'dart:convert';
 import 'package:yaml/yaml.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_route/shelf_route.dart';
-import 'package:json_object/json_object.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -39,7 +38,7 @@ Map<String, Page> pages = {
   '/definition/list': listDefinitionsPage,
   '/proof/create': createProofPage,
   '/proof/list': listProofsPage,
-  '/proof/{id}/read': readProofPage
+  '/proof/{id}/steps/list': listProofStepsPage
 };
 
 Future<Null> setupRouter(String apiBase, Router router) async {
@@ -79,7 +78,7 @@ Future<Null> setupRouter(String apiBase, Router router) async {
       // Load additional resources.
       for (final label in page.additional.keys) {
         final response = await http.get('$apiBase${page.additional[label]}');
-        data.additional[label] = new JsonObject.fromJsonString(response.body);
+        data.additional[label] = jsonify(JSON.decode(response.body));
       }
 
       if (request.method == 'POST' && page.onPost != null) {
@@ -87,26 +86,24 @@ Future<Null> setupRouter(String apiBase, Router router) async {
         final uri = new Uri(query: await request.readAsString());
 
         // Encode post data.
-        data.request = new JsonObject.fromMap(page.onPost(uri.queryParameters));
+        data.request = jsonify(page.onPost(uri.queryParameters));
 
         // Get API response.
         final response = await http.post(
             '$apiBase${request.requestedUri.path.substring(1)}',
             headers: {'Content-Type': 'application/json'},
             body: JSON.encode(data.request));
-        data.response = new JsonObject.fromJsonString(response.body);
+        data.response = jsonify(JSON.decode(response.body));
 
         // Render page.
         return new Response.ok(page.template(data),
             headers: {'Content-Type': 'text/html'});
       } else {
-        data.response = new JsonObject();
-
         // Do GET request if no postFormat is specified.
         if (page.onPost == null) {
           final response = await http
               .get('$apiBase${request.requestedUri.path.substring(1)}');
-          data.response = new JsonObject.fromJsonString(response.body);
+          data.response = jsonify(JSON.decode(response.body));
         }
 
         return new Response.ok(page.template(data),

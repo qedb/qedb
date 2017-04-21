@@ -140,7 +140,8 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   }
 
   final Map<String, dynamic> values = {
-    'steps': ARRAY(rows.map((r) => r.id), 'integer')
+    'first_step_id': rows.first.id,
+    'last_step_id': rows.last.id
   };
   return await s.insert(db.proof, VALUES(values));
 }

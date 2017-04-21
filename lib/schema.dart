@@ -175,6 +175,18 @@ class DefinitionRow implements Record {
 // Expression manipulation
 //------------------------------------------------------------------------------
 
+/// Proof
+class ProofRow implements Record {
+  final int id;
+  final int firstStepId;
+  final int lastStepId;
+
+  ProofRow(this.id, this.firstStepId, this.lastStepId);
+
+  static const select = '*';
+  static ProofRow map(Row r) => new ProofRow(r[0], r[1], r[2]);
+}
+
 /// Step
 class StepRow implements Record {
   final int id;
@@ -193,15 +205,4 @@ class StepRow implements Record {
   static const select = '*';
   static StepRow map(Row r) =>
       new StepRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6], pgIntArray(r[5]));
-}
-
-/// Proof
-class ProofRow implements Record {
-  final int id;
-  final List<int> steps;
-
-  ProofRow(this.id, this.steps);
-
-  static const select = '*';
-  static ProofRow map(Row r) => new ProofRow(r[0], pgIntArray(r[1]));
 }

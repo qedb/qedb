@@ -262,11 +262,13 @@ class StepResource extends ResourceBase<db.StepRow> {
 /// Proof
 class ProofResource extends ResourceBase<db.ProofRow> {
   int id;
-  List<StepResource> steps;
+  StepResource firstStep;
+  StepResource lastStep;
 
   Map<int, db.ProofRow> _getTableMap(data) => data.proofTable;
 
   void loadFields(row, data) {
-    steps = row.steps.map((id) => new StepResource()..load(id, data)).toList();
+    firstStep = getResource(row.firstStepId, data, new StepResource());
+    lastStep = getResource(row.lastStepId, data, new StepResource());
   }
 }

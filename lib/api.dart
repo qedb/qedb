@@ -170,10 +170,12 @@ class EqDB {
               .toList(),
           [language]);
 
-  @ApiMethod(path: 'proof/{id}/read', method: 'GET')
-  Future<ProofResource> readProof(int id) =>
-      _runRequestSession<ProofResource>((s) async =>
-          new ProofResource()..loadRow(await api.readProof(s, id), s.data));
+  @ApiMethod(path: 'proof/{id}/steps/list', method: 'GET')
+  Future<List<StepResource>> listProofSteps(int id) =>
+      _runRequestSession<List<StepResource>>((s) async =>
+          (await api.listProofSteps(s, id))
+              .map((r) => new StepResource()..loadRow(r, s.data))
+              .toList());
 }
 
 /// Utility to reuse method calling boilerplate.

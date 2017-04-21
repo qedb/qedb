@@ -20,23 +20,38 @@ class Page {
 class PageSessionData {
   final Map<String, String> settings;
   final Map<String, String> snippets;
-  final Map<String, JsonObject> additional;
+  final Map<String, dynamic> additional;
   final Set<String> allRoutes;
 
-  JsonObject request;
-  JsonObject response;
+  dynamic request;
+  dynamic response;
 
   List<String> path;
   Map<String, Object> pathParameters;
 
   PageSessionData(this.settings, this.snippets, this.allRoutes)
-      : additional = new Map<String, JsonObject>();
+      : additional = new Map<String, JsonObject>() {
+    request = new JsonObject();
+    response = new JsonObject();
+  }
 
   String relativeUrl(String route) {
     final base = new List<String>.from(path);
     base.removeLast();
     final baseUrl = base.join('/');
     return '/$baseUrl/$route';
+  }
+}
+
+/// Convert given JSON data into a JsonObject, or if its not a Map, fallback to
+/// Dart object.
+dynamic jsonify(dynamic data) {
+  if (data is Map) {
+    return new JsonObject.fromMap(data);
+  } else if (data is Iterable) {
+    return new List.generate(data.length, (i) => jsonify(data.elementAt(i)));
+  } else {
+    return data;
   }
 }
 

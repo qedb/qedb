@@ -48,6 +48,12 @@ class SessionState<D> {
 
   SessionState(this.conn, this.data);
 
+  Future<List<R>> run<R extends Record>(TableInfo<R, D> table, Sql s1,
+      [Sql s2, Sql s3, Sql s4, Sql s5]) async {
+    return _runMappedQuery<R, D>(
+        this, true, table, SQL(_collapse(s1, s2, s3, s4, s5)));
+  }
+
   Future<R> insert<R extends Record>(TableInfo<R, D> table, Sql s1,
       [Sql s2, Sql s3, Sql s4, Sql s5]) async {
     return (await _runMappedQuery<R, D>(
@@ -233,6 +239,16 @@ Sql IS(dynamic value) {
 }
 
 // ignore: non_constant_identifier_names
+Sql IS_NOT(dynamic value) {
+  if (value is Sql) {
+    return SQL('!= $value');
+  } else {
+    final converter = new TypeConverter();
+    return SQL('!= ${converter.encode(value, null)}');
+  }
+}
+
+// ignore: non_constant_identifier_names
 Sql IN(dynamic values) {
   if (values is Sql) {
     return SQL('IN $values');
@@ -289,4 +305,22 @@ Sql LIMIT(int limit) {
 Sql ARRAY(Iterable values, String type) {
   final encoded = _encodeValues(values, new TypeConverter());
   return SQL('ARRAY[${encoded.join(',')}]' + (type == null ? '' : '::$type[]'));
+}
+
+// ignore: non_constant_identifier_names
+Sql WITH_RECURSIVE(Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
+  final statements = _collapse(s1, s2, s3, s4, s5);
+  return SQL('WITH RECURSIVE $statements');
+}
+
+// ignore: non_constant_identifier_names
+Sql AS(Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
+  final statements = _collapse(s1, s2, s3, s4, s5);
+  return SQL('AS ($statements)');
+}
+
+// ignore: non_constant_identifier_names
+Sql UNION_ALL(Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
+  final statements = _collapse(s1, s2, s3, s4, s5);
+  return SQL('UNION ALL $statements');
 }

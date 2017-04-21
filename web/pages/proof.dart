@@ -24,11 +24,26 @@ final createProofPage = new Page(
     },
     onPost: (data) => JSON.decode(data['data']));
 
-final readProofPage = new Page(template: (s) {
-  return pageTemplate(s, 'Proof ${s.response.id}',
+final listProofsPage = new Page(template: (s) {
+  return listResourceTemplate(s, 'proof', 'proofs',
+      tableHead: [th('ID'), th('First'), th('Last')], row: (proof) {
+    return [
+      td(a(proof.id.toString(), href: '/proof/${proof.id}/steps/list')),
+      td(span('.latex', proof.firstStep.expression.latex)),
+      td(span('.latex', proof.lastStep.expression.latex))
+    ];
+  }, bodyTags: [
+    style(s.snippets['latex-table.css']),
+    katexSource(s),
+    script(s.snippets['render-latex.js'])
+  ]);
+});
+
+final listProofStepsPage = new Page(template: (s) {
+  return pageTemplate(s, 'Proof #${s.pathParameters['id']} steps',
       containerTags: ol(
           '.proof',
-          s.response.steps
+          s.response
               .map((step) => li([
                     span('.latex', step.expression.latex),
                     ' ',
@@ -40,19 +55,4 @@ final readProofPage = new Page(template: (s) {
         katexSource(s),
         script(s.snippets['render-latex.js'])
       ]);
-});
-
-final listProofsPage = new Page(template: (s) {
-  return listResourceTemplate(s, 'proof', 'proofs',
-      tableHead: [th('ID'), th('First'), th('Last')], row: (proof) {
-    return [
-      td(a(proof.id.toString(), href: '/proof/${proof.id}/read')),
-      td(span('.latex', proof.steps.first.expression.latex)),
-      td(span('.latex', proof.steps.last.expression.latex))
-    ];
-  }, bodyTags: [
-    style(s.snippets['latex-table.css']),
-    katexSource(s),
-    script(s.snippets['render-latex.js'])
-  ]);
 });
