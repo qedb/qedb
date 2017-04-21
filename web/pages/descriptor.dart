@@ -25,7 +25,7 @@ final listDescriptorsPage = new Page(template: (s) {
     return [
       th(a(descriptor.id.toString(), href: '/descriptor/${descriptor.id}/read'),
           scope: 'row'),
-      td(safe(() => descriptor.translations[0].content, ''))
+      td(safe(() => descriptor.translations[0].content, span('.none')))
     ];
   });
 });

@@ -75,7 +75,8 @@ List defaultHead(PageSessionData s) => [
           rel: 'stylesheet',
           href: s.settings['bootstrap.href'],
           integrity: s.settings['bootstrap.integrity'],
-          crossorigin: 'anonymous')
+          crossorigin: 'anonymous'),
+      style(s.snippets['common.css'])
     ];
 
 /// Path breadcrumb.

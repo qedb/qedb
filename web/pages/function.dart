@@ -96,12 +96,13 @@ final listFunctionsPage = new Page(template: (s) {
       td(function.id.toString()),
       td(descriptorHyperlink(() => function.subject.descriptor)),
       td(descriptorHyperlink(() => function.descriptor)),
-      td(safe(() => function.keyword.toString(), '')),
-      td(safe(() => span('.latex', function.latexTemplate))),
+      td(safe(() => function.keyword.toString(), span('.none'))),
+      td(safe(() => span('.latex', function.latexTemplate), span('.none'))),
       td(function.generic ? 'yes' : 'no')
     ];
   }, headTags: [
-    style('.katex-display { margin: 0 !important; text-align: left; }'
+    style(
+        '.katex-display { margin: 0 !important; text-align: left !important; }'
         'tr { line-height: 3em; }')
   ], bodyTags: [
     katexSource(s),
