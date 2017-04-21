@@ -172,35 +172,36 @@ class DefinitionRow implements Record {
 }
 
 //------------------------------------------------------------------------------
-// Expression lineages
+// Expression manipulation
 //------------------------------------------------------------------------------
 
-/// Lineage step
-class LineageStepRow implements Record {
+/// Step
+class StepRow implements Record {
   final int id;
   final int previousId;
   final int expressionId;
 
   final int position;
   final String type;
-  final List<int> rearrange;
+  final int proofId;
   final int ruleId;
+  final List<int> rearrange;
 
-  LineageStepRow(this.id, this.previousId, this.expressionId, this.position,
-      this.type, this.rearrange, this.ruleId);
+  StepRow(this.id, this.previousId, this.expressionId, this.position, this.type,
+      this.proofId, this.ruleId, this.rearrange);
 
   static const select = '*';
-  static LineageStepRow map(Row r) =>
-      new LineageStepRow(r[0], r[1], r[2], r[3], r[4], pgIntArray(r[5]), r[6]);
+  static StepRow map(Row r) =>
+      new StepRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6], pgIntArray(r[5]));
 }
 
-/// Lineage
-class LineageRow implements Record {
+/// Proof
+class ProofRow implements Record {
   final int id;
   final List<int> steps;
 
-  LineageRow(this.id, this.steps);
+  ProofRow(this.id, this.steps);
 
   static const select = '*';
-  static LineageRow map(Row r) => new LineageRow(r[0], pgIntArray(r[1]));
+  static ProofRow map(Row r) => new ProofRow(r[0], pgIntArray(r[1]));
 }

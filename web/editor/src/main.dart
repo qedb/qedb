@@ -97,26 +97,26 @@ class ExpressionEditor extends EdiTeX {
   }
 }
 
-class LineageEditor {
+class ProofEditor {
   final DivElement container;
   final EqDBEdiTeXInterface interface;
   final EqdbApi db;
 
   final editors = new List<ExpressionEditor>();
 
-  LineageEditor(this.container, this.db, this.interface);
+  ProofEditor(this.container, this.db, this.interface);
 
-  Future<LineageCreateData> getData() async {
-    final data = new LineageCreateData();
+  Future<ProofData> getData() async {
+    final data = new ProofData();
     data.steps = new List<DifferenceBranch>();
 
-    // The first editor sets the lineage initial expression and has no
+    // The first editor sets the proof initial expression and has no
     // difference data.
     for (var i = 1; i < editors.length; i++) {
       final editor = editors[i];
 
       // Ignore empty editors.
-      // An empty editor between non-empty ones will cause an error at lineage
+      // An empty editor between non-empty ones will cause an error at proof
       // creation.
       if (editor.isNotEmpty) {
         // Resolve difference again to be sure the expressionDifference is
@@ -126,7 +126,7 @@ class LineageEditor {
         if (diff != null && diff.resolved) {
           data.steps.add(diff);
         } else {
-          throw new Exception('lineage is broken');
+          throw new Exception('proof is broken');
         }
       }
     }
@@ -138,11 +138,11 @@ class LineageEditor {
     DivElement editorContainer, resolveStatus;
 
     // Add resolve info elements.
-    final row = container.append(div('.lineage-row', c: [
-      div('.lineage-row-number')..text = (editors.length + 1).toString(),
-      div('.lineage-row-editor.editex.editex-align-left',
+    final row = container.append(div('.proof-row', c: [
+      div('.proof-row-number')..text = (editors.length + 1).toString(),
+      div('.proof-row-editor.editex.editex-align-left',
           store: (e) => editorContainer = e),
-      div('.lineage-row-status', store: (e) => resolveStatus = e)
+      div('.proof-row-status', store: (e) => resolveStatus = e)
     ]));
 
     final editor = new ExpressionEditor(
@@ -222,24 +222,24 @@ Future main() async {
   await interface.loadData(db);
 
   // Construct editors.
-  final lineageEditor =
-      new LineageEditor(querySelector('#lineage-editor'), db, interface);
-  lineageEditor.addRow();
-  lineageEditor.addRow();
+  final proofEditor =
+      new ProofEditor(querySelector('#proof-editor'), db, interface);
+  proofEditor.addRow();
+  proofEditor.addRow();
 
   // Build form data on submit.
   final FormElement form = querySelector('form');
   final InputElement dataInput = querySelector('#data');
   form.onSubmit.listen((e) {
     e.preventDefault();
-    submitForm(form, dataInput, lineageEditor);
+    submitForm(form, dataInput, proofEditor);
   });
 }
 
-Future<bool> submitForm(FormElement form, InputElement dataInput,
-    LineageEditor lineageEditor) async {
+Future<bool> submitForm(
+    FormElement form, InputElement dataInput, ProofEditor proofEditor) async {
   try {
-    dataInput.value = JSON.encode((await lineageEditor.getData()).toJson());
+    dataInput.value = JSON.encode((await proofEditor.getData()).toJson());
     form.submit();
     return true;
   } catch (e) {

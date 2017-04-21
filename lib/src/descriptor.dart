@@ -6,7 +6,7 @@ part of eqdb;
 
 /// Design choice: never call this directly from the API. Create descriptor
 /// should be called when a descriptor is created for another record. This is
-/// always a new record. All subject/function/lineage titles should be distinct.
+/// always a new record. All subject/function titles should be distinct.
 Future<db.DescriptorRow> _createDescriptor(
     Session s, DescriptorResource body) async {
   // You must submit at least one translation.

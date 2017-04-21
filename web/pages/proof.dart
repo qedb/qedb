@@ -8,26 +8,26 @@ import '../htgen/htgen.dart';
 import '../page.dart';
 import 'templates.dart';
 
-final createLineagePage = new Page(
+final createProofPage = new Page(
     template: (s) {
-      return createResourceTemplate(s, 'lineage', inputs: (data) {
+      return createResourceTemplate(s, 'proof', inputs: (data) {
         return [
-          div('#lineage-editor'),
+          div('#proof-editor'),
           input('#data', type: 'hidden', name: 'data')
         ];
       }, bodyTags: [
         katexSource(s),
         editexStyles(s),
-        stylesheet(s.settings['lineagesrc'] + 'styles/main.css'),
-        script(src: s.settings['lineagesrc'] + 'src/main.dart.js')
+        stylesheet(s.settings['proofsrc'] + 'styles/main.css'),
+        script(src: s.settings['proofsrc'] + 'src/main.dart.js')
       ]);
     },
     onPost: (data) => JSON.decode(data['data']));
 
-final readLineagePage = new Page(template: (s) {
-  return pageTemplate(s, 'Lineage ${s.response.id}',
+final readProofPage = new Page(template: (s) {
+  return pageTemplate(s, 'Proof ${s.response.id}',
       containerTags: ol(
-          '.lineage',
+          '.proof',
           s.response.steps
               .map((step) => li([
                     span('.latex', step.expression.latex),
@@ -36,19 +36,19 @@ final readLineagePage = new Page(template: (s) {
                   ]))
               .toList()),
       bodyTags: [
-        style(s.snippets['lineage.css']),
+        style(s.snippets['proof.css']),
         katexSource(s),
         script(s.snippets['render-latex.js'])
       ]);
 });
 
-final listLineagesPage = new Page(template: (s) {
-  return listResourceTemplate(s, 'lineage', 'lineages',
-      tableHead: [th('ID'), th('First'), th('Last')], row: (lineage) {
+final listProofsPage = new Page(template: (s) {
+  return listResourceTemplate(s, 'proof', 'proofs',
+      tableHead: [th('ID'), th('First'), th('Last')], row: (proof) {
     return [
-      td(a(lineage.id.toString(), href: '/lineage/${lineage.id}/read')),
-      td(span('.latex', lineage.steps.first.expression.latex)),
-      td(span('.latex', lineage.steps.last.expression.latex))
+      td(a(proof.id.toString(), href: '/proof/${proof.id}/read')),
+      td(span('.latex', proof.steps.first.expression.latex)),
+      td(span('.latex', proof.steps.last.expression.latex))
     ];
   }, bodyTags: [
     style(s.snippets['latex-table.css']),

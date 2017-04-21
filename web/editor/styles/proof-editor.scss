@@ -2,17 +2,17 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-.lineage-editor {
+.proof-editor {
   margin: 2em 0;
 }
 
-.lineage-row {
+.proof-row {
   display: flex;
   flex-direction: row;
   align-items: center;
 }
 
-.lineage-row-number {
+.proof-row-number {
   flex: 0 0 4em;
   text-align: center;
   font-family: KaTeX_Main;
@@ -26,20 +26,20 @@
   }
 }
 
-.lineage-row-editor {
+.proof-row-editor {
   flex: 1;
 }
 
-.lineage-row-status {
+.proof-row-status {
   flex: 0 0 4em;
   text-align: center;
 }
 
-.lineage-row-editor.editex {
+.proof-row-editor.editex {
   border-color: transparent;
 }
 
-.lineage-row-status.status-error:before {
+.proof-row-status.status-error:before {
   content: '!';
   display: inline-block;
   width: 1.2em;

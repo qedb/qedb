@@ -20,7 +20,7 @@ import 'pages/subject.dart';
 import 'pages/translation.dart';
 import 'pages/function.dart';
 import 'pages/definition.dart';
-import 'pages/lineage.dart';
+import 'pages/proof.dart';
 
 import 'page.dart';
 
@@ -37,9 +37,9 @@ Map<String, Page> pages = {
   '/function/list': listFunctionsPage,
   '/definition/create': createDefinitionPage,
   '/definition/list': listDefinitionsPage,
-  '/lineage/create': createLineagePage,
-  '/lineage/list': listLineagesPage,
-  '/lineage/{id}/read': readLineagePage
+  '/proof/create': createProofPage,
+  '/proof/list': listProofsPage,
+  '/proof/{id}/read': readProofPage
 };
 
 Future<Null> setupRouter(String apiBase, Router router) async {
@@ -87,7 +87,7 @@ Future<Null> setupRouter(String apiBase, Router router) async {
         final uri = new Uri(query: await request.readAsString());
 
         // Encode post data.
-        data.request = page.onPost(uri.queryParameters);
+        data.request = new JsonObject.fromMap(page.onPost(uri.queryParameters));
 
         // Get API response.
         final response = await http.post(

@@ -21,8 +21,7 @@ restart-api-server-log-tests:
 
 restart-web-server:
 	./tool/kill-port.sh 8081
-	export EQDB_WEB_PORT=8081; \
-	dart -c web/server.dart > /dev/null 2>&1 &
+	export EQDB_WEB_PORT=8081; dart -c web/server.dart > /dev/null 2>&1 &
 
 check:
 	./tool/check.sh
@@ -32,6 +31,8 @@ build-dev-environment: restart-web-server
 	./tool/restart-db.sh
 	export EQDB_TEST_LOG=''; ./tool/run-test.sh ./test/run.sh
 	pub serve --port 8083 > /dev/null 2>&1 &
+	./tool/kill-port.sh 8081 force
+	export EQDB_WEB_PORT=8081; dart -c web/server.dart > /dev/null 2>&1 &
 
 generate-discovery-doc: restart-database restart-api-server
 	mkdir -p doc

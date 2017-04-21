@@ -4,11 +4,11 @@
 
 part of eqdb;
 
-class LineageCreateData {
+class ProofData {
   List<DifferenceBranch> steps;
 }
 
-enum LineageStepType {
+enum StepType {
   setExpression,
   rearrange,
   ruleNormal,
@@ -17,10 +17,10 @@ enum LineageStepType {
   ruleRevert
 }
 
-/// Intermediary data for building a lineage step.
+/// Intermediary data for building a step.
 /// The [DifferenceBranch] is first flattened into this class.
-class LineageStepBuilder {
-  LineageStepType type;
+class _StepData {
+  StepType type;
   int position;
   Expr subExprRight;
   Expr expression;
@@ -29,25 +29,25 @@ class LineageStepBuilder {
   Rule rule;
 
   String get typeString => {
-        LineageStepType.setExpression: 'set',
-        LineageStepType.rearrange: 'rearrange',
-        LineageStepType.ruleNormal: 'rule_normal',
-        LineageStepType.ruleInvert: 'rule_invert',
-        LineageStepType.ruleMirror: 'rule_mirror',
-        LineageStepType.ruleRevert: 'rule_revert'
+        StepType.setExpression: 'set',
+        StepType.rearrange: 'rearrange',
+        StepType.ruleNormal: 'rule_normal',
+        StepType.ruleInvert: 'rule_invert',
+        StepType.ruleMirror: 'rule_mirror',
+        StepType.ruleRevert: 'rule_revert'
       }[type];
 }
 
-Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
+Future<db.ProofRow> createProof(Session s, ProofData body) async {
   if (body.steps.isEmpty) {
-    throw new UnprocessableEntityError('lineage must have at least one step');
+    throw new UnprocessableEntityError('proof must have at least one step');
   }
 
   /// Create intermediary data list.
-  final steps = new List<LineageStepBuilder>();
-  steps.add(new LineageStepBuilder()
+  final steps = new List<_StepData>();
+  steps.add(new _StepData()
     ..position = 0
-    ..type = LineageStepType.setExpression
+    ..type = StepType.setExpression
     ..expression = new Expr.fromBase64(body.steps.first.leftData));
 
   /// Flatten list of difference branches into a step list.
@@ -58,7 +58,7 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
       // Note: reverse flattened list so that position integers are unaffected.
       steps.addAll(_flattenDifferenceBranch(branch).reversed);
 
-      // Use the right side of the branch to later validate that lineage
+      // Use the right side of the branch to later validate that proof
       // reconstruction is correct.
       steps.last.expression = new Expr.fromBase64(branch.rightData);
     }
@@ -100,7 +100,7 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
   Expr expr;
   for (final step in steps) {
     // Apply step to [expr].
-    expr = computeLineageStep(expr, step, rearrangeableIds, compute);
+    expr = _computeProofStep(expr, step, rearrangeableIds, compute);
 
     // As a convention we evaluate the expression after each step.
     expr = expr.evaluate(compute);
@@ -108,7 +108,7 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
     if (step.expression != null && step.expression.evaluate(compute) != expr) {
       // If an expression is already set for this step, it should be the same
       // after evaluation.
-      throw new UnprocessableEntityError('lineage reconstruction failed');
+      throw new UnprocessableEntityError('proof reconstruction failed');
     }
 
     // Set/override the expression.
@@ -116,7 +116,7 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
   }
 
   // Insert all steps into database.
-  final rows = new List<db.LineageStepRow>();
+  final rows = new List<db.StepRow>();
   for (final step in steps) {
     final expressionRow = await _createExpression(s, step.expression);
 
@@ -124,7 +124,7 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
     final values = {
       'expression_id': expressionRow.id,
       'position': step.position,
-      'type': step.typeString
+      'step_type': step.typeString
     };
     if (rows.isNotEmpty) {
       values['previous_id'] = rows.last.id;
@@ -136,41 +136,40 @@ Future<db.LineageRow> createLineage(Session s, LineageCreateData body) async {
       values['rearrange'] = ARRAY(step.rearrange, 'integer');
     }
 
-    rows.add(await s.insert(db.lineageStep, VALUES(values)));
+    rows.add(await s.insert(db.step, VALUES(values)));
   }
 
   final Map<String, dynamic> values = {
     'steps': ARRAY(rows.map((r) => r.id), 'integer')
   };
-  return await s.insert(db.lineage, VALUES(values));
+  return await s.insert(db.proof, VALUES(values));
 }
 
 /// Compute result of applying [step], given the [previous] expression. In some
 /// cases the computation is backwards. This means the substitution that is
 /// applied to [previous] is computed in part based on the resulting expression
 /// (fetched from [DifferenceBranch.rightData]).
-Expr computeLineageStep(Expr previous, LineageStepBuilder step,
+Expr _computeProofStep(Expr previous, _StepData step,
     List<int> rearrangeableIds, ExprCompute compute) {
   assert(step.type != null);
   switch (step.type) {
-    case LineageStepType.setExpression:
+    case StepType.setExpression:
       return step.expression;
 
-    case LineageStepType.rearrange:
+    case StepType.rearrange:
       return previous.rearrangeAt(
           step.rearrange, step.position, rearrangeableIds);
 
-    case LineageStepType.ruleNormal:
+    case StepType.ruleNormal:
       return previous.substituteAt(step.rule, step.position);
 
-    case LineageStepType.ruleInvert:
+    case StepType.ruleInvert:
       return previous.substituteAt(step.rule.inverted, step.position);
 
-    case LineageStepType.ruleMirror:
-    case LineageStepType.ruleRevert:
-      final rule = step.type == LineageStepType.ruleMirror
-          ? step.rule
-          : step.rule.inverted;
+    case StepType.ruleMirror:
+    case StepType.ruleRevert:
+      final rule =
+          step.type == StepType.ruleMirror ? step.rule : step.rule.inverted;
 
       // Reversed evaluation means that the right sub-expression at this
       // position is used to construct the original expression. When evaluated
@@ -188,36 +187,36 @@ Expr computeLineageStep(Expr previous, LineageStepBuilder step,
   }
 }
 
-/// Flatten [branch] into a list of lineage steps.
-List<LineageStepBuilder> _flattenDifferenceBranch(DifferenceBranch branch) {
+/// Flatten [branch] into a list of steps.
+List<_StepData> _flattenDifferenceBranch(DifferenceBranch branch) {
   if (!branch.resolved) {
     throw new UnprocessableEntityError('contains unresolved steps');
   } else if (branch.different) {
-    final steps = new List<LineageStepBuilder>();
+    final steps = new List<_StepData>();
     if (branch.rearrangements.isNotEmpty) {
       // Add step for each rearrangement.
       for (final rearrangement in branch.rearrangements) {
-        steps.add(new LineageStepBuilder()
+        steps.add(new _StepData()
           ..position = rearrangement.position
-          ..type = LineageStepType.rearrange
+          ..type = StepType.rearrange
           ..rearrange = rearrangement.format);
       }
     } else if (branch.rule != null) {
       // Add single step for rule.
-      final step = new LineageStepBuilder()
+      final step = new _StepData()
         ..position = branch.position
         ..ruleId = branch.rule.id
         ..subExprRight = new Expr.fromBase64(branch.rightData);
 
       // Determine rule type.
       if (!branch.reverseRule && !branch.reverseEvaluate) {
-        step.type = LineageStepType.ruleNormal;
+        step.type = StepType.ruleNormal;
       } else if (branch.reverseRule && !branch.reverseEvaluate) {
-        step.type = LineageStepType.ruleInvert;
+        step.type = StepType.ruleInvert;
       } else if (branch.reverseRule && branch.reverseEvaluate) {
-        step.type = LineageStepType.ruleMirror;
+        step.type = StepType.ruleMirror;
       } else {
-        step.type = LineageStepType.ruleRevert;
+        step.type = StepType.ruleRevert;
       }
 
       steps.add(step);

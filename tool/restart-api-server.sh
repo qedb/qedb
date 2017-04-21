@@ -4,7 +4,7 @@
 # Use of this source code is governed by an AGPL-3.0-style license
 # that can be found in the LICENSE file.
 
-./tool/kill-port.sh 8080
+./tool/kill-port.sh 8080 force
 
 # Wait for kill (is async).
 # If the old server is still listening the new server cannot bind.

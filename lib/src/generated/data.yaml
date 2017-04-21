@@ -35,10 +35,10 @@ tables:
   className:  Definition
   varName:    definition
 
-- tableName:  lineage_step
-  className:  LineageStep
-  varName:    lineageStep
+- tableName:  step
+  className:  Step
+  varName:    step
 
-- tableName:  lineage
-  className:  Lineage
-  varName:    lineage
+- tableName:  proof
+  className:  Proof
+  varName:    proof

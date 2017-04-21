@@ -225,11 +225,11 @@ class DefinitionResource extends ResourceBase<db.DefinitionRow> {
 }
 
 //------------------------------------------------------------------------------
-// Expression lineages
+// Expression manipulation
 //------------------------------------------------------------------------------
 
-/// Lineage step
-class LineageStepResource extends ResourceBase<db.LineageStepRow> {
+/// Step
+class StepResource extends ResourceBase<db.StepRow> {
   int id;
   ExpressionResource expression;
   int position;
@@ -244,10 +244,11 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
   })
   String type;
 
-  List<int> rearrange;
   RuleResource rule;
+  ProofResource proof;
+  List<int> rearrange;
 
-  Map<int, db.LineageStepRow> _getTableMap(data) => data.lineageStepTable;
+  Map<int, db.StepRow> _getTableMap(data) => data.stepTable;
 
   void loadFields(row, data) {
     expression = new ExpressionResource()..load(row.expressionId, data);
@@ -258,16 +259,14 @@ class LineageStepResource extends ResourceBase<db.LineageStepRow> {
   }
 }
 
-/// Lineage
-class LineageResource extends ResourceBase<db.LineageRow> {
+/// Proof
+class ProofResource extends ResourceBase<db.ProofRow> {
   int id;
-  List<LineageStepResource> steps;
+  List<StepResource> steps;
 
-  Map<int, db.LineageRow> _getTableMap(data) => data.lineageTable;
+  Map<int, db.ProofRow> _getTableMap(data) => data.proofTable;
 
   void loadFields(row, data) {
-    steps = row.steps
-        .map((id) => new LineageStepResource()..load(id, data))
-        .toList();
+    steps = row.steps.map((id) => new StepResource()..load(id, data)).toList();
   }
 }

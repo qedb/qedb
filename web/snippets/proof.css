@@ -4,23 +4,23 @@
  * that can be found in the LICENSE file.
  */
 
-ol.lineage {
+ol.proof {
   list-style-type: none;
   counter-reset: step-nr;
 }
 
-ol.lineage > li {
+ol.proof > li {
   display: flex;
   flex-direction: row;
   align-items: center;
 }
 
-ol.lineage > li:before {
+ol.proof > li:before {
   counter-increment: step-nr;
   content: '(' counter(step-nr, decimal) ')';
 }
 
-ol.lineage > li > .latex {
+ol.proof > li > .latex {
   flex: 1;
   padding: 2em;
 }

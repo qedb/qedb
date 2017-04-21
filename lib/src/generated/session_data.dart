@@ -16,6 +16,6 @@ class SessionData {
   Map<int, ExpressionRow> expressionTable = {};
   Map<int, RuleRow> ruleTable = {};
   Map<int, DefinitionRow> definitionTable = {};
-  Map<int, LineageStepRow> lineageStepTable = {};
-  Map<int, LineageRow> lineageTable = {};
+  Map<int, StepRow> stepTable = {};
+  Map<int, ProofRow> proofTable = {};
 }

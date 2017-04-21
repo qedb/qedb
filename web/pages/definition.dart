@@ -18,7 +18,7 @@ final createDefinitionPage = new Page(
       }, bodyTags: [
         katexSource(s),
         editexStyles(s),
-        script(src: s.settings['lineagesrc'] + 'src/editex_form.dart.js')
+        script(src: s.settings['proofsrc'] + 'src/editex_form.dart.js')
       ]);
     },
     onPost: (data) => {

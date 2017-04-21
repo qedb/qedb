@@ -151,30 +151,29 @@ class EqDB {
               .toList(),
           [language]);
 
-  @ApiMethod(path: 'expressionDifference/resolve', method: 'POST')
+  @ApiMethod(path: 'difference/resolve', method: 'POST')
   Future<api.DifferenceBranch> resolveExpressionDifference(
           api.DifferenceBranch body) =>
       _runRequestSession<api.DifferenceBranch>(
           (s) => api.resolveExpressionDifference(s, body));
 
-  @ApiMethod(path: 'lineage/create', method: 'POST')
-  Future<LineageResource> createLineage(api.LineageCreateData body) =>
-      _runRequestSession<LineageResource>((s) async => new LineageResource()
-        ..loadRow(await api.createLineage(s, body), s.data));
+  @ApiMethod(path: 'proof/create', method: 'POST')
+  Future<ProofResource> createProof(api.ProofData body) =>
+      _runRequestSession<ProofResource>((s) async =>
+          new ProofResource()..loadRow(await api.createProof(s, body), s.data));
 
-  @ApiMethod(path: 'lineage/list', method: 'GET')
-  Future<List<LineageResource>> listLineages(
-          {String language: defaultLanguage}) =>
-      _runRequestSession<List<LineageResource>>(
-          (s) async => (await api.listLineages(s))
-              .map((r) => new LineageResource()..loadRow(r, s.data))
+  @ApiMethod(path: 'proof/list', method: 'GET')
+  Future<List<ProofResource>> listProofs({String language: defaultLanguage}) =>
+      _runRequestSession<List<ProofResource>>(
+          (s) async => (await api.listProofs(s))
+              .map((r) => new ProofResource()..loadRow(r, s.data))
               .toList(),
           [language]);
 
-  @ApiMethod(path: 'lineage/{id}/read', method: 'GET')
-  Future<LineageResource> readLineage(int id) =>
-      _runRequestSession<LineageResource>((s) async =>
-          new LineageResource()..loadRow(await api.readLineage(s, id), s.data));
+  @ApiMethod(path: 'proof/{id}/read', method: 'GET')
+  Future<ProofResource> readProof(int id) =>
+      _runRequestSession<ProofResource>((s) async =>
+          new ProofResource()..loadRow(await api.readProof(s, id), s.data));
 }
 
 /// Utility to reuse method calling boilerplate.

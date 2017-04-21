@@ -184,40 +184,44 @@ CREATE TABLE definition (
 );
 
 --------------------------------------------------------------------------------
--- Expression lineages
+-- Expression manipulation
 --------------------------------------------------------------------------------
 
-CREATE TYPE lineage_step_type AS ENUM (
-  'set',
-  'rearrange',
-  'rule_normal', -- substitute a -> b, evaluate b from a
-  'rule_invert', -- substitute b -> a, evaluate a from b (invert rule sides)
-  'rule_mirror', -- substitute a -> b, evaluate a from b (mirror evaluation)
-  'rule_revert'  -- substitute b -> a, evaluate b from a (invert and mirror)
+CREATE TYPE step_type AS ENUM (
+  'set',         -- Set expression to arbitrary value.
+  'copy_proof',  -- Copy first and last expression of a proof.
+  'rule_normal', -- Substitute a -> b, evaluate b from a.
+  'rule_invert', -- Substitute b -> a, evaluate a from b (invert rule sides).
+  'rule_mirror', -- Substitute a -> b, evaluate a from b (mirror evaluation).
+  'rule_revert', -- Substitute b -> a, evaluate b from a (invert and mirror).
+  'rearrange'    -- Rearrange using the given format.
 );
 
--- Expression lineage step
-CREATE TABLE lineage_step (
-  id             serial    PRIMARY KEY,
-  previous_id    integer   REFERENCES lineage_step(id),
-  expression_id  integer   NOT NULL REFERENCES expression(id),
+CREATE TABLE proof (
+  id     serial     PRIMARY KEY,
+  steps  integer[]  NOT NULL
+);
 
-  -- Expression rewrite parameters
-  position       smallint           NOT NULL CHECK (position >= 0),
-  type           lineage_step_type  NOT NULL,
+-- Expression manipulation step
+CREATE TABLE step (
+  id             serial     PRIMARY KEY,
+  previous_id    integer    REFERENCES step(id),
+  expression_id  integer    NOT NULL REFERENCES expression(id),
+
+  -- Manipulation parameters
+  position       smallint   NOT NULL CHECK (position >= 0),
+  step_type      step_type  NOT NULL,
+  proof_id       integer    REFERENCES proof(id),
+  rule_id        integer    REFERENCES rule(id),
   rearrange      smallint[],
-  rule_id        integer            REFERENCES rule(id),
 
   -- Enforce various constraints.
   CONSTRAINT valid_type CHECK (
-    (previous_id = NULL AND type = 'set') OR
+    (previous_id = NULL AND step_type = 'set') OR
     (previous_id != NULL AND (
-      (type = 'rearrange'  AND rearrange IS NOT NULL) OR rule_id IS NOT NULL)))
-);
-
-CREATE TABLE lineage (
-  id     serial     PRIMARY KEY,
-  steps  integer[]  NOT NULL
+      (step_type = 'copy_proof' AND proof_id IS NOT NULL) OR
+      (step_type = 'rearrange' AND rearrange IS NOT NULL) OR
+      (rule_id IS NOT NULL))))
 );
 
 --------------------------------------------------------------------------------

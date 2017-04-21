@@ -61,6 +61,11 @@ class SessionState<D> {
         this, true, table, SELECT(table, s1, s2, s3, s4, s5));
   }
 
+  Future<R> selectOne<R extends Record>(TableInfo<R, D> table,
+      [Sql s1, Sql s2, Sql s3, Sql s4, Sql s5]) async {
+    return (await select(table, s1, s2, s3, s4, s5)).single;
+  }
+
   Future<List<int>> selectIds<R extends Record>(TableInfo<R, D> table,
       [Sql s1, Sql s2, Sql s3, Sql s4, Sql s5]) async {
     return (await select(table, s1, s2, s3, s4, s5))
