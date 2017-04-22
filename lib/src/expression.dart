@@ -4,13 +4,8 @@
 
 part of eqdb;
 
-/// Shortcut for decoding base64 codec headers.
-ExprCodecData _decodeCodecHeader(String base64Data) =>
-    new ExprCodecData.decodeHeader(
-        new Uint8List.fromList(BASE64.decode(base64Data)).buffer);
-
 Future<db.ExpressionRow> _createExpression(Session s, Expr expr,
-    [OperatorConfig ops]) async {
+    [OperatorConfig operatorConfig]) async {
   // Encode expression.
   final codecData = exprCodecEncode(expr);
 
@@ -50,7 +45,7 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr,
   }
 
   // Make sure we have a valid operator configuration.
-  final _ops = ops == null ? await _loadOperatorConfig(s) : ops;
+  final ops = operatorConfig ?? await _loadOperatorConfig(s);
 
   // Resolve expression node parameters.
   String nodeType;
@@ -68,7 +63,7 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr,
     // Get expression IDs for all arguments.
     nodeArguments = new List<int>();
     for (final arg in expr.arguments) {
-      nodeArguments.add((await _createExpression(s, arg, _ops)).id);
+      nodeArguments.add((await _createExpression(s, arg, ops)).id);
     }
   }
 
@@ -78,11 +73,9 @@ Future<db.ExpressionRow> _createExpression(Session s, Expr expr,
   return await s.insert(
       db.expression,
       VALUES({
-        'data': FUNCTION('decode', base64, 'base64'),
-        'hash':
-            FUNCTION('digest', FUNCTION('decode', base64, 'base64'), 'sha256'),
-        'latex':
-            await _renderExpressionLaTeX(s, codecData.functionIds, expr, _ops),
+        'data': DECODE(base64, 'base64'),
+        'hash': DIGEST(DECODE(base64, 'base64'), 'sha256'),
+        'latex': await _renderExpressionLaTeX(s, expr, ops),
         'functions': ARRAY(codecData.functionIds, 'integer'),
         'node_type': nodeType,
         'node_value': nodeValue,
@@ -100,9 +93,8 @@ Future<List<db.ExpressionRow>> listExpressions(
   for (var i = 0; i < expressions.length; i++) {
     final expr = expressions[i];
     if (expr.latex == null) {
-      final codecData = _decodeCodecHeader(expr.data);
-      final latex = _renderExpressionLaTeX(
-          s, codecData.functionIds, exprCodecDecode(codecData), ops);
+      final latex =
+          _renderExpressionLaTeX(s, new Expr.fromBase64(expr.data), ops);
       queue.add(s
           .update(
               db.expression, WHERE({'id': IS(expr.id)}), SET({'latex': latex}))
@@ -149,15 +141,15 @@ Future<OperatorConfig> _loadOperatorConfig(Session s) async {
 
 /// Expression LaTeX rendering.
 /// Internal function. Allows reuse of codec data for more efficient function ID
-///
 Future<String> _renderExpressionLaTeX(
-    Session s, List<int> functionsInExpr, Expr expr, OperatorConfig ops) async {
+    Session s, Expr expr, OperatorConfig ops) async {
   final printer = new LaTeXPrinter();
 
   // Retrieve latex templates and populate printer dictionary.
   var getLbl = (int id) => '\\#$id';
-  if (functionsInExpr.isNotEmpty) {
-    final functions = await s.selectByIds(db.function, functionsInExpr);
+  final functionIds = expr.functionIds;
+  if (functionIds.isNotEmpty) {
+    final functions = await s.selectByIds(db.function, functionIds);
 
     // Create new LaTeX printer and populate dictionary.
     functions.forEach((row) {

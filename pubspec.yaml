@@ -8,7 +8,7 @@ environment:
 dependencies:
   rpc:          ^0.5.7
   yaml:         ^2.1.12
-  eqlib:        ^0.13.0
+  eqlib:        ^0.13.0+1
   postgresql:   ^0.3.4+1
   shelf:        ^0.6.7+2
   shelf_rpc:    ^0.0.3+2

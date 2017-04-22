@@ -6,7 +6,6 @@ library eqdb;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:rpc/rpc.dart';
 import 'package:eqlib/eqlib.dart';

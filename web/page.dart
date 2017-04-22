@@ -30,7 +30,7 @@ class PageSessionData {
   Map<String, Object> pathParameters;
 
   PageSessionData(this.settings, this.snippets, this.allRoutes)
-      : additional = new Map<String, JsonObject>() {
+      : additional = new Map<String, dynamic>() {
     request = new JsonObject();
     response = new JsonObject();
   }

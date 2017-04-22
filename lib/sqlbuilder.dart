@@ -324,3 +324,15 @@ Sql UNION_ALL(Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
   final statements = _collapse(s1, s2, s3, s4, s5);
   return SQL('UNION ALL $statements');
 }
+
+// Extension functions
+
+// ignore: non_constant_identifier_names
+Sql DECODE(dynamic data, String type) {
+  return FUNCTION('decode', data, type);
+}
+
+// ignore: non_constant_identifier_names
+Sql DIGEST(dynamic data, String type) {
+  return FUNCTION('digest', data, type);
+}

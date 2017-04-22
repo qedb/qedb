@@ -98,12 +98,19 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
 
   // Run through all steps.
   Expr expr;
+  final processedSteps = new List<_StepData>();
   for (final step in steps) {
     // Apply step to [expr].
-    expr = _computeProofStep(expr, step, rearrangeableIds, compute);
-
     // As a convention we evaluate the expression after each step.
-    expr = expr.evaluate(compute);
+    final nextExpr = _computeProofStep(expr, step, rearrangeableIds, compute)
+        .evaluate(compute);
+
+    // If there is no difference with the previous expression, remove this step.
+    if (nextExpr == expr) {
+      continue;
+    } else {
+      expr = nextExpr;
+    }
 
     if (step.expression != null && step.expression.evaluate(compute) != expr) {
       // If an expression is already set for this step, it should be the same
@@ -113,11 +120,14 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
 
     // Set/override the expression.
     step.expression = expr.clone();
+
+    // Add to processed steps.
+    processedSteps.add(step);
   }
 
   // Insert all steps into database.
   final rows = new List<db.StepRow>();
-  for (final step in steps) {
+  for (final step in processedSteps) {
     final expressionRow = await _createExpression(s, step.expression);
 
     // Create map with insert values.
