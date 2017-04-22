@@ -151,13 +151,14 @@ class ExpressionRow implements Record {
 /// Note: left_array_data and right_array_data are not included.
 class RuleRow implements Record {
   final int id;
+  final int proofId;
   final int leftExpressionId;
   final int rightExpressionId;
 
-  RuleRow(this.id, this.leftExpressionId, this.rightExpressionId);
+  RuleRow(this.id, this.proofId, this.leftExpressionId, this.rightExpressionId);
 
-  static const select = 'id, left_expression_id, right_expression_id';
-  static RuleRow map(Row r) => new RuleRow(r[0], r[1], r[2]);
+  static const select = 'id, proof_id, left_expression_id, right_expression_id';
+  static RuleRow map(Row r) => new RuleRow(r[0], r[1], r[2], r[3]);
 }
 
 /// Definition

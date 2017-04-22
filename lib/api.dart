@@ -136,6 +136,19 @@ class EqDB {
               .map((r) => new OperatorResource()..loadRow(r, s.data))
               .toList());
 
+  @ApiMethod(path: 'rule/create', method: 'POST')
+  Future<RuleResource> createRule(RuleResource body) =>
+      _runRequestSession<RuleResource>((s) async =>
+          new RuleResource()..loadRow(await api.createRule(s, body), s.data));
+
+  @ApiMethod(path: 'rule/list', method: 'GET')
+  Future<List<RuleResource>> listRules({String language: defaultLanguage}) =>
+      _runRequestSession<List<RuleResource>>(
+          (s) async => (await api.listRules(s))
+              .map((r) => new RuleResource()..loadRow(r, s.data))
+              .toList(),
+          [language]);
+
   @ApiMethod(path: 'definition/create', method: 'POST')
   Future<DefinitionResource> createDefinition(DefinitionResource body) =>
       _runRequestSession<DefinitionResource>((s) async =>

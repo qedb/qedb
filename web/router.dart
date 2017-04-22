@@ -20,6 +20,7 @@ import 'pages/translation.dart';
 import 'pages/function.dart';
 import 'pages/definition.dart';
 import 'pages/proof.dart';
+import 'pages/rule.dart';
 
 import 'page.dart';
 
@@ -34,6 +35,8 @@ Map<String, Page> pages = {
   '/subject/list': listSubjectsPage,
   '/function/create': createFunctionPage,
   '/function/list': listFunctionsPage,
+  '/rule/create': createRulePage,
+  '/rule/list': listRulesPage,
   '/definition/create': createDefinitionPage,
   '/definition/list': listDefinitionsPage,
   '/proof/create': createProofPage,

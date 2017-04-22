@@ -165,6 +165,7 @@ CREATE INDEX expression_functions_index on expression USING GIN (functions);
 -- + Add index for top level function ID.
 CREATE TABLE rule (
   id                   serial     PRIMARY KEY,
+  proof_id             integer,
   left_expression_id   integer    NOT NULL REFERENCES expression(id),
   right_expression_id  integer    NOT NULL REFERENCES expression(id),
   left_array_data      integer[]  NOT NULL,
@@ -187,6 +188,17 @@ CREATE TABLE definition (
 -- Expression manipulation
 --------------------------------------------------------------------------------
 
+CREATE TABLE proof (
+  id             serial   PRIMARY KEY,
+  first_step_id  integer  NOT NULL,
+  last_step_id   integer  NOT NULL,
+
+  UNIQUE (first_step_id, last_step_id)
+);
+
+-- Add rule proof constraint.
+ALTER TABLE rule ADD FOREIGN KEY (proof_id) REFERENCES proof(id);
+
 CREATE TYPE step_type AS ENUM (
   'set',         -- Set expression to arbitrary value.
   'copy_proof',  -- Copy first and last expression of a proof.
@@ -195,12 +207,6 @@ CREATE TYPE step_type AS ENUM (
   'rule_mirror', -- Substitute a -> b, evaluate a from b (mirror evaluation).
   'rule_revert', -- Substitute b -> a, evaluate b from a (invert and mirror).
   'rearrange'    -- Rearrange using the given format.
-);
-
-CREATE TABLE proof (
-  id             serial   PRIMARY KEY,
-  first_step_id  integer  NOT NULL,
-  last_step_id   integer  NOT NULL
 );
 
 -- Expression manipulation step
@@ -226,8 +232,8 @@ CREATE TABLE step (
 );
 
 -- Add proof step constraints.
-ALTER TABLE proof ADD FOREIGN KEY(first_step_id) REFERENCES step(id);
-ALTER TABLE proof ADD FOREIGN KEY(last_step_id) REFERENCES step(id);
+ALTER TABLE proof ADD FOREIGN KEY (first_step_id) REFERENCES step(id);
+ALTER TABLE proof ADD FOREIGN KEY (last_step_id) REFERENCES step(id);
 
 --------------------------------------------------------------------------------
 -- Create user and restrict access.

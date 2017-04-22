@@ -4,26 +4,82 @@
 
 part of eqdb;
 
+/// Create rule from given proof.
 Future<db.RuleRow> createRule(Session s, RuleResource body) async {
-  // Decode expression headers.
-  final leftData = _decodeCodecHeader(body.leftExpression.data);
-  final rightData = _decodeCodecHeader(body.rightExpression.data);
+  /// Check if proof is valid.
+  final steps = await _listStepsBetween(
+      s, body.proof.firstStep.id, body.proof.lastStep.id);
+  if (steps.first.id != body.proof.firstStep.id ||
+      steps.last.id != body.proof.lastStep.id) {
+    throw new UnprocessableEntityError('invalid proof');
+  } else {
+    var proofId;
 
+    // Check if a proof ID exists.
+    final proofs = await s.select(
+        db.proof,
+        WHERE({
+          'first_step_id': IS(steps.first.id),
+          'last_step_id': IS(steps.last.id)
+        }));
+    if (proofs.isNotEmpty) {
+      proofId = proofs.single.id;
+    }
+
+    // Else create new proof ID.
+    else {
+      final proof = await s.insert(
+          db.proof,
+          VALUES({
+            'first_step_id': steps.first.id,
+            'last_step_id': steps.last.id
+          }));
+      proofId = proof.id;
+    }
+
+    assert(proofId != null);
+
+    // Pre-load expressions.
+    final firstId = steps.first.expressionId;
+    final lastId = steps.last.expressionId;
+    await s.selectByIds(db.expression, [firstId, lastId]);
+    final leftExpr = new Expr.fromBase64(s.data.expressionTable[firstId].data);
+    final rightExpr = new Expr.fromBase64(s.data.expressionTable[lastId].data);
+
+    // Insert expressions.
+    final leftRow = await _createExpression(s, leftExpr);
+    final rightRow = await _createExpression(s, rightExpr);
+
+    // Insert rule.
+    return s.insert(
+        db.rule,
+        VALUES({
+          'left_expression_id': leftRow.id,
+          'right_expression_id': rightRow.id,
+          'left_array_data': ARRAY(leftExpr.toArray(), 'integer'),
+          'right_array_data': ARRAY(rightExpr.toArray(), 'integer'),
+          'proof_id': proofId
+        }));
+  }
+}
+
+/// Create unchecked rule.
+Future<db.RuleRow> _createRule(Session s, RuleResource body) async {
   // Decode expressions.
-  final leftDecoded = exprCodecDecode(leftData);
-  final rightDecoded = exprCodecDecode(rightData);
+  final leftExpr = new Expr.fromBase64(body.leftExpression.data);
+  final rightExpr = new Expr.fromBase64(body.rightExpression.data);
 
   // Insert expressions.
-  final leftExpr = await _createExpression(s, leftDecoded);
-  final rightExpr = await _createExpression(s, rightDecoded);
+  final leftRow = await _createExpression(s, leftExpr);
+  final rightRow = await _createExpression(s, rightExpr);
 
-  return await s.insert(
+  return s.insert(
       db.rule,
       VALUES({
-        'left_expression_id': leftExpr.id,
-        'right_expression_id': rightExpr.id,
-        'left_array_data': ARRAY(leftDecoded.toArray(), 'integer'),
-        'right_array_data': ARRAY(rightDecoded.toArray(), 'integer')
+        'left_expression_id': leftRow.id,
+        'right_expression_id': rightRow.id,
+        'left_array_data': ARRAY(leftExpr.toArray(), 'integer'),
+        'right_array_data': ARRAY(rightExpr.toArray(), 'integer')
       }));
 }
 

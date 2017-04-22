@@ -7,7 +7,7 @@ part of eqdb;
 Future<db.DefinitionRow> createDefinition(
     Session s, DefinitionResource body) async {
   // Insert rule.
-  final rule = await createRule(s, body.rule);
+  final rule = await _createRule(s, body.rule);
 
   // Insert definition.
   return await s.insert(db.definition, VALUES({'rule_id': rule.id}));

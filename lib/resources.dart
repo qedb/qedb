@@ -200,12 +200,14 @@ class ExpressionResource extends ResourceBase<db.ExpressionRow> {
 /// Rule
 class RuleResource extends ResourceBase<db.RuleRow> {
   int id;
+  ProofResource proof;
   ExpressionResource leftExpression;
   ExpressionResource rightExpression;
 
   Map<int, db.RuleRow> _getTableMap(data) => data.ruleTable;
 
   void loadFields(row, data) {
+    proof = getResource(row.proofId, data, new ProofResource());
     leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
     rightExpression = new ExpressionResource()
       ..load(row.rightExpressionId, data);
