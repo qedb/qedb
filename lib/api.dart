@@ -115,6 +115,12 @@ class EqDB {
       _runRequestSession<FunctionResource>((s) async => new FunctionResource()
         ..loadRow(await api.createFunction(s, body), s.data));
 
+  @ApiMethod(path: 'function/{id}/update', method: 'POST')
+  Future<FunctionResource> updateFunctionSubject(
+          int id, FunctionResource body) =>
+      _runRequestSession<FunctionResource>((s) async => new FunctionResource()
+        ..loadRow(await api.updateFunction(s, id, body), s.data));
+
   @ApiMethod(path: 'function/list', method: 'GET')
   Future<List<FunctionResource>> listFunctions(
           {String language: defaultLanguage}) =>

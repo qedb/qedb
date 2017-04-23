@@ -35,6 +35,20 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
   return await s.insert(db.function, VALUES(values));
 }
 
+Future<db.FunctionRow> updateFunction(
+    Session s, int functionId, FunctionResource body) {
+  final setValues = new Map<String, dynamic>();
+  if (body.subject != null) {
+    setValues['subject_id'] = body.subject.id;
+  }
+  if (setValues.isEmpty) {
+    throw new UnprocessableEntityError(
+        'body does not contain updatable fields');
+  }
+  return s.updateOne(
+      db.function, SET(setValues), WHERE({'id': IS(functionId)}));
+}
+
 Future<List<db.FunctionRow>> listFunctions(Session s) async {
   final functions = await s.select(db.function);
 

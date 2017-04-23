@@ -34,6 +34,7 @@ Map<String, Page> pages = {
   '/subject/create': createSubjectPage,
   '/subject/list': listSubjectsPage,
   '/function/create': createFunctionPage,
+  '/function/{id}/update': updateFunctionPage,
   '/function/list': listFunctionsPage,
   '/rule/create': createRulePage,
   '/rule/list': listRulesPage,

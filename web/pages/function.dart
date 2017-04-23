@@ -83,6 +83,36 @@ final createFunctionPage = new Page(
       'subjects': 'subject/list?language=en_US'
     });
 
+final updateFunctionPage = new Page(
+    template: (s) {
+      return updateResourceTemplate(s, 'function', inputs: (_) {
+        return [
+          formGroup('Subject', 'subject', [
+            select('#subject.custom-select.form-control',
+                name: 'subject',
+                c: s.additional['subjects'].map((subject) {
+                  return option(
+                      safe(
+                          () => subject.descriptor.translations[0].content, ''),
+                      value: subject.id);
+                }).toList())
+          ])
+        ];
+      });
+    },
+    onPost: (data) {
+      int subjectId;
+      try {
+        subjectId = int.parse(data['subject']);
+      } catch (e) {
+        subjectId = null;
+      }
+      return {
+        'subject': subjectId != null ? {'id': subjectId} : null
+      };
+    },
+    additional: {'subjects': 'subject/list?language=en_US'});
+
 final listFunctionsPage = new Page(template: (s) {
   return listResourceTemplate(s, 'function', 'functions', tableHead: [
     th('ID'),
@@ -90,7 +120,8 @@ final listFunctionsPage = new Page(template: (s) {
     th('Descriptor'),
     th('Keyword'),
     th('LaTeX template'),
-    th('Generic')
+    th('Generic'),
+    th('Actions')
   ], row: (function) {
     return [
       td(function.id.toString()),
@@ -98,7 +129,8 @@ final listFunctionsPage = new Page(template: (s) {
       td(descriptorHyperlink(() => function.descriptor)),
       td(safe(() => function.keyword.toString(), span('.none'))),
       td(safe(() => span('.latex', function.latexTemplate), span('.none'))),
-      td(function.generic ? 'yes' : 'no')
+      td(function.generic ? 'yes' : 'no'),
+      td([a('Update', href: '${function.id}/update')])
     ];
   }, headTags: [
     style(

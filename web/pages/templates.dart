@@ -125,6 +125,38 @@ String pageTemplate(PageSessionData s, String pageTitle,
   ]);
 }
 
+/// Resource update page.
+String updateResourceTemplate(PageSessionData s, String name,
+    {InlineHtmlBuilder inputs, dynamic headTags, dynamic bodyTags}) {
+  // Build form.
+  dynamic containerTags;
+  if (s.response.containsKey('id')) {
+    containerTags = [
+      div('.alert.alert-success', 'Successfully updated $name', role: 'alert'),
+      a('.btn.btn-primary', 'Return to $name overview',
+          href: '/$name/list', role: 'button')
+    ];
+  } else {
+    containerTags = form(method: 'POST', c: [
+      inputs(s),
+      br(),
+      button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
+    ]);
+    if (s.response.containsKey('error')) {
+      containerTags = [
+        div('.alert.alert-warning', role: 'alert', c: [
+          '${prettyPrintErrorMessage(s.response.error.message)} ',
+          '<strong>(${s.response.error.code})</strong>'
+        ]),
+        containerTags
+      ];
+    }
+  }
+
+  return pageTemplate(s, 'Update $name',
+      headTags: headTags, bodyTags: bodyTags, containerTags: containerTags);
+}
+
 /// Resource creation page.
 String createResourceTemplate(PageSessionData s, String name,
     {InlineHtmlBuilder inputs,

@@ -122,6 +122,11 @@ class SessionState<D> {
     return _runMappedQuery<R, D>(
         this, true, table, UPDATE(table, s1, s2, s3, s4, s5));
   }
+
+  Future<R> updateOne<R extends Record>(TableInfo<R, D> table, Sql s1,
+      [Sql s2, Sql s3, Sql s4, Sql s5]) async {
+    return (await update(table, s1, s2, s3, s4, s5)).single;
+  }
 }
 
 Future<List<R>> _runMappedQuery<R extends Record, D>(
