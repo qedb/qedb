@@ -37,7 +37,7 @@ my @pattern_tests = (
 );
 
 # Rules to test against.
-my $rule_n = 11;
+my $rule_n = 12;
 my %rules = (
   1 => $a + $b >> $b + $a,
   2 => $a - $b >> $b - $a,
@@ -49,7 +49,8 @@ my %rules = (
   8 => diff(f($a), $a) >> lim(d($a), 0, (f($a + d($a)) - f($a)) / d($a)),
   9 => diff($a^$b, $a) >> $b * ($a^($b - 1)),
   10 => $a - $b >> $a + ~$b,
-  11 => ($a^$b * $a^$c) >> ($a ^ ($b + $c))
+  11 => ($a^$b * $a^$c) >> ($a ^ ($b + $c)),
+  12 => ($b*$a + $c*$a) >> (($b + $c)*$a)
 );
 
 # Rule inputs that are tested, format: [RULE#, EQUATION].
@@ -63,7 +64,10 @@ my @rule_tests = (
   [10, $x - $y >> $x + ~$y],
   [10, $x - 1 >> $x + -1],
   [11, ($x^1 * $x^2) >> ($x^3)],
-  [11, ($x^expr_number(-1) * $x^4) >> ($x^3)]
+  [11, ($x^expr_number(-1) * $x^4) >> ($x^3)],
+  [12, ($y*$x + $z*$x) >> (($y+$z)*$x)],
+  [12, ($y*$x + $y*$x) >> (($y+$y)*$x)],
+  [12, (expr_number(1)*$x + expr_number(1)*$x) >> (2*$x)]
 );
 
 # Computable function IDs.

@@ -312,6 +312,9 @@ $match_pattern = sub {
 
         if (!defined($evaluated_value) || $value_t != $evaluated_value) {
           return 0;
+        } else {
+          # Jump over function body.
+          $ptr_p += 2 + $data[$ptr_p + 1];
         }
       } else {
         # Expression is not also a function or an integer.

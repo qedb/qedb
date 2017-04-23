@@ -183,7 +183,7 @@ sub match_pattern {
       # Jump over function body.
       if ($type_t == $EXPR_FUNCTION || $type_t == $EXPR_FUNCTION_GEN) {
         $ptr_t += 2 + $data[$ptr_t + 1];
-      }      
+      }
     } elsif ($type_p == $EXPR_FUNCTION_GEN) {
       if (!$write_mapping) {
         # Internal remapping.
@@ -298,9 +298,14 @@ sub match_pattern {
         # target expression.
         my ($evaluated_value, $ptr_t) = evaluate($ptr_p - 3, $mapping_hash,
             $computable_ids, \@data);
+        
+        debug("evaluated value: $evaluated_value\n");
 
         if (!defined($evaluated_value) || $value_t != $evaluated_value) {
           return 0;
+        } else {
+          # Jump over function body.
+          $ptr_p += 2 + $data[$ptr_p + 1];
         }
       } else {
         # Expression is not also a function or an integer.
@@ -349,14 +354,14 @@ sub expr_match_rule {
   my $ptr_p = scalar(@$expr_left) + scalar(@$expr_right);
   my @data = (@$expr_left, @$expr_right, @$rule_left, @$rule_right);
 
-  debug("match rule left side\n");
+  debug("\nMATCH RULE LEFT SIDE\n");
   (my $result_left, $ptr_t, $ptr_p) = match_pattern(1, 0,
       \%mapping_hash, \%mapping_genfn, $ptr_t, $ptr_p, $computable_ids, @data);
   if (!$result_left) {
     return 0;
   }
 
-  debug("match rule right side\n");
+  debug("\nMATCH RULE RIGHT SIDE\n");
   # Process generic function mapping.
   foreach my $ptrs (values %mapping_genfn) {
     my $mptr_t = $$ptrs[0];
