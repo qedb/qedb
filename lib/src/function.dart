@@ -41,6 +41,15 @@ Future<db.FunctionRow> updateFunction(
   if (body.subject != null) {
     setValues['subject_id'] = body.subject.id;
   }
+  if (body.keyword != null) {
+    setValues['keyword'] = body.keyword;
+  }
+  if (body.keywordType != null) {
+    setValues['keyword_type'] = body.keywordType;
+  }
+  if (body.latexTemplate != null) {
+    setValues['latex_template'] = body.latexTemplate;
+  }
   if (setValues.isEmpty) {
     throw new UnprocessableEntityError(
         'body does not contain updatable fields');

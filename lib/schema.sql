@@ -249,4 +249,4 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO eqdb;
 GRANT USAGE ON LANGUAGE plperl TO eqdb;
 
 -- Column specific update access.
-GRANT UPDATE (subject_id) ON "function" TO eqdb;
+GRANT UPDATE (subject_id, keyword, keyword_type, latex_template) ON "function" TO eqdb;

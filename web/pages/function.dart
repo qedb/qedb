@@ -95,8 +95,21 @@ final updateFunctionPage = new Page(
                       safe(
                           () => subject.descriptor.translations[0].content, ''),
                       value: subject.id);
-                }).toList())
-          ])
+                }).toList()
+                  ..insert(0, option(' ', value: '')))
+          ]),
+          formInput('Keyword', name: 'keyword'),
+          formGroup('Keyword type', 'keyword-type', [
+            select('.form-control', name: 'keyword-type', c: [
+              option(' ', value: ''),
+              option('Word', value: 'word'),
+              option('Acronym', value: 'acronym'),
+              option('Abbreviation', value: 'abbreviation'),
+              option('Symbol', value: 'symbol'),
+              option('LaTeX', value: 'latex')
+            ])
+          ]),
+          formInput('LaTeX template', name: 'latex-template')
         ];
       });
     },
@@ -108,7 +121,13 @@ final updateFunctionPage = new Page(
         subjectId = null;
       }
       return {
-        'subject': subjectId != null ? {'id': subjectId} : null
+        'subject': subjectId != null ? {'id': subjectId} : null,
+        'keyword': data['keyword'].isNotEmpty ? data['keyword'] : null,
+        'keywordType': data['keyword-type'].trim().isNotEmpty
+            ? data['keyword-type']
+            : null,
+        'latexTemplate':
+            data['latex-template'].isNotEmpty ? data['latex-template'] : null
       };
     },
     additional: {'subjects': 'subject/list?language=en_US'});
@@ -119,6 +138,7 @@ final listFunctionsPage = new Page(template: (s) {
     th('Subject'),
     th('Descriptor'),
     th('Keyword'),
+    th('Keyword type'),
     th('LaTeX template'),
     th('Generic'),
     th('Actions')
@@ -128,6 +148,7 @@ final listFunctionsPage = new Page(template: (s) {
       td(descriptorHyperlink(() => function.subject.descriptor)),
       td(descriptorHyperlink(() => function.descriptor)),
       td(safe(() => function.keyword.toString(), span('.none'))),
+      td(safe(() => function.keywordType.toString(), span('.none'))),
       td(safe(() => span('.latex', function.latexTemplate), span('.none'))),
       td(function.generic ? 'yes' : 'no'),
       td([a('Update', href: '${function.id}/update')])
