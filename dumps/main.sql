@@ -1066,6 +1066,10 @@ COPY definition (id, rule_id) FROM stdin;
 12	22
 13	23
 14	24
+15	25
+16	26
+17	27
+18	28
 \.
 
 
@@ -1073,7 +1077,7 @@ COPY definition (id, rule_id) FROM stdin;
 -- Name: definition_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('definition_id_seq', 14, true);
+SELECT pg_catalog.setval('definition_id_seq', 18, true);
 
 
 --
@@ -1103,6 +1107,13 @@ COPY descriptor (id) FROM stdin;
 20
 21
 22
+23
+24
+25
+26
+27
+28
+29
 \.
 
 
@@ -1110,7 +1121,7 @@ COPY descriptor (id) FROM stdin;
 -- Name: descriptor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('descriptor_id_seq', 22, true);
+SELECT pg_catalog.setval('descriptor_id_seq', 29, true);
 
 
 --
@@ -1265,6 +1276,17 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 145	\\x000002000500010000000000020000001400000002000000180000001700000004000000000002000300010002000102030005040600020300050300	\\xf7f5723c790985d130f6e5dc254e8fa33a2937d3c33ebee065b54d32e272f101	\\lim_{\\Delta{}_\\text{?}x\\to0}2{}_\\text{?}x+\\lim_{\\Delta{}_\\text{?}x\\to0}\\Delta{}_\\text{?}x	{20,2,24,23,4}	function	2	{143,144}
 146	\\x00000200050001000000000002000000140000000200000018000000170000000400000000000200030001000200010203000504060005	\\x58ab06ef9d441a1147a9530ba33b977657efa151e11e0fd46e7647a7f945ff21	\\lim_{\\Delta{}_\\text{?}x\\to0}2{}_\\text{?}x+0	{20,2,24,23,4}	function	2	{143,25}
 147	\\x000002000300010002000000000000001400000002000000040000000000020002000102030004	\\xbefa230147674ec5c7ecfb400702319f358515ba3828fcde33e502678c2076ae	2{}_\\text{?}x+0	{20,2,4}	function	2	{105,25}
+148	\\x00000000010001001b000000000000	\\x85c6cdda47e4d256d3715ae785cbc5aac9fca0ebdc7bdb2d60930002b699c05e	{}_\\text{?}body	{27}	generic	27	{}
+149	\\x00000000020001001b0000001d000000000001000100	\\x3aadb6d8df539963e29b7a7699b839d505967f07f8c3ac0442d441a365187140	\\vec{v_{{}_\\text{?}body}}	{27,29}	function	29	{148}
+150	\\x000000000100000021000000000000	\\x2e072772572ac8afc626b23eb0a61bbb693c2d7cb868e88d7152856335e1869d	t	{33}	function	33	{}
+151	\\x00000000020001001b0000001c000000000001000100	\\x745777fa95b7d147538b91d334c1f23aa00acb27f157674e7dbf2a511d23dc8c	\\vec{p_{{}_\\text{?}body}}	{27,28}	function	28	{148}
+152	\\x00000000040001001b00000019000000210000001c000000000002000000010001020300	\\xb03a44b86f87ae12eeebb182895f81c69e9a8e217676f985bd7cfc25b6ee8677	\\frac{\\partial}{\\partial t}\\vec{p_{{}_\\text{?}body}}	{27,25,33,28}	function	25	{150,151}
+153	\\x00000000020001001b0000001e000000000001000100	\\xd717f85ac71de6d40513e31337ae143ed7c5d77b6dde01fe9223d08552ccb3be	\\vec{a_{{}_\\text{?}body}}	{27,30}	function	30	{148}
+154	\\x00000000040001001b00000019000000210000001d000000000002000000010001020300	\\x51869e0b8dca8f01ae0f494e2b42892f45e607c6e88bfaf27baa1eb14822b3cd	\\frac{\\partial}{\\partial t}\\vec{v_{{}_\\text{?}body}}	{27,25,33,29}	function	25	{150,149}
+155	\\x00000000020001001b0000001f000000000001000100	\\xe93ee218cb5146a91e2df49536f01427e5560bd66917f930d3e4d05030e79627	\\text{v}_{{}_\\text{?}body}	{27,31}	function	31	{148}
+156	\\x00000000030001001b0000001a0000001d000000000001000100010200	\\xb3a17c6c3b4b9c8ed335fcdd8465b784bcf7fea44db1b74f2bb5b26f83949910	\\left|\\vec{v_{{}_\\text{?}body}}\\right|	{27,26,29}	function	26	{149}
+157	\\x00000000020001001b00000020000000000001000100	\\x8a5510535ffe67185b4d4cc789d5904c037d5097e3cc0110c9d7410b8e647717	\\text{a}_{{}_\\text{?}body}	{27,32}	function	32	{148}
+158	\\x00000000030001001b0000001a0000001e000000000001000100010200	\\xd8bb5a6cd27a9c2e3323b92976f6accb5baf46ecb71ad7f6c7b83d6ccba5f90a	\\left|\\vec{a_{{}_\\text{?}body}}\\right|	{27,26,30}	function	26	{153}
 \.
 
 
@@ -1272,7 +1294,7 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 -- Name: expression_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('expression_id_seq', 147, true);
+SELECT pg_catalog.setval('expression_id_seq', 158, true);
 
 
 --
@@ -1306,6 +1328,13 @@ COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_c
 24	5	19	f	f	3	lim	latex	\\lim_{$0\\to$1}$2
 25	5	20	f	f	2	diff	abbreviation	\\frac{\\partial}{\\partial$0}$1
 26	1	22	f	f	1	abs	abbreviation	\\left|$0\\right|
+27	1	23	t	f	0	body	word	\N
+30	6	26	f	f	1	accel	abbreviation	\\vec{a_{$0}}
+31	6	27	f	f	1	speed	word	\\text{v}_{$0}
+29	6	25	f	f	1	vel	abbreviation	\\vec{v_{$0}}
+32	6	28	f	f	1	accelm	abbreviation	\\text{a}_{$0}
+33	6	29	f	f	0	time	word	t
+28	6	24	f	f	1	pos	abbreviation	\\vec{p_{$0}}
 \.
 
 
@@ -1313,7 +1342,7 @@ COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_c
 -- Name: function_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('function_id_seq', 26, true);
+SELECT pg_catalog.setval('function_id_seq', 33, true);
 
 
 --
@@ -1411,6 +1440,10 @@ COPY rule (id, proof_id, left_expression_id, right_expression_id, left_array_dat
 22	\N	93	96	{566635098,4,24,3,17,198119638,3,9,358130610,3,10,237948570,4,2,2,6,801036408,3,20,208212430,3,21}	{671542814,4,2,2,28,480104780,4,24,3,9,198119638,3,9,358130610,3,10,801036408,3,20,270136248,4,24,3,9,198119638,3,9,358130610,3,10,208212430,3,21}
 23	\N	97	25	{870341676,4,24,3,9,198119638,3,9,1,1,0,198119638,3,9}	{1,1,0}
 24	\N	98	7	{838931994,4,24,3,9,198119638,3,9,358130610,3,10,971369676,3,11}	{971369676,3,11}
+25	\N	149	152	{744767124,4,29,1,3,1063352268,3,27}	{273211608,4,25,2,11,935094976,2,33,758628994,4,28,1,3,1063352268,3,27}
+26	\N	153	154	{159151750,4,30,1,3,1063352268,3,27}	{17029168,4,25,2,11,935094976,2,33,744767124,4,29,1,3,1063352268,3,27}
+27	\N	155	156	{713209448,4,31,1,3,1063352268,3,27}	{739632324,4,26,1,8,744767124,4,29,1,3,1063352268,3,27}
+28	\N	157	158	{863026784,4,32,1,3,1063352268,3,27}	{686827136,4,26,1,8,159151750,4,30,1,3,1063352268,3,27}
 \.
 
 
@@ -1418,7 +1451,7 @@ COPY rule (id, proof_id, left_expression_id, right_expression_id, left_array_dat
 -- Name: rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('rule_id_seq', 24, true);
+SELECT pg_catalog.setval('rule_id_seq', 28, true);
 
 
 --
@@ -1563,6 +1596,13 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 40	20	2	Differentiaal
 41	21	1	Classical Mechanics
 42	22	1	Absolute Value
+43	23	1	Body
+44	24	1	Position
+45	25	1	Velocity
+46	26	1	Acceleration
+47	27	1	Velocity Magnitude
+48	28	1	Acceleration Magnitude
+49	29	1	Time
 \.
 
 
@@ -1570,7 +1610,7 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 -- Name: translation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('translation_id_seq', 42, true);
+SELECT pg_catalog.setval('translation_id_seq', 49, true);
 
 
 --
@@ -1968,6 +2008,27 @@ GRANT SELECT,INSERT ON TABLE function TO eqdb;
 --
 
 GRANT UPDATE(subject_id) ON TABLE function TO eqdb;
+
+
+--
+-- Name: function.keyword; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT UPDATE(keyword) ON TABLE function TO eqdb;
+
+
+--
+-- Name: function.keyword_type; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT UPDATE(keyword_type) ON TABLE function TO eqdb;
+
+
+--
+-- Name: function.latex_template; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT UPDATE(latex_template) ON TABLE function TO eqdb;
 
 
 --
