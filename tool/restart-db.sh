@@ -8,7 +8,9 @@
 ./tool/stop-db.sh
 
 # Generate password.
-export EQDB_DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-64}; echo;`
+#export EQDB_DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-64}; echo;`
+# A static password makes using SQL dumps easier.
+export EQDB_DB_PASS='the equation manipulation database'
 
 # Replace password in setup SQL.
 sed "s/\$password/${EQDB_DB_PASS}/" < ./lib/schema.sql > ./tool/docker/eqdb-postgres/setup.sql

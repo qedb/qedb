@@ -23,6 +23,14 @@ restart-web-server:
 	./tool/kill-port.sh 8081
 	export EQDB_WEB_PORT=8081; dart -c web/server.dart > /dev/null 2>&1 &
 
+dump-database:
+	docker exec -t eqdb-postgres pg_dumpall -c -U postgres > dumps/main.sql
+
+restore-database-dump:
+	./tool/kill-port.sh 8080 force
+	cat dumps/main.sql | docker exec -i eqdb-postgres psql -U postgres
+	export EQDB_TEST_LOG=''; ./tool/restart-api-server.sh
+
 check:
 	./tool/check.sh
 
