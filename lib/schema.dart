@@ -139,8 +139,8 @@ class ExpressionRow implements Record {
     'node_value',
     'node_arguments'
   ].join(',');
-  static ExpressionRow map(Row r) => new ExpressionRow(
-      r[0], r[1], r[2], r[3], pgIntArray(r[4]), r[5], r[6], pgIntArray(r[7]));
+  static ExpressionRow map(Row r) => new ExpressionRow(r[0], fixBase64(r[1]),
+      fixBase64(r[2]), r[3], pgIntArray(r[4]), r[5], r[6], pgIntArray(r[7]));
 }
 
 //------------------------------------------------------------------------------

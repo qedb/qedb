@@ -31,7 +31,7 @@ void readRequestLog(File file) {
 ///     request body (omitted in case of GET)
 ///     response body
 ///
-Middleware logRequestData(File file) {
+Middleware logRequestData(File file, bool createOnly) {
   return (innerHandler) {
     return (request) async {
       final method = request.method;
@@ -46,11 +46,14 @@ Middleware logRequestData(File file) {
         }
 
         // Write request data.
-        if (method == 'GET' && _requestMap[path] != responseStr) {
+        if (!createOnly &&
+            method == 'GET' &&
+            _requestMap[path] != responseStr) {
           _requestMap[path] = responseStr;
           await file.writeAsString('GET\n$path\n$responseStr\n',
               mode: FileMode.APPEND);
-        } else if (method == 'POST') {
+        } else if (method == 'POST' &&
+            (!createOnly || path.endsWith('create'))) {
           await file.writeAsString('POST\n$path\n$requestStr\n$responseStr\n',
               mode: FileMode.APPEND);
         }

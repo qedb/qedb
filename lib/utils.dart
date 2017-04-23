@@ -33,6 +33,11 @@ List<int> pgIntArray(String str) {
       parts.length, (i) => int.parse(parts[i].trim()));
 }
 
+/// Remove newlines from base64 string to make it compatible with dart:convert.
+String fixBase64(String data) {
+  return data.replaceAll(new RegExp(r'\s'), '');
+}
+
 /// Evironment variables / YAML file configuration helper.
 class EnvConfig {
   final String envPrefix;

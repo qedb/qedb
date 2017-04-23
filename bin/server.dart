@@ -70,7 +70,8 @@ Future<Null> main() async {
   final testLogFile = new File(conf.string('TEST_LOG'));
   if (await testLogFile.exists()) {
     readRequestLog(testLogFile);
-    pipeline = pipeline.addMiddleware(logRequestData(testLogFile));
+    pipeline = pipeline.addMiddleware(logRequestData(
+        testLogFile, conf.boolean('TEST_LOG_CREATE_ONLY', true)));
   }
 
   final handler = pipeline.addHandler(apiRouter.handler);
