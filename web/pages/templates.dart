@@ -154,13 +154,13 @@ String updateResourceTemplate(PageSessionData s, String name,
       // Create for for each field.
       containerTags.add(form(method: 'POST', c: [
         formGroup(
-            label,
-            label.toLowerCase().replaceAll(new RegExp(r'\s'), '-'),
-            div('.input-group', [
-              field(s),
-              span('.input-group-btn',
-                  [button('.btn.btn-secondary', 'Submit', type: 'submit')])
-            ]))
+            label, label.toLowerCase().replaceAll(new RegExp(r'\s'), '-'), [
+          div('.input-group', [
+            field(s),
+            span('.input-group-btn',
+                [button('.btn.btn-secondary', 'Submit', type: 'submit')])
+          ])
+        ])
       ]));
     });
 
