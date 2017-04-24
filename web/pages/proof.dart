@@ -47,7 +47,8 @@ final listProofStepsPage = new Page(template: (s) {
               .map((step) => li([
                     span('.latex', step.expression.latex),
                     ' ',
-                    span('.stepid', step.id.toRadixString(36).padLeft(6, '0'))
+                    span('.stepid.badge.badge-pill.badge-default',
+                        step.id.toRadixString(36).padLeft(6, '0'))
                   ]))
               .toList()),
       bodyTags: [

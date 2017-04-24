@@ -33,13 +33,16 @@ final listRulesPage = new Page(template: (s) {
     th('ID'),
     th('Left', style: 'text-align: center;'),
     th(''),
-    th('Right', style: 'text-align: center;')
+    th('Right', style: 'text-align: center;'),
+    th('Proof')
   ], row: (rule) {
     return [
       td(rule.id.toString()),
       td(span('.latex', rule.leftExpression.latex)),
       td(span('.latex', r'\rightarrow')),
-      td(span('.latex', rule.rightExpression.latex))
+      td(span('.latex', rule.rightExpression.latex)),
+      td(safe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
+          span('.none')))
     ];
   }, bodyTags: [
     katexSource(s),

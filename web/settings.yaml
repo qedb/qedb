@@ -1,7 +1,7 @@
+# bootstrap.href:
+#   https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css
 bootstrap.href:
-  https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css
-bootstrap.integrity:
-  sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ
+  https://bootswatch.com/4-alpha/solar/bootstrap.min.css
 katex.js.src:
   https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js
 katex.css.href:

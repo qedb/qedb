@@ -254,6 +254,16 @@ Sql IS_NOT(dynamic value) {
 }
 
 // ignore: non_constant_identifier_names
+Sql CONTAINS(dynamic value) {
+  if (value is Sql) {
+    return SQL('@> $value');
+  } else {
+    final converter = new TypeConverter();
+    return SQL('@> ${converter.encode(value, null)}');
+  }
+}
+
+// ignore: non_constant_identifier_names
 Sql IN(dynamic values) {
   if (values is Sql) {
     return SQL('IN $values');

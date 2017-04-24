@@ -250,3 +250,4 @@ GRANT USAGE ON LANGUAGE plperl TO eqdb;
 
 -- Column specific update access.
 GRANT UPDATE (subject_id, keyword, keyword_type, latex_template) ON "function" TO eqdb;
+GRANT UPDATE (latex) ON "expression" TO eqdb;

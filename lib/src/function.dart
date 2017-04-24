@@ -36,7 +36,7 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
 }
 
 Future<db.FunctionRow> updateFunction(
-    Session s, int functionId, FunctionResource body) {
+    Session s, int functionId, FunctionResource body) async {
   final setValues = new Map<String, dynamic>();
   if (body.subject != null) {
     setValues['subject_id'] = body.subject.id;
@@ -54,6 +54,16 @@ Future<db.FunctionRow> updateFunction(
     throw new UnprocessableEntityError(
         'body does not contain updatable fields');
   }
+
+  // In case of a LaTeX template update, first empty all expressions that have
+  // this function ID.
+  await s.update(
+      db.expression,
+      SET({'latex': null}),
+      WHERE({
+        'functions': CONTAINS(ARRAY([functionId], 'integer'))
+      }));
+
   return s.updateOne(
       db.function, SET(setValues), WHERE({'id': IS(functionId)}));
 }

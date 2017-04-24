@@ -94,10 +94,10 @@ Future<List<db.ExpressionRow>> listExpressions(
     final expr = expressions[i];
     if (expr.latex == null) {
       final latex =
-          _renderExpressionLaTeX(s, new Expr.fromBase64(expr.data), ops);
+          await _renderExpressionLaTeX(s, new Expr.fromBase64(expr.data), ops);
       queue.add(s
           .update(
-              db.expression, WHERE({'id': IS(expr.id)}), SET({'latex': latex}))
+              db.expression, SET({'latex': latex}), WHERE({'id': IS(expr.id)}))
           .then((rows) {
         expressions[i] = rows.single;
       }));

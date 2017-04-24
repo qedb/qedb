@@ -37,12 +37,10 @@ String formInput(String labelText, {String name, String type: 'text'}) {
       labelText, name, [input('#$name.form-control', type: type, name: name)]);
 }
 
-/// Language language select form element.
+/// Language select form element.
 String languageSelect(PageSessionData s,
-    {String name: 'language',
-    String customClass: '.custom-select',
-    bool inGroup: true}) {
-  final selectHtml = select('#$name$customClass.form-control',
+    {String name: 'language', bool inGroup: true}) {
+  final selectHtml = select('#$name.form-control',
       name: name,
       c: s.additional['languages'].map((language) {
         return option(language.code, value: language.code);
@@ -50,6 +48,24 @@ String languageSelect(PageSessionData s,
 
   if (inGroup) {
     return formGroup('Language', name, [selectHtml]);
+  } else {
+    return selectHtml;
+  }
+}
+
+/// Subject select form element.
+String subjectSelect(PageSessionData s,
+    {String name: 'language', bool inGroup: true}) {
+  final selectHtml = select('#$name.form-control',
+      name: name,
+      c: s.additional['subjects'].map((subject) {
+        return option(
+            safe(() => subject.descriptor.translations[0].content, ''),
+            value: subject.id);
+      }).toList());
+
+  if (inGroup) {
+    return formGroup('Subject', name, [selectHtml]);
   } else {
     return selectHtml;
   }
@@ -74,7 +90,6 @@ List defaultHead(PageSessionData s) => [
       link(
           rel: 'stylesheet',
           href: s.settings['bootstrap.href'],
-          integrity: s.settings['bootstrap.integrity'],
           crossorigin: 'anonymous'),
       style(s.snippets['common.css'])
     ];

@@ -19,13 +19,13 @@ Future<List<db.StepRow>> listProofSteps(Session s, int id) async {
   final proof = await s.selectById(db.proof, id);
   final steps = await _listStepsBetween(s, proof.firstStepId, proof.lastStepId);
   final expressionIds = steps.map((step) => step.expressionId);
-  await s.selectByIds(db.expression, expressionIds);
+  await listExpressions(s, expressionIds);
   return steps;
 }
 
 Future<List<db.StepRow>> _listStepsById(Session s, List<int> ids) async {
   final steps = await s.selectByIds(db.step, ids);
-  await s.selectByIds(db.expression, steps.map((step) => step.expressionId));
+  await listExpressions(s, steps.map((step) => step.expressionId));
   return steps;
 }
 

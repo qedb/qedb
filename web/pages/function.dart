@@ -7,40 +7,35 @@ import '../page.dart';
 import 'templates.dart';
 import 'descriptor.dart';
 
+String keywordTypeSelect({String name}) {
+  return select('.form-control', name: name, c: [
+    option(' ', value: ''),
+    option('Word', value: 'word'),
+    option('Acronym', value: 'acronym'),
+    option('Abbreviation', value: 'abbreviation'),
+    option('Symbol', value: 'symbol'),
+    option('LaTeX', value: 'latex')
+  ]);
+}
+
 final createFunctionPage = new Page(
     template: (s) {
       return createResourceTemplate(s, 'function', inputs: (_) {
         return [
           input(type: 'hidden', name: 'language', value: 'en_US'),
-          formGroup('Subject', 'subject', [
-            select('#subject.custom-select.form-control',
-                name: 'subject',
-                c: s.additional['subjects'].map((subject) {
-                  return option(
-                      safe(
-                          () => subject.descriptor.translations[0].content, ''),
-                      value: subject.id);
-                }).toList())
-          ]),
+          subjectSelect(s, name: 'subject'),
           div('.form-group', [
             label('Name'),
             div('.input-group', [
               input('.form-control', type: 'text', name: 'descriptor'),
-              languageSelect(s,
-                  name: 'descriptor-language', customClass: '', inGroup: false)
+              languageSelect(s, name: 'descriptor-language', inGroup: false)
             ])
           ]),
           div('.form-group', [
             label('Keyword'),
             div('.input-group', [
               input('.form-control', type: 'text', name: 'keyword'),
-              select('.form-control', name: 'keyword-type', c: [
-                option('Word', value: 'word'),
-                option('Acronym', value: 'acronym'),
-                option('Abbreviation', value: 'abbreviation'),
-                option('Symbol', value: 'symbol'),
-                option('LaTeX', value: 'latex')
-              ])
+              keywordTypeSelect(name: 'keyword-type')
             ])
           ]),
           formGroup('Argument count', 'argument-count', [
@@ -87,28 +82,10 @@ final updateFunctionPage = new Page(
     template: (s) {
       return updateResourceTemplate(s, 'function', inputs: (_) {
         return [
-          formGroup('Subject', 'subject', [
-            select('#subject.custom-select.form-control',
-                name: 'subject',
-                c: s.additional['subjects'].map((subject) {
-                  return option(
-                      safe(
-                          () => subject.descriptor.translations[0].content, ''),
-                      value: subject.id);
-                }).toList()
-                  ..insert(0, option(' ', value: '')))
-          ]),
+          subjectSelect(s, name: 'subject'),
           formInput('Keyword', name: 'keyword'),
-          formGroup('Keyword type', 'keyword-type', [
-            select('.form-control', name: 'keyword-type', c: [
-              option(' ', value: ''),
-              option('Word', value: 'word'),
-              option('Acronym', value: 'acronym'),
-              option('Abbreviation', value: 'abbreviation'),
-              option('Symbol', value: 'symbol'),
-              option('LaTeX', value: 'latex')
-            ])
-          ]),
+          formGroup('Keyword type', 'keyword-type',
+              [keywordTypeSelect(name: 'keyword-type')]),
           formInput('LaTeX template', name: 'latex-template')
         ];
       });

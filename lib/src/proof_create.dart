@@ -74,7 +74,7 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     expressionIds.add(rule.leftExpressionId);
     expressionIds.add(rule.rightExpressionId);
   });
-  final expressions = await s.selectByIds(db.expression, expressionIds);
+  final expressions = await listExpressions(s, expressionIds);
 
   // Build expression map.
   final expressionMap = new Map<int, Expr>.fromIterable(expressions,

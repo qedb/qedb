@@ -42,7 +42,7 @@ Future<db.RuleRow> createRule(Session s, RuleResource body) async {
     // Pre-load expressions.
     final firstId = steps.first.expressionId;
     final lastId = steps.last.expressionId;
-    await s.selectByIds(db.expression, [firstId, lastId]);
+    await listExpressions(s, [firstId, lastId]);
     final leftExpr = new Expr.fromBase64(s.data.expressionTable[firstId].data);
     final rightExpr = new Expr.fromBase64(s.data.expressionTable[lastId].data);
 

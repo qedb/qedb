@@ -5,12 +5,15 @@
  */
 
 .editex {
-  border: 1px solid rgba(0, 0, 0, .14902);
+  border: 2px solid rgba(0, 0, 0, .15);
   font-size: 1.2em;
   border-radius: .25rem;
+  background: #a9bdbd;
 }
 
 .editex:focus {
-  border-color: #5cb3fd;
+  /*border-color: #5cb3fd;*/
+  border-color: #ffce36;
   outline: none;
+  color: #666 !important;
 }

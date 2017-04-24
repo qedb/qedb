@@ -6,6 +6,6 @@
 
 .none:before {
   content: 'none';
-  color: #ccc;
+  color: rgba(42, 161, 152, .5);
   font-style: italic;
 }
