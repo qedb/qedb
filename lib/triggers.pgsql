@@ -5,7 +5,7 @@
 CREATE OR REPLACE FUNCTION clear_expression_latex()
   RETURNS trigger AS $BODY$
 BEGIN
-  UPDATE expression SET latex = NULL WHERE functions @> ARRAY[NEW.id]::integer[]
+  UPDATE expression SET latex = NULL WHERE functions @> ARRAY[NEW.id]::integer[];
   RETURN NULL;
 END;
 $BODY$

@@ -142,29 +142,40 @@ String pageTemplate(PageSessionData s, String pageTitle,
 
 /// Resource update page.
 String updateResourceTemplate(PageSessionData s, String name,
-    {InlineHtmlBuilder inputs, dynamic headTags, dynamic bodyTags}) {
+    {Map<String, InlineHtmlBuilder> fields,
+    dynamic headTags,
+    dynamic bodyTags}) {
   // Build form.
-  dynamic containerTags;
+  final containerTags = new List();
   if (s.response.containsKey('id')) {
-    containerTags = [
+    containerTags.addAll([
       div('.alert.alert-success', 'Successfully updated $name', role: 'alert'),
       a('.btn.btn-primary', 'Return to $name overview',
-          href: '/$name/list', role: 'button')
-    ];
-  } else {
-    containerTags = form(method: 'POST', c: [
-      inputs(s),
-      br(),
-      button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
+          href: '/$name/list', role: 'button'),
+      a('.btn', 'Update another field', href: 'update', role: 'button')
     ]);
+  } else {
+    fields.forEach((label, field) {
+      // Create for for each field.
+      containerTags.add(form(method: 'POST', c: [
+        formGroup(
+            label,
+            label.toLowerCase().replaceAll(new RegExp(r'\s'), '-'),
+            div('.input-group', [
+              field(s),
+              span('.input-group-btn',
+                  [button('.btn.btn-secondary', 'Submit', type: 'submit')])
+            ]))
+      ]));
+    });
+
     if (s.response.containsKey('error')) {
-      containerTags = [
-        div('.alert.alert-warning', role: 'alert', c: [
-          '${prettyPrintErrorMessage(s.response.error.message)} ',
-          '<strong>(${s.response.error.code})</strong>'
-        ]),
-        containerTags
-      ];
+      containerTags.insert(
+          0,
+          div('.alert.alert-warning', role: 'alert', c: [
+            '${prettyPrintErrorMessage(s.response.error.message)} ',
+            '<strong>(${s.response.error.code})</strong>'
+          ]));
     }
   }
 

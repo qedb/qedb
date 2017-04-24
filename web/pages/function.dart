@@ -9,7 +9,6 @@ import 'descriptor.dart';
 
 String keywordTypeSelect({String name}) {
   return select('.form-control', name: name, c: [
-    option(' ', value: ''),
     option('Word', value: 'word'),
     option('Acronym', value: 'acronym'),
     option('Abbreviation', value: 'abbreviation'),
@@ -80,32 +79,30 @@ final createFunctionPage = new Page(
 
 final updateFunctionPage = new Page(
     template: (s) {
-      return updateResourceTemplate(s, 'function', inputs: (_) {
-        return [
-          subjectSelect(s, name: 'subject'),
-          formInput('Keyword', name: 'keyword'),
-          formGroup('Keyword type', 'keyword-type',
-              [keywordTypeSelect(name: 'keyword-type')]),
-          formInput('LaTeX template', name: 'latex-template')
-        ];
+      return updateResourceTemplate(s, 'function', fields: {
+        'Subject': (s) => subjectSelect(s, name: 'subject', inGroup: false),
+        'Keyword': (s) => input('#keyword.form-control', name: 'keyword'),
+        'Keyword type': (s) => keywordTypeSelect(name: 'keyword-type'),
+        'LaTeX template': (s) =>
+            input('#latex-template.form-control', name: 'latex-template')
       });
     },
     onPost: (data) {
-      int subjectId;
-      try {
-        subjectId = int.parse(data['subject']);
-      } catch (e) {
-        subjectId = null;
+      final map = new Map<String, dynamic>();
+      if (data.containsKey('subject')) {
+        map['subject'] = {'id': int.parse(data['subject'])};
+        data.remove('subject');
       }
-      return {
-        'subject': subjectId != null ? {'id': subjectId} : null,
-        'keyword': data['keyword'].isNotEmpty ? data['keyword'] : null,
-        'keywordType': data['keyword-type'].trim().isNotEmpty
-            ? data['keyword-type']
-            : null,
-        'latexTemplate':
-            data['latex-template'].isNotEmpty ? data['latex-template'] : null
-      };
+      if (data.containsKey('keyword')) {
+        map['keyword'] = data['keyword'];
+      }
+      if (data.containsKey('keyword-type')) {
+        map['keywordType'] = data['keyword-type'];
+      }
+      if (data.containsKey('latex-template')) {
+        map['latexTemplate'] = data['latex-template'];
+      }
+      return map;
     },
     additional: {'subjects': 'subject/list?language=en_US'});
 

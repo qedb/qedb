@@ -55,15 +55,6 @@ Future<db.FunctionRow> updateFunction(
         'body does not contain updatable fields');
   }
 
-  // In case of a LaTeX template update, first empty all expressions that have
-  // this function ID.
-  await s.update(
-      db.expression,
-      SET({'latex': null}),
-      WHERE({
-        'functions': CONTAINS(ARRAY([functionId], 'integer'))
-      }));
-
   return s.updateOne(
       db.function, SET(setValues), WHERE({'id': IS(functionId)}));
 }
