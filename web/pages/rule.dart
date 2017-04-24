@@ -42,7 +42,7 @@ final listRulesPage = new Page(template: (s) {
       td(span('.latex', r'\rightarrow')),
       td(span('.latex', rule.rightExpression.latex)),
       td(safe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
-          span('.none')))
+          span('.none.text-muted')))
     ];
   }, bodyTags: [
     katexSource(s),

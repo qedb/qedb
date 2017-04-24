@@ -21,10 +21,8 @@ List editexStyles(PageSessionData s) => [
       stylesheet(s.settings['editex.css.href'])
     ];
 
-List katexSource(PageSessionData s) => [
-      stylesheet(s.settings['katex.css.href']),
-      script(src: s.settings['katex.js.src'])
-    ];
+List katexSource(PageSessionData s) =>
+    [stylesheet('/static/katex.min.css'), script(src: '/static/katex.min.js')];
 
 /// Bootstrap .form-group
 String formGroup(String labelText, String id, List widget) {
@@ -87,10 +85,7 @@ List defaultHead(PageSessionData s) => [
       meta(
           name: 'viewport',
           content: 'width=device-width,initial-scale=1,shrink-to-fit=no'),
-      link(
-          rel: 'stylesheet',
-          href: s.settings['bootstrap.href'],
-          crossorigin: 'anonymous'),
+      link(rel: 'stylesheet', href: '/static/bootstrap.min.css'),
       style(s.snippets['common.css'])
     ];
 

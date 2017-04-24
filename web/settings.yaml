@@ -1,11 +1,3 @@
-# bootstrap.href:
-#   https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css
-bootstrap.href:
-  https://bootswatch.com/4-alpha/solar/bootstrap.min.css
-katex.js.src:
-  https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js
-katex.css.href:
-  https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css
 editex.css.href:
   http://0.0.0.0:8083/packages/editex/editex.css
 proofsrc:

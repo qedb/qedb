@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:yaml/yaml.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_route/shelf_route.dart';
+import 'package:shelf_static/shelf_static.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -45,6 +46,7 @@ Map<String, Page> pages = {
   '/proof/{id}/steps/list': listProofStepsPage
 };
 
+/// Entry point to create router.
 Future<Null> setupRouter(String apiBase, Router router) async {
   // Read settings file.
   final settings = loadYaml(await new File('web/settings.yaml').readAsString());
@@ -65,6 +67,10 @@ Future<Null> setupRouter(String apiBase, Router router) async {
     return new Response.ok(faviconData,
         headers: {'Content-Type': 'image/x-icon'});
   });
+
+  // Serve static files.
+  router.add('/static/', ['GET'], createStaticHandler('web/static'),
+      exactMatch: false);
 
   // Add handlers for all pages.
   pages.forEach((path, page) {
