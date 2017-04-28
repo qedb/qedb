@@ -18,3 +18,9 @@ Future<List<db.DefinitionRow>> listDefinitions(Session s) async {
   await listRules(s, definitions.map((row) => row.ruleId));
   return definitions;
 }
+
+Future<db.DefinitionRow> deleteDefinition(Session s, int id) async {
+  final definition = await s.deleteOne(db.definition, WHERE({'id': IS(id)}));
+  await deleteRule(s, definition.ruleId);
+  return definition;
+}

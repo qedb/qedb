@@ -39,8 +39,10 @@ Map<String, Page> pages = {
   '/function/list': listFunctionsPage,
   '/rule/create': createRulePage,
   '/rule/list': listRulesPage,
+  '/rule/{id}/delete': deleteRulePage,
   '/definition/create': createDefinitionPage,
   '/definition/list': listDefinitionsPage,
+  '/definition/{id}/delete': deleteDefinitionPage,
   '/proof/create': createProofPage,
   '/proof/list': listProofsPage,
   '/proof/{id}/steps/list': listProofStepsPage

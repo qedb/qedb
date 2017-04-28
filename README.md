@@ -8,7 +8,6 @@ package. This can also be used as direct database client.
 
 ## Suggested improvements for next iteration
 
-+ Delete rules
 + Expand proof after submission
 + Create rule directly from proof
 + Create rule from proof with equality signs

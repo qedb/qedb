@@ -127,6 +127,17 @@ class SessionState<D> {
       [Sql s2, Sql s3, Sql s4, Sql s5]) async {
     return (await update(table, s1, s2, s3, s4, s5)).single;
   }
+
+  Future<List<R>> delete<R extends Record>(TableInfo<R, D> table, Sql s1,
+      [Sql s2, Sql s3, Sql s4, Sql s5]) {
+    return _runMappedQuery<R, D>(
+        this, true, table, DELETE(table, s1, s2, s3, s4, s5));
+  }
+
+  Future<R> deleteOne<R extends Record>(TableInfo<R, D> table, Sql s1,
+      [Sql s2, Sql s3, Sql s4, Sql s5]) async {
+    return (await delete(table, s1, s2, s3, s4, s5)).single;
+  }
 }
 
 Future<List<R>> _runMappedQuery<R extends Record, D>(
@@ -195,6 +206,13 @@ Sql SELECT(TableInfo table, [Sql s1, Sql s2, Sql s3, Sql s4, Sql s5]) {
 Sql UPDATE(TableInfo table, Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
   final statements = _collapse(s1, s2, s3, s4, s5);
   return SQL('UPDATE ${table.tableName} $statements RETURNING ${table.select}');
+}
+
+// ignore: non_constant_identifier_names
+Sql DELETE(TableInfo table, Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
+  final statements = _collapse(s1, s2, s3, s4, s5);
+  return SQL(
+      'DELETE FROM ${table.tableName} $statements RETURNING ${table.select}');
 }
 
 /// This code is shared between [WHERE] and [SET].

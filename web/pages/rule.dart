@@ -34,7 +34,8 @@ final listRulesPage = new Page(template: (s) {
     th('Left', style: 'text-align: center;'),
     th(''),
     th('Right', style: 'text-align: center;'),
-    th('Proof')
+    th('Proof'),
+    th('Actions')
   ], row: (rule) {
     return [
       td(rule.id.toString()),
@@ -42,11 +43,16 @@ final listRulesPage = new Page(template: (s) {
       td(span('.latex', r'\rightarrow')),
       td(span('.latex', rule.rightExpression.latex)),
       td(safe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
-          span('.none.text-muted')))
+          span('.none.text-muted'))),
+      td([a('Delete', href: '${rule.id}/delete')])
     ];
   }, bodyTags: [
     katexSource(s),
     style(s.snippets['latex-table.css']),
     script(s.snippets['render-latex.js'])
   ]);
+});
+
+final deleteRulePage = new Page(template: (s) {
+  return deleteResourceTemplate(s, 'rule');
 });

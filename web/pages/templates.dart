@@ -119,6 +119,14 @@ dynamic breadcrumb(PageSessionData s) {
       ]);
 }
 
+/// Template for printing errors.
+String errorAlert(PageSessionData s) {
+  return div('.alert.alert-warning', role: 'alert', c: [
+    '${prettyPrintErrorMessage(s.response.error.message)} ',
+    '<strong>(${s.response.error.code})</strong>'
+  ]);
+}
+
 /// Template for every page.
 String pageTemplate(PageSessionData s, String pageTitle,
     {InlineHtmlBuilder inputs,
@@ -133,49 +141,6 @@ String pageTemplate(PageSessionData s, String pageTitle,
       bodyTags
     ])
   ]);
-}
-
-/// Resource update page.
-String updateResourceTemplate(PageSessionData s, String name,
-    {Map<String, InlineHtmlBuilder> fields,
-    dynamic headTags,
-    dynamic bodyTags}) {
-  // Build form.
-  final containerTags = new List();
-  if (s.response.containsKey('id')) {
-    containerTags.addAll([
-      div('.alert.alert-success', 'Successfully updated $name', role: 'alert'),
-      a('.btn.btn-primary', 'Return to $name overview',
-          href: '/$name/list', role: 'button'),
-      a('.btn', 'Update another field', href: 'update', role: 'button')
-    ]);
-  } else {
-    fields.forEach((label, field) {
-      // Create for for each field.
-      containerTags.add(form(method: 'POST', c: [
-        formGroup(
-            label, label.toLowerCase().replaceAll(new RegExp(r'\s'), '-'), [
-          div('.input-group', [
-            field(s),
-            span('.input-group-btn',
-                [button('.btn.btn-secondary', 'Submit', type: 'submit')])
-          ])
-        ])
-      ]));
-    });
-
-    if (s.response.containsKey('error')) {
-      containerTags.insert(
-          0,
-          div('.alert.alert-warning', role: 'alert', c: [
-            '${prettyPrintErrorMessage(s.response.error.message)} ',
-            '<strong>(${s.response.error.code})</strong>'
-          ]));
-    }
-  }
-
-  return pageTemplate(s, 'Update $name',
-      headTags: headTags, bodyTags: bodyTags, containerTags: containerTags);
 }
 
 /// Resource creation page.
@@ -205,17 +170,49 @@ String createResourceTemplate(PageSessionData s, String name,
       button('.btn.btn-primary.btn-lg', 'Submit', type: 'submit')
     ]);
     if (s.response.containsKey('error')) {
-      containerTags = [
-        div('.alert.alert-warning', role: 'alert', c: [
-          '${prettyPrintErrorMessage(s.response.error.message)} ',
-          '<strong>(${s.response.error.code})</strong>'
-        ]),
-        containerTags
-      ];
+      containerTags = [errorAlert(s), containerTags];
     }
   }
 
   return pageTemplate(s, 'Create $name',
+      headTags: headTags, bodyTags: bodyTags, containerTags: containerTags);
+}
+
+/// Resource update page.
+String updateResourceTemplate(PageSessionData s, String name,
+    {Map<String, InlineHtmlBuilder> fields,
+    dynamic headTags,
+    dynamic bodyTags}) {
+  // Build form.
+  final containerTags = new List();
+  if (s.response.containsKey('id')) {
+    containerTags.addAll([
+      div('.alert.alert-success', 'Successfully updated $name', role: 'alert'),
+      a('.btn.btn-primary', 'Return to $name overview',
+          href: '/$name/list', role: 'button'),
+      a('.btn', 'Update another field', href: 'update', role: 'button')
+    ]);
+  } else {
+    if (s.response.containsKey('error')) {
+      containerTags.add(errorAlert(s));
+    }
+
+    fields.forEach((label, field) {
+      // Create for for each field.
+      containerTags.add(form(method: 'POST', c: [
+        formGroup(
+            label, label.toLowerCase().replaceAll(new RegExp(r'\s'), '-'), [
+          div('.input-group', [
+            field(s),
+            span('.input-group-btn',
+                [button('.btn.btn-secondary', 'Submit', type: 'submit')])
+          ])
+        ])
+      ]));
+    });
+  }
+
+  return pageTemplate(s, 'Update $name #${s.pathParameters['id']}',
       headTags: headTags, bodyTags: bodyTags, containerTags: containerTags);
 }
 
@@ -252,4 +249,28 @@ String listResourceTemplate(
           }).toList())
         ])
       ]);
+}
+
+/// Resource deletion page.
+String deleteResourceTemplate(PageSessionData s, String name) {
+  final containerTags = new List();
+
+  if (s.response.containsKey('id')) {
+    containerTags.addAll([
+      div('.alert.alert-success', 'Successfully deleted $name', role: 'alert'),
+      a('.btn.btn-primary', 'Return to $name overview',
+          href: '/$name/list', role: 'button')
+    ]);
+  } else if (s.response.containsKey('error')) {
+    containerTags.add(errorAlert(s));
+  }
+  /* else {
+    containerTags.add(form(method: 'GET', c: [
+      p('Please confirm that you want to delete this $name.'),
+      button('.btn.btn-primary.btn-lg', 'Delete', type: 'submit')
+    ]));
+  } */
+
+  return pageTemplate(s, 'Delete $name #${s.pathParameters['id']}',
+      containerTags: containerTags);
 }

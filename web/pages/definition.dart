@@ -33,17 +33,23 @@ final listDefinitionsPage = new Page(template: (s) {
     th('ID'),
     th('Left', style: 'text-align: center;'),
     th(''),
-    th('Right', style: 'text-align: center;')
+    th('Right', style: 'text-align: center;'),
+    th('Actions')
   ], row: (definition) {
     return [
       td(definition.id.toString()),
       td(span('.latex', definition.rule.leftExpression.latex)),
       td(span('.latex', r'\rightarrow')),
-      td(span('.latex', definition.rule.rightExpression.latex))
+      td(span('.latex', definition.rule.rightExpression.latex)),
+      td([a('Delete', href: '${definition.id}/delete')])
     ];
   }, bodyTags: [
     katexSource(s),
     style(s.snippets['latex-table.css']),
     script(s.snippets['render-latex.js'])
   ]);
+});
+
+final deleteDefinitionPage = new Page(template: (s) {
+  return deleteResourceTemplate(s, 'definition');
 });
