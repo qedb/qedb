@@ -237,6 +237,8 @@ String listResourceTemplate(
         href: 'create'));
   }
 
+  s.response.sort((a, b) => a.id - b.id);
+
   return pageTemplate(s, customTitle ?? 'All $namePlural',
       headTags: headTags,
       bodyTags: bodyTags,

@@ -10,17 +10,7 @@ package. This can also be used as direct database client.
 
 + Delete rules
 + Expand proof after submission
-+ Copy/pase expressions in editor
-+ Non-destructive parenthesis removal in editor
-+ Look into improving editor performance (HTML diffing?)
-+ Look into using matrix notation for vectors
-+ Contextual keywords and LaTeX template?
 + Create rule directly from proof
 + Create rule from proof with equality signs
-+ Improve automatic generation of parentheses (more specifically for templates
-  as `-$0`, `\sin$0` and `\frac{\partial}{\partial$0}$1`)
++ Do conflict checking when definitions are added
 
-## Bugs
-
-- EdiTeX: delete parenthenses with `Del` before the closing parentheses does not
-  move the cursor index correctly.
