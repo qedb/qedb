@@ -6,13 +6,36 @@ library eqdb.utils;
 
 import 'dart:io';
 
+import 'package:rpc/rpc.dart';
 import 'package:yaml/yaml.dart';
+
+/// RPC exception for 422 status.
+class UnprocessableEntityError extends RpcError {
+  UnprocessableEntityError(String message)
+      : super(422, 'Unprocessable Entity', message);
+}
 
 /// Check the given String is not null and not empty.
 bool notEmpty(String str) => str != null && str.isNotEmpty;
 
 /// Check if the given value is null (useful with [List.removeWhere]).
 bool isNull(dynamic value) => value == null;
+
+/// Execute function, collect return value, check it is not null, and return it.
+/// If it is null, or if the function itself fails, throw an
+/// [UnprocessableEntityError].
+T checkNull<T>(T getter()) {
+  try {
+    final value = getter();
+    if (value != null) {
+      return value;
+    } else {
+      throw new UnprocessableEntityError('unexpected null value');
+    }
+  } catch (e) {
+    throw new UnprocessableEntityError('unexpected null value');
+  }
+}
 
 /// Convert PostgreSQL integer array in [str] to List<int>.
 /// If [str] is null this function will also return null.

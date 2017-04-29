@@ -19,17 +19,6 @@ String descriptorHyperlink(JsonObject getDescriptor()) {
   }
 }
 
-final listDescriptorsPage = new Page(template: (s) {
-  return listResourceTemplate(s, 'descriptor', 'descriptors',
-      tableHead: [th('ID'), th('Translation')], row: (descriptor) {
-    return [
-      th(a(descriptor.id.toString(), href: '/descriptor/${descriptor.id}/read'),
-          scope: 'row'),
-      td(safe(() => descriptor.translations[0].content, span('.none')))
-    ];
-  });
-});
-
 final readDescriptorPage = new Page(template: (s) {
   var translationNr = 0;
   return pageTemplate(s, 'Descriptor #${s.response.id}', containerTags: [

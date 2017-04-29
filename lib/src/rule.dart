@@ -5,13 +5,63 @@
 part of eqdb;
 
 /// Create rule from given proof.
+///
+/// A new rule can be defined in one of four ways:
+///
+/// 1. *From a definition:* `isDefinition` = true, `leftExpression.data` and
+///    `rightExpression.data` are set.
+/// 2. *From a proof:* `proof.id` is set.
+/// 3. *From two connecting steps:* `proof.firstStep.id` and
+///    `proof.lastStep.id` are set.
+/// 4. *From a single step:* `step.id` is set (must be an equation, e.g. the top
+///    level function is equal to the '=' operator).
 Future<db.RuleRow> createRule(Session s, RuleResource body) async {
-  /// Check if proof is valid.
-  final steps = await _listStepsBetween(
-      s, body.proof.firstStep.id, body.proof.lastStep.id);
-  if (steps.first.id != body.proof.firstStep.id ||
-      steps.last.id != body.proof.lastStep.id) {
-    throw new UnprocessableEntityError('invalid proof');
+  if (body.isDefinition != null && body.isDefinition) {
+    return createRuleFromDefinition(
+        s,
+        checkNull(() => body.leftExpression.data),
+        checkNull(() => body.rightExpression.data));
+  } else if (body.proof != null) {
+    if (body.proof.id != null) {
+      return createRuleFromProof(s, body.proof.id);
+    } else {
+      return createRuleFromSteps(s, checkNull(() => body.proof.firstStep.id),
+          checkNull(() => body.proof.lastStep.id));
+    }
+  } else if (body.step != null) {
+    return createRuleFromStep(s, checkNull(() => body.step.id));
+  } else {
+    throw new UnprocessableEntityError('not enough parameters');
+  }
+}
+
+Future<db.RuleRow> createRuleFromDefinition(
+    Session s, String leftData, String rightData) {
+  return _createRule(
+      s, new Expr.fromBase64(leftData), new Expr.fromBase64(rightData),
+      isDefinition: true);
+}
+
+Future<db.RuleRow> createRuleFromProof(Session s, int proofId) async {
+  // Load first and last expression from proof.
+  final proof = await s.selectById(db.proof, proofId);
+
+  // Load expressions.
+  await _listStepsById(s, [proof.firstStepId, proof.lastStepId]);
+  final leftExpr = new Expr.fromBase64(s.data
+      .expressionTable[s.data.stepTable[proof.firstStepId].expressionId].data);
+  final rightExpr = new Expr.fromBase64(s.data
+      .expressionTable[s.data.stepTable[proof.lastStepId].expressionId].data);
+
+  return _createRule(s, leftExpr, rightExpr, proofId: proofId);
+}
+
+Future<db.RuleRow> createRuleFromSteps(
+    Session s, int firstStepId, int lastStepId) async {
+  /// Check if the steps connect.
+  final steps = await _listStepsBetween(s, firstStepId, lastStepId);
+  if (steps.first.id != firstStepId || steps.last.id != lastStepId) {
+    throw new UnprocessableEntityError('steps do not connect');
   } else {
     var proofId;
 
@@ -24,10 +74,7 @@ Future<db.RuleRow> createRule(Session s, RuleResource body) async {
         }));
     if (proofs.isNotEmpty) {
       proofId = proofs.single.id;
-    }
-
-    // Else create new proof ID.
-    else {
+    } else {
       final proof = await s.insert(
           db.proof,
           VALUES({
@@ -42,32 +89,57 @@ Future<db.RuleRow> createRule(Session s, RuleResource body) async {
     // Pre-load expressions.
     final firstId = steps.first.expressionId;
     final lastId = steps.last.expressionId;
-    await listExpressions(s, [firstId, lastId]);
-    final leftExpr = new Expr.fromBase64(s.data.expressionTable[firstId].data);
-    final rightExpr = new Expr.fromBase64(s.data.expressionTable[lastId].data);
+    final map = await getExpressionMap(s, [firstId, lastId]);
 
-    // Insert expressions.
-    final leftRow = await _createExpression(s, leftExpr);
-    final rightRow = await _createExpression(s, rightExpr);
+    final leftExpr = new Expr.fromBase64(map[firstId].data);
+    final rightExpr = new Expr.fromBase64(map[lastId].data);
 
-    // Insert rule.
-    return s.insert(
-        db.rule,
-        VALUES({
-          'left_expression_id': leftRow.id,
-          'right_expression_id': rightRow.id,
-          'left_array_data': ARRAY(leftExpr.toArray(), 'integer'),
-          'right_array_data': ARRAY(rightExpr.toArray(), 'integer'),
-          'proof_id': proofId
-        }));
+    return _createRule(s, leftExpr, rightExpr, proofId: proofId);
+  }
+}
+
+Future<db.RuleRow> createRuleFromStep(Session s, int stepId) async {
+  // Get ID of '=' operator.
+  final eqOperator =
+      await s.selectOne(db.operator, WHERE({'character': IS('=')}));
+
+  // Get step expression.
+  final step = await s.selectById(db.step, stepId);
+  final expr = await s.selectById(db.expression, step.expressionId);
+
+  if (expr.nodeType == 'function' && expr.nodeValue == eqOperator.functionId) {
+    // Trace back to initial step.
+    final steps = await _listStepsBetween(s, -1, stepId);
+
+    // This must be a 'copy_rule' or 'copy_proof' step.
+    if (['copy_rule', 'copy_proof'].contains(steps.first.type)) {
+      // Retrieve left and right expression.
+      assert(expr.nodeArguments.length == 2);
+      final map = await getExpressionMap(s, expr.nodeArguments);
+      final leftExpr = new Expr.fromBase64(map[expr.nodeArguments[0]].data);
+      final rightExpr = new Expr.fromBase64(map[expr.nodeArguments[1]].data);
+      return _createRule(s, leftExpr, rightExpr, stepId: step.id);
+    } else {
+      throw new UnprocessableEntityError(
+          "inital parent of step is not a 'copy_rule' or 'copy_proof' step");
+    }
+  } else {
+    throw new UnprocessableEntityError('step expression is not an equation');
   }
 }
 
 /// Create unchecked rule.
-Future<db.RuleRow> _createRule(Session s, RuleResource body) async {
-  // Decode expressions.
-  final leftExpr = new Expr.fromBase64(body.leftExpression.data);
-  final rightExpr = new Expr.fromBase64(body.rightExpression.data);
+Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
+    {int stepId, int proofId, bool isDefinition: false}) async {
+  // Check if a similar rule already exists.
+  // It should not be possible to directly resolve this rule using
+  // [resolveExpressionDifference].
+  final difference = await _resolveExpressionDifference(s, leftExpr, rightExpr);
+  if (!difference.different) {
+    throw new UnprocessableEntityError('rule sides must be different');
+  } else if (difference.resolved) {
+    throw new UnprocessableEntityError('rule is directly resolvable');
+  }
 
   // Insert expressions.
   final leftRow = await _createExpression(s, leftExpr);
@@ -76,6 +148,9 @@ Future<db.RuleRow> _createRule(Session s, RuleResource body) async {
   return s.insert(
       db.rule,
       VALUES({
+        'step_id': stepId,
+        'proof_id': proofId,
+        'is_definition': isDefinition,
         'left_expression_id': leftRow.id,
         'right_expression_id': rightRow.id,
         'left_array_data': ARRAY(leftExpr.toArray(), 'integer'),

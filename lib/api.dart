@@ -160,30 +160,9 @@ class EqDB {
       _runRequestSession<RuleResource>((s) async =>
           new RuleResource()..loadRow(await api.deleteRule(s, id), s.data));
 
-  @ApiMethod(path: 'definition/create', method: 'POST')
-  Future<DefinitionResource> createDefinition(DefinitionResource body) =>
-      _runRequestSession<DefinitionResource>((s) async =>
-          new DefinitionResource()
-            ..loadRow(await api.createDefinition(s, body), s.data));
-
-  @ApiMethod(path: 'definition/list', method: 'GET')
-  Future<List<DefinitionResource>> listDefinition(
-          {String language: defaultLanguage}) =>
-      _runRequestSession<List<DefinitionResource>>(
-          (s) async => (await api.listDefinitions(s))
-              .map((r) => new DefinitionResource()..loadRow(r, s.data))
-              .toList(),
-          [language]);
-
-  @ApiMethod(path: 'definition/{id}/delete', method: 'GET')
-  Future<DefinitionResource> deleteDefinition(int id) =>
-      _runRequestSession<DefinitionResource>((s) async =>
-          new DefinitionResource()
-            ..loadRow(await api.deleteDefinition(s, id), s.data));
-
   @ApiMethod(path: 'difference/resolve', method: 'POST')
   Future<api.DifferenceBranch> resolveExpressionDifference(
-          api.DifferenceBranch body) =>
+          api.DifferenceRequest body) =>
       _runRequestSession<api.DifferenceBranch>(
           (s) => api.resolveExpressionDifference(s, body));
 

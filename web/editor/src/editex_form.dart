@@ -21,6 +21,7 @@ Future main() async {
     final editor = new EdiTeX(element, interface);
     final input = new InputElement(type: 'hidden');
     input.name = element.dataset['name'];
+    input.value = '';
     element.parent.append(input);
 
     editor.onUpdate.listen((_) {

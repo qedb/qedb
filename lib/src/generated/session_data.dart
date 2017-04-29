@@ -15,7 +15,6 @@ class SessionData {
   Map<int, OperatorRow> operatorTable = {};
   Map<int, ExpressionRow> expressionTable = {};
   Map<int, RuleRow> ruleTable = {};
-  Map<int, DefinitionRow> definitionTable = {};
   Map<int, StepRow> stepTable = {};
   Map<int, ProofRow> proofTable = {};
 }

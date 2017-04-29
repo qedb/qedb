@@ -71,9 +71,9 @@ class ExpressionEditor extends EdiTeX {
         try {
           _expressionDifference = new Completer<DifferenceBranch>();
           final result =
-              await db.resolveExpressionDifference(new DifferenceBranch()
-                ..leftData = left.expression.toBase64()
-                ..rightData = right.expression.toBase64());
+              await db.resolveExpressionDifference(new DifferenceRequest()
+                ..leftExpression = left.expression.toBase64()
+                ..rightExpression = right.expression.toBase64());
           _expressionDifference.complete(result);
           setStatus(result.different && !result.resolved ? 'error' : 'valid');
           return result;

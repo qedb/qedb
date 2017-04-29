@@ -156,7 +156,7 @@ CREATE TABLE expression (
 CREATE INDEX expression_functions_index on expression USING GIN (functions);
 
 --------------------------------------------------------------------------------
--- Rules and definitions
+-- Rule
 --------------------------------------------------------------------------------
 
 -- Rule (equation of two expression)
@@ -165,23 +165,21 @@ CREATE INDEX expression_functions_index on expression USING GIN (functions);
 -- + Add index for top level function ID.
 CREATE TABLE rule (
   id                   serial     PRIMARY KEY,
+  step_id              integer,
   proof_id             integer,
+  is_definition        boolean    NOT NULL,
   left_expression_id   integer    NOT NULL REFERENCES expression(id),
   right_expression_id  integer    NOT NULL REFERENCES expression(id),
   left_array_data      integer[]  NOT NULL,
   right_array_data     integer[]  NOT NULL,
 
-  UNIQUE (left_expression_id, right_expression_id)
-);
+  UNIQUE (left_expression_id, right_expression_id),
 
--- A rule definition
-CREATE TABLE definition (
-  id       serial   PRIMARY KEY,
-  rule_id  integer  NOT NULL UNIQUE REFERENCES rule(id)
+  CONSTRAINT left_is_not_right CHECK
+    (left_expression_id != right_expression_id),
 
-  -- TODO:
-  -- + Theoretical definition (mathematical property of functions)
-  -- + Empirical definition (physics)
+  CONSTRAINT step_or_proof_or_definition CHECK
+    (step_id IS NOT NULL OR proof_id IS NOT NULL OR is_definition IS TRUE)
 );
 
 --------------------------------------------------------------------------------
@@ -231,9 +229,10 @@ CREATE TABLE step (
       (rule_id IS NOT NULL))))
 );
 
--- Add proof step constraints.
+-- Add rule and proof step constraints.
+ALTER TABLE rule  ADD FOREIGN KEY (step_id)       REFERENCES step(id);
 ALTER TABLE proof ADD FOREIGN KEY (first_step_id) REFERENCES step(id);
-ALTER TABLE proof ADD FOREIGN KEY (last_step_id) REFERENCES step(id);
+ALTER TABLE proof ADD FOREIGN KEY (last_step_id)  REFERENCES step(id);
 
 --------------------------------------------------------------------------------
 -- Create user and restrict access.
@@ -252,4 +251,3 @@ GRANT USAGE ON LANGUAGE plperl TO eqdb;
 GRANT UPDATE (subject_id, keyword, keyword_type, latex_template) ON "function" TO eqdb;
 GRANT UPDATE (latex) ON "expression" TO eqdb;
 GRANT DELETE ON "rule" TO eqdb;
-GRANT DELETE ON "definition" TO eqdb;

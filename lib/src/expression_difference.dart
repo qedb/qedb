@@ -4,10 +4,18 @@
 
 part of eqdb;
 
+class DifferenceRequest {
+  @ApiProperty(required: true)
+  String leftExpression;
+
+  @ApiProperty(required: true)
+  String rightExpression;
+}
+
 class DifferenceBranch {
   int position;
-  String leftData;
-  String rightData;
+  String leftExpression;
+  String rightExpression;
   bool resolved;
   bool different;
   bool reverseRule;
@@ -17,12 +25,17 @@ class DifferenceBranch {
   List<DifferenceBranch> arguments;
 }
 
+/// Resolves difference between leftExpression and rightExpression.
 Future<DifferenceBranch> resolveExpressionDifference(
-    Session s, DifferenceBranch body) async {
-  // Decode expressions.
-  final left = new Expr.fromBase64(body.leftData);
-  final right = new Expr.fromBase64(body.rightData);
+    Session s, DifferenceRequest body) async {
+  final left = new Expr.fromBase64(checkNull(() => body.leftExpression));
+  final right = new Expr.fromBase64(checkNull(() => body.rightExpression));
+  return _resolveExpressionDifference(s, left, right);
+}
 
+/// Resolves difference between [left] and [right].
+Future<DifferenceBranch> _resolveExpressionDifference(
+    Session s, Expr left, Expr right) async {
   // Get rearrangeable functions.
   final rearrangeableIds =
       await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
@@ -33,8 +46,8 @@ Future<DifferenceBranch> resolveExpressionDifference(
   // Resolve difference tree.
   if (result.numericInequality) {
     return new DifferenceBranch()
-      ..leftData = body.leftData
-      ..rightData = body.rightData
+      ..leftExpression = left.toBase64()
+      ..rightExpression = right.toBase64()
       ..different = true
       ..resolved = false;
   } else {
@@ -50,8 +63,8 @@ Future<DifferenceBranch> resolveTreeDiff(Session s, ExprDiffBranch branch,
     List<int> computableIds, ExprCompute compute) async {
   final outputBranch = new DifferenceBranch()
     ..position = branch.position
-    ..leftData = branch.left.toBase64()
-    ..rightData = branch.right.toBase64()
+    ..leftExpression = branch.left.toBase64()
+    ..rightExpression = branch.right.toBase64()
     ..different = branch.isDifferent
     ..resolved = false;
 

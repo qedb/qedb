@@ -30,10 +30,6 @@ tables:
 - tableName:  rule
   className:  Rule
   varName:    rule
-  
-- tableName:  definition
-  className:  Definition
-  varName:    definition
 
 - tableName:  step
   className:  Step

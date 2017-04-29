@@ -1,4 +1,4 @@
 editex.css.href:
   http://0.0.0.0:8083/packages/editex/editex.css
-proofsrc:
+editorsrc:
   http://0.0.0.0:8083/editor/

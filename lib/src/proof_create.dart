@@ -48,11 +48,11 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   steps.add(new _StepData()
     ..position = 0
     ..type = StepType.setExpression
-    ..expression = new Expr.fromBase64(body.steps.first.leftData));
+    ..expression = new Expr.fromBase64(body.steps.first.leftExpression));
 
   /// Flatten list of difference branches into a step list.
   for (final branch in body.steps) {
-    if (new Expr.fromBase64(branch.leftData) != steps.last.expression) {
+    if (new Expr.fromBase64(branch.leftExpression) != steps.last.expression) {
       throw new UnprocessableEntityError('steps do not connect');
     } else {
       // Note: reverse flattened list so that position integers are unaffected.
@@ -60,7 +60,7 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
 
       // Use the right side of the branch to later validate that proof
       // reconstruction is correct.
-      steps.last.expression = new Expr.fromBase64(branch.rightData);
+      steps.last.expression = new Expr.fromBase64(branch.rightExpression);
     }
   }
 
@@ -159,7 +159,7 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
 /// Compute result of applying [step], given the [previous] expression. In some
 /// cases the computation is backwards. This means the substitution that is
 /// applied to [previous] is computed in part based on the resulting expression
-/// (fetched from [DifferenceBranch.rightData]).
+/// (fetched from [DifferenceBranch.rightExpression]).
 Expr _computeProofStep(Expr previous, _StepData step,
     List<int> rearrangeableIds, ExprCompute compute) {
   assert(step.type != null);
@@ -217,7 +217,7 @@ List<_StepData> _flattenDifferenceBranch(DifferenceBranch branch) {
       final step = new _StepData()
         ..position = branch.position
         ..ruleId = branch.rule.id
-        ..subExprRight = new Expr.fromBase64(branch.rightData);
+        ..subExprRight = new Expr.fromBase64(branch.rightExpression);
 
       // Determine rule type.
       if (!branch.reverseRule && !branch.reverseEvaluate) {

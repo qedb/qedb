@@ -194,35 +194,27 @@ class ExpressionResource extends ResourceBase<db.ExpressionRow> {
 }
 
 //------------------------------------------------------------------------------
-// Rules and definitions
+// Rule
 //------------------------------------------------------------------------------
 
 /// Rule
 class RuleResource extends ResourceBase<db.RuleRow> {
   int id;
+  StepResource step;
   ProofResource proof;
+  bool isDefinition;
   ExpressionResource leftExpression;
   ExpressionResource rightExpression;
 
   Map<int, db.RuleRow> _getTableMap(data) => data.ruleTable;
 
   void loadFields(row, data) {
+    step = getResource(row.stepId, data, new StepResource());
     proof = getResource(row.proofId, data, new ProofResource());
+    isDefinition = row.isDefinition;
     leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
     rightExpression = new ExpressionResource()
       ..load(row.rightExpressionId, data);
-  }
-}
-
-/// Definition
-class DefinitionResource extends ResourceBase<db.DefinitionRow> {
-  int id;
-  RuleResource rule;
-
-  Map<int, db.DefinitionRow> _getTableMap(data) => data.definitionTable;
-
-  void loadFields(row, data) {
-    rule = new RuleResource()..load(row.ruleId, data);
   }
 }
 

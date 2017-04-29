@@ -9,6 +9,7 @@ set -e
 OBSERVATORY_PORT=8000
 
 # Start the API server.
+export EQDB_TEST_LOG=''; 
 ./tool/restart-api-server.sh $OBSERVATORY_PORT
 
 # Run the provided test command.

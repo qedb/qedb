@@ -37,7 +37,8 @@ check:
 build-dev-environment: restart-web-server
 	./tool/kill-port.sh 8083 force
 	./tool/restart-db.sh
-	export EQDB_TEST_LOG=''; ./tool/run-test.sh ./test/run.sh
+	./tool/run-test.sh ./test/run.sh
+	./tool/restart-api-server.sh
 	pub serve --port 8083 > /dev/null 2>&1 &
 	./tool/kill-port.sh 8081 force
 	export EQDB_WEB_PORT=8081; dart -c web/server.dart > /dev/null 2>&1 &

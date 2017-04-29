@@ -6,27 +6,64 @@ import '../htgen/htgen.dart';
 import '../page.dart';
 import 'templates.dart';
 
-final createRulePage = new Page(
-    template: (s) {
-      return createResourceTemplate(s, 'rule', inputs: (_) {
-        return [
-          formGroup('First step of proof', 'first', [
-            input('#first.form-control',
-                type: 'text', name: 'first', maxlength: 6, pattern: '[0-9a-z]+')
-          ]),
-          formGroup('Last step of proof', 'last', [
-            input('#last.form-control',
-                type: 'text', name: 'last', maxlength: 6, pattern: '[0-9a-z]+')
-          ])
-        ];
-      });
-    },
-    onPost: (data) => {
-          'proof': {
-            'firstStep': {'id': int.parse(data['first'], radix: 36)},
-            'lastStep': {'id': int.parse(data['last'], radix: 36)}
-          }
-        });
+import 'package:eqdb/utils.dart';
+
+final createRulePage = new Page(template: (s) {
+  return createResourceTemplate(s, 'rule', inputs: (_) {
+    return [
+      h4('From definition'),
+      formGroup('Left expression', 'left',
+          [div('#left.editex.editex-align-left', data_name: 'left')]),
+      formGroup('Right expression', 'right',
+          [div('#right.editex.editex-align-left', data_name: 'right')]),
+      h4('From proof'),
+      formInput('Proof ID', name: 'proof'),
+      h4('From connecting steps'),
+      formGroup('First step ID', 'first', [
+        input('#first.form-control',
+            type: 'text', name: 'first', maxlength: 6, pattern: '[0-9a-z]+')
+      ]),
+      formGroup('Last step ID', 'last', [
+        input('#last.form-control',
+            type: 'text', name: 'last', maxlength: 6, pattern: '[0-9a-z]+')
+      ]),
+      h4('From derived rule expression'),
+      formGroup('Step ID', 'last', [
+        input('#last.form-control',
+            type: 'text', name: 'step', maxlength: 6, pattern: '[0-9a-z]+')
+      ])
+    ];
+  }, bodyTags: [
+    katexSource(s),
+    editexStyles(s),
+    script(src: s.settings['editorsrc'] + 'src/editex_form.dart.js')
+  ]);
+}, onPost: (data) {
+  if (notEmpty(data['left']) && notEmpty(data['right'])) {
+    return {
+      'isDefinition': true,
+      'leftExpression': {'data': data['left']},
+      'rightExpression': {'data': data['right']}
+    };
+  } else if (notEmpty(data['proof'])) {
+    return {
+      'proof': {'id': int.parse(data['proof'])}
+    };
+  } else if (notEmpty(data['first']) && notEmpty(data['last'])) {
+    return {
+      'proof': {
+        'firstStep': {'id': int.parse(data['first'], radix: 36)},
+        'lastStep': {'id': int.parse(data['last'], radix: 36)}
+      }
+    };
+  } else if (notEmpty(data['step'])) {
+    return {
+      'step': {'id': int.parse(data['step'])}
+    };
+  } else {
+    return {};
+  }
+});
 
 final listRulesPage = new Page(template: (s) {
   return listResourceTemplate(s, 'rule', 'rules', tableHead: [
@@ -43,7 +80,7 @@ final listRulesPage = new Page(template: (s) {
       td(span('.latex', r'\rightarrow')),
       td(span('.latex', rule.rightExpression.latex)),
       td(safe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
-          span('.none.text-muted'))),
+          rule.containsKey('step') ? span('step') : span('.none.text-muted'))),
       td([a('Delete', href: '${rule.id}/delete')])
     ];
   }, bodyTags: [

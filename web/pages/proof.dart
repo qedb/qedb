@@ -18,19 +18,27 @@ final createProofPage = new Page(
       }, bodyTags: [
         katexSource(s),
         editexStyles(s),
-        stylesheet(s.settings['proofsrc'] + 'styles/main.css'),
-        script(src: s.settings['proofsrc'] + 'src/main.dart.js')
+        stylesheet(s.settings['editorsrc'] + 'styles/main.css'),
+        script(src: s.settings['editorsrc'] + 'src/main.dart.js')
       ]);
     },
     onPost: (data) => JSON.decode(data['data']));
 
 final listProofsPage = new Page(template: (s) {
-  return listResourceTemplate(s, 'proof', 'proofs',
-      tableHead: [th('ID'), th('First'), th('Last')], row: (proof) {
+  return listResourceTemplate(s, 'proof', 'proofs', tableHead: [
+    th('ID'),
+    th('First expression'),
+    th('Last expression'),
+    th('Actions')
+  ], row: (proof) {
     return [
       td(a(proof.id.toString(), href: '/proof/${proof.id}/steps/list')),
       td(span('.latex', proof.firstStep.expression.latex)),
-      td(span('.latex', proof.lastStep.expression.latex))
+      td(span('.latex', proof.lastStep.expression.latex)),
+      td(form(method: 'POST', action: '/rule/create', c: [
+        input(type: 'hidden', name: 'proof', value: '${proof.id}'),
+        button('.btn.btn-link', 'To rule', type: 'submit')
+      ]))
     ];
   }, bodyTags: [
     style(s.snippets['latex-table.css']),

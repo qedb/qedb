@@ -26,7 +26,6 @@ part 'src/function.dart';
 part 'src/operator.dart';
 part 'src/expression.dart';
 part 'src/rule.dart';
-part 'src/definition.dart';
 part 'src/expression_difference.dart';
 part 'src/proof_create.dart';
 part 'src/proof_read.dart';
@@ -39,9 +38,4 @@ class Session extends SessionState<db.SessionData> {
 
   Session(Connection conn, db.SessionData data, this.languages)
       : super(conn, data);
-}
-
-class UnprocessableEntityError extends RpcError {
-  UnprocessableEntityError(String message)
-      : super(422, 'Unprocessable Entity', message);
 }

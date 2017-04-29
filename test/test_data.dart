@@ -141,29 +141,26 @@ Future main() async {
   // Definitions
   await csvtest(baseUrl, definitionsFile, [
     // Create definition.
-    route('POST', 'definition/create', request: {
-      'rule': {
-        'leftExpression': {'data': eqlib.data(col('Expression left'))},
-        'rightExpression': {'data': eqlib.data(col('Expression right'))}
-      }
+    route('POST', 'rule/create', request: {
+      'isDefinition': true,
+      'leftExpression': {'data': eqlib.data(col('Expression left'))},
+      'rightExpression': {'data': eqlib.data(col('Expression right'))}
     }, response: {
       'id': col('ID'),
-      'rule': {
-        'id': pkey.get('rule', col('ID')),
-        'leftExpression': {
-          'id': pkey.get('expression', col('Expression left')),
-          'data': eqlib.data(col('Expression left')),
-          'hash': eqlib.hash(col('Expression left')),
-          'latex': accept(AcceptType.string),
-          'functions': eqlib.functionIds(col('Expression left'))
-        },
-        'rightExpression': {
-          'id': pkey.get('expression', col('Expression right')),
-          'data': eqlib.data(col('Expression right')),
-          'hash': eqlib.hash(col('Expression right')),
-          'latex': accept(AcceptType.string),
-          'functions': eqlib.functionIds(col('Expression right'))
-        }
+      'isDefinition': true,
+      'leftExpression': {
+        'id': pkey.get('expression', col('Expression left')),
+        'data': eqlib.data(col('Expression left')),
+        'hash': eqlib.hash(col('Expression left')),
+        'latex': accept(AcceptType.string),
+        'functions': eqlib.functionIds(col('Expression left'))
+      },
+      'rightExpression': {
+        'id': pkey.get('expression', col('Expression right')),
+        'data': eqlib.data(col('Expression right')),
+        'hash': eqlib.hash(col('Expression right')),
+        'latex': accept(AcceptType.string),
+        'functions': eqlib.functionIds(col('Expression right'))
       }
     })
   ]);

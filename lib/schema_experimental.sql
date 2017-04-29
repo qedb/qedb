@@ -11,8 +11,8 @@ CREATE TABLE function_property (
 -- Function property definition
 CREATE TABLE function_property_definition (
   id                    serial   PRIMARY KEY,
+  rule_id               integer  NOT NULL REFERENCES rule(id),
   function_id           integer  NOT NULL REFERENCES function(id),
-  definition_id         integer  NOT NULL REFERENCES definition(id),
   function_property_id  integer  NOT NULL REFERENCES function_property(id)
 );
 
@@ -68,11 +68,11 @@ CREATE TABLE page (
   descriptor_id  integer  NOT NULL UNIQUE REFERENCES descriptor(id)
 );
 
-CREATE TABLE page_definition (
-  id             serial   PRIMARY KEY,
-  page_id        integer  NOT NULL REFERENCES page(id),
-  definition_id  integer  NOT NULL REFERENCES definition(id),
-  sequence       integer  NOT NULL CHECK (sequence > 0)
+CREATE TABLE page_rule (
+  id        serial   PRIMARY KEY,
+  page_id   integer  NOT NULL REFERENCES page(id),
+  rule_id   integer  NOT NULL REFERENCES rule(id),
+  sequence  integer  NOT NULL CHECK (sequence > 0)
 );
 
 CREATE TABLE page_text (

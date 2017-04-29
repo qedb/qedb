@@ -19,7 +19,6 @@ import 'pages/descriptor.dart';
 import 'pages/subject.dart';
 import 'pages/translation.dart';
 import 'pages/function.dart';
-import 'pages/definition.dart';
 import 'pages/proof.dart';
 import 'pages/rule.dart';
 
@@ -29,7 +28,6 @@ import 'page.dart';
 Map<String, Page> pages = {
   '/': homePage,
   '/language/create': createLanguagePage,
-  '/descriptor/list': listDescriptorsPage,
   '/descriptor/{id}/read': readDescriptorPage,
   '/descriptor/{id}/translation/create': createTranslationPage,
   '/subject/create': createSubjectPage,
@@ -40,9 +38,6 @@ Map<String, Page> pages = {
   '/rule/create': createRulePage,
   '/rule/list': listRulesPage,
   '/rule/{id}/delete': deleteRulePage,
-  '/definition/create': createDefinitionPage,
-  '/definition/list': listDefinitionsPage,
-  '/definition/{id}/delete': deleteDefinitionPage,
   '/proof/create': createProofPage,
   '/proof/list': listProofsPage,
   '/proof/{id}/steps/list': listProofStepsPage
