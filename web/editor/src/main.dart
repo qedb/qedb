@@ -181,7 +181,7 @@ class ProofEditor {
         if (e.keyCode == KeyCode.ENTER && editors[editor.index + 1].isEmpty) {
           editors[editor.index + 1]
             ..loadData(editor.getData())
-            ..setCursor(editor.cursorPosition);
+            ..setCursor(editor.cursors.single);
         }
 
         _focusEditor(editor.index + 1, 0);

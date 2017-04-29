@@ -123,7 +123,7 @@ final listFunctionsPage = new Page(template: (s) {
       td(descriptorHyperlink(() => function.descriptor)),
       td(safe(() => function.keyword.toString(), span('.none'))),
       td(safe(() => function.keywordType.toString(), span('.none'))),
-      td(safe(() => span('.latex', function.latexTemplate), span('.none'))),
+      td(safe(() => code(function.latexTemplate), span('.none'))),
       td(function.generic ? 'yes' : 'no'),
       td([a('Update', href: '${function.id}/update')])
     ];
@@ -132,7 +132,6 @@ final listFunctionsPage = new Page(template: (s) {
         '.katex-display { margin: 0 !important; text-align: left !important; }'
         'tr { line-height: 3em; }')
   ], bodyTags: [
-    katexSource(s),
-    script(s.snippets['render-latex.js'])
+    katexSource(s)
   ]);
 });

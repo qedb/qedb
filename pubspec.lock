@@ -54,7 +54,7 @@ packages:
       name: collection
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.13.0"
+    version: "1.14.0"
   concepts:
     description:
       name: concepts
@@ -96,7 +96,7 @@ packages:
       name: editex
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.3"
+    version: "0.1.5"
   either:
     description:
       name: either
@@ -114,7 +114,7 @@ packages:
       name: eqlib
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.13.0+1"
+    version: "0.13.1"
   gcloud:
     description:
       name: gcloud
