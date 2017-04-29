@@ -12,6 +12,8 @@ import 'package:eqdb_client/browser_client.dart';
 import 'editex_interface.dart';
 
 Future main() async {
+  CursorList.selectionColor = '#2aa198';
+
   // Retrieve operators and functions.
   final db = new EqdbApi(new BrowserClient());
   final interface = new EqDBEdiTeXInterface();
