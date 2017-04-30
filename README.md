@@ -10,7 +10,5 @@ package. This can also be used as direct database client.
 
 + Expand proof after submission
 + Copy proof or rule into new proof expression
-+ Create rule directly from proof
 + Create rule from proof with equality signs
-+ Do conflict checking when definitions are added
 

@@ -138,7 +138,9 @@ String pageTemplate(PageSessionData s, String pageTitle,
     body([
       breadcrumb(s),
       div('.container', [h3(pageTitle), br(), containerTags]),
-      bodyTags
+      bodyTags,
+      br(),
+      br()
     ])
   ]);
 }

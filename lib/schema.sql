@@ -199,6 +199,7 @@ ALTER TABLE rule ADD FOREIGN KEY (proof_id) REFERENCES proof(id);
 
 CREATE TYPE step_type AS ENUM (
   'set',         -- Set expression to arbitrary value.
+  'copy_rule',   -- Copy left and right expression of a rule.
   'copy_proof',  -- Copy first and last expression of a proof.
   'rule_normal', -- Substitute a -> b, evaluate b from a.
   'rule_invert', -- Substitute b -> a, evaluate a from b (invert rule sides).

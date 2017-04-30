@@ -29,15 +29,23 @@ final listProofsPage = new Page(template: (s) {
     th('ID'),
     th('First expression'),
     th('Last expression'),
-    th('Actions')
+    th('Actions', style: 'width: 1px;')
   ], row: (proof) {
     return [
       td(a(proof.id.toString(), href: '/proof/${proof.id}/steps/list')),
       td(span('.latex', proof.firstStep.expression.latex)),
       td(span('.latex', proof.lastStep.expression.latex)),
-      td(form(method: 'POST', action: '/rule/create', c: [
-        input(type: 'hidden', name: 'proof', value: '${proof.id}'),
-        button('.btn.btn-link', 'To rule', type: 'submit')
+      td(div('.btn-group.btn-group-sm', role: 'group', c: [
+        form('.btn-group.btn-group-sm',
+            role: 'group',
+            method: 'POST',
+            action: '/rule/create',
+            style: 'display: inline-block;',
+            c: [
+              button('.btn.btn-outline-secondary', 'To rule', type: 'submit'),
+              input(type: 'hidden', name: 'proof', value: '${proof.id}')
+            ]),
+        a('.btn.btn-outline-secondary', 'Extend', href: '#')
       ]))
     ];
   }, bodyTags: [

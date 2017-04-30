@@ -115,7 +115,7 @@ final listFunctionsPage = new Page(template: (s) {
     th('Keyword type'),
     th('LaTeX template'),
     th('Generic'),
-    th('Actions')
+    th('Actions', style: 'width: 1px;')
   ], row: (function) {
     return [
       td(function.id.toString()),
@@ -125,7 +125,10 @@ final listFunctionsPage = new Page(template: (s) {
       td(safe(() => function.keywordType.toString(), span('.none'))),
       td(safe(() => code(function.latexTemplate), span('.none'))),
       td(function.generic ? 'yes' : 'no'),
-      td([a('Update', href: '${function.id}/update')])
+      td([
+        a('.btn.btn-outline-secondary.btn-sm', 'Update',
+            href: '${function.id}/update')
+      ])
     ];
   }, headTags: [
     style(

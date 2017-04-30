@@ -12,10 +12,12 @@ final createRulePage = new Page(template: (s) {
   return createResourceTemplate(s, 'rule', inputs: (_) {
     return [
       h4('From definition'),
-      formGroup('Left expression', 'left',
-          [div('#left.editex.editex-align-left', data_name: 'left')]),
-      formGroup('Right expression', 'right',
-          [div('#right.editex.editex-align-left', data_name: 'right')]),
+      formGroup('Left expression', 'left', [
+        div('#left.editex.editex-align-left.form-control', data_name: 'left')
+      ]),
+      formGroup('Right expression', 'right', [
+        div('#right.editex.editex-align-left.form-control', data_name: 'right')
+      ]),
       h4('From proof'),
       formInput('Proof ID', name: 'proof'),
       h4('From connecting steps'),
@@ -72,7 +74,7 @@ final listRulesPage = new Page(template: (s) {
     th(''),
     th('Right', style: 'text-align: center;'),
     th('Proof'),
-    th('Actions')
+    th('Actions', style: 'width: 1px;')
   ], row: (rule) {
     return [
       td(rule.id.toString()),
@@ -81,7 +83,11 @@ final listRulesPage = new Page(template: (s) {
       td(span('.latex', rule.rightExpression.latex)),
       td(safe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
           rule.containsKey('step') ? span('step') : span('.none.text-muted'))),
-      td([a('Delete', href: '${rule.id}/delete')])
+      td(div('.btn-group.btn-group-sm', role: 'group', c: [
+        a('.btn.btn.btn-outline-secondary', 'Delete',
+            href: '${rule.id}/delete'),
+        a('.btn.btn.btn-outline-secondary', 'Derive rule', href: '#')
+      ]))
     ];
   }, bodyTags: [
     katexSource(s),
