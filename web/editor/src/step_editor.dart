@@ -54,9 +54,9 @@ class StepEditor extends StepEditorBase {
       }
     });
 
-    editor.container.onBlur.listen((_) {
+    subscriptions.add(editor.container.onBlur.listen((_) {
       afterUpdate.add(null);
-    });
+    }));
 
     editor.onLeftLeave.listen((_) {
       if (prev != null) {

@@ -43,10 +43,22 @@
   flex: 0 0 4em;
   text-align: center;
 
+  &.status-resolved:before {
+    content: '';
+    display: inline-block;
+    box-sizing: border-box;
+    width: .7em;
+    height: 1.2em;
+    border: .2em solid green;
+    border-width: 0 .2em .2em 0;
+    transform: rotate(40deg);
+    box-shadow: 1px 1px 1px #000;
+  }
+
   &.status-error:before {
     content: '?';
     font-size: 2em;
-    color: #b58900;
+    color: goldenrod;
     text-shadow: 1px 1px 1px #000;
   }
 

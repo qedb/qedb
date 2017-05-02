@@ -37,34 +37,41 @@ abstract class StepEditorBase {
   final afterUpdate = new StreamController<Null>.broadcast();
 
   /// Stream that is triggered when the difference between this step and the
-  /// previous one is successfully resolved. Called in [resolveDifference].
-  final afterResolve = new StreamController<Null>.broadcast();
+  /// previous one is resolved. Called in [resolveDifference]. The value
+  /// indicates if the resolving was successful.
+  final afterResolve = new StreamController<bool>.broadcast();
+
+  /// All subscriptions that must be cancelled on remove.
+  final subscriptions = new List<StreamSubscription>();
 
   StepEditorBase(this.interface, this.db, this.root, this.row, this.container,
       this.status, this.prev) {
     if (prev != null) {
-      prev.afterResolve.stream.listen((_) {
+      subscriptions.add(prev.afterResolve.stream.listen((v) {
         resolveDifference();
-      });
+      }));
 
-      afterUpdate.stream.listen((_) {
+      subscriptions.add(afterUpdate.stream.listen((_) {
         resolveDifference();
-      });
+      }));
     } else {
-      afterUpdate.stream.listen((_) {
-        // In other cases this is updated in [resolveDifference].
-        setStatus(!getExpression().valid ? 'exclaim' : 'valid');
-        afterResolve.add(null);
-      });
+      subscriptions.add(afterUpdate.stream.listen((_) {
+        final valid = getExpression().valid;
+        setStatus(valid ? 'valid' : 'exclaim');
+        afterResolve.add(valid);
+      }));
     }
   }
 
   /// Remove from DOM.
   Future remove([bool self = true]) async {
     if (self == true) {
-      row.remove();
+      for (final sub in subscriptions) {
+        await sub.cancel();
+      }
       await afterUpdate.close();
       await afterResolve.close();
+      row.remove();
     }
     if (next != null) {
       await next.remove();
@@ -80,10 +87,6 @@ abstract class StepEditorBase {
 
   /// Set editing cursor index.
   void setCursor(int index);
-
-  /// Get expression value. May return null for an invalid expression. May throw
-  /// an error when the expression cannot be retrieved.
-  ExpressionData getExpression();
 
   /// Check if step is empty.
   bool get isEmpty;
@@ -129,6 +132,10 @@ abstract class StepEditorBase {
     }
   }
 
+  /// Get expression value. May return null for an invalid expression. May throw
+  /// an error when the expression cannot be retrieved.
+  ExpressionData getExpression();
+
   /// Resolve difference.
   /// This function assumes that [prev] is defined.
   Future<DifferenceBranch> resolveDifference() async {
@@ -136,9 +143,11 @@ abstract class StepEditorBase {
     final thisExpr = getExpression();
     if (!thisExpr.valid) {
       setStatus('exclaim');
+      afterResolve.add(false);
       return null;
     } else if (!prevExpr.valid || thisExpr.empty || prevExpr.empty) {
       setStatus('valid');
+      afterResolve.add(false);
       return null;
     } else {
       setStatus('progress');
@@ -158,15 +167,14 @@ abstract class StepEditorBase {
         final result = await db.resolveExpressionDifference(request);
 
         // Update status and trigger stream.
-        setStatus(result.different && !result.resolved ? 'error' : 'valid');
-        if (result.different && result.resolved) {
-          afterResolve.add(null);
-        }
-
+        setStatus(result.different && !result.resolved ? 'error' : 'resolved');
+        afterResolve.add(result.resolved);
         completer.complete(result);
         return result;
       } else {
-        setStatus(current.different && !current.resolved ? 'error' : 'valid');
+        setStatus(
+            current.different && !current.resolved ? 'error' : 'resolved');
+        afterResolve.add(current.resolved);
         return difference;
       }
     }
