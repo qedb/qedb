@@ -21,35 +21,39 @@ final homePage = new Page(template: (s) {
   return html([
     head([title('EqDB Admin'), defaultHead(s)]),
     body([
-      div('.jumbotron', c: [
-        div('.container', style: 'text-align: center;', c: [
-          svg([
-            svgDefs([
-              svgLinearGradient([
-                svgStop(offset: '5%', stop_color: '#aaa'),
-                svgStop(offset: '95%', stop_color: '#fff')
-              ], id: 'logo-gradient', gradientTransform: 'rotate(90)')
-            ]),
-            logoSvgContent
-          ],
-              style: buildStyle({
-                'max-width': '20em',
-                'vertical-align': 'middle',
-                'fill': 'url(#logo-gradient)'
-              }),
-              xmlns: 'http://www.w3.org/2000/svg',
-              viewBox: '0 0 31 16'),
-          span('.display-4', 'Builder',
-              style: buildStyle({
-                'vertical-align': 'middle',
-                'padding-left': '.3em',
-                'font-family': "'Roboto'",
-                'background': '-webkit-linear-gradient(#aaa, #ddd)',
-                '-webkit-background-clip': 'text',
-                '-webkit-text-fill-color': 'transparent'
-              }))
-        ])
-      ]),
+      div('.jumbotron',
+          style: 'background: repeating-linear-gradient(135deg,'
+              'transparent 0px, transparent 2px, #111 4px,'
+              'transparent 6px, transparent 8px);',
+          c: [
+            div('.container', style: 'text-align: center;', c: [
+              svg([
+                svgDefs([
+                  svgLinearGradient([
+                    svgStop(offset: '5%', stop_color: '#aaa'),
+                    svgStop(offset: '95%', stop_color: '#fff')
+                  ], id: 'logo-gradient', gradientTransform: 'rotate(90)')
+                ]),
+                logoSvgContent
+              ],
+                  style: buildStyle({
+                    'max-width': '20em',
+                    'vertical-align': 'middle',
+                    'fill': 'url(#logo-gradient)'
+                  }),
+                  xmlns: 'http://www.w3.org/2000/svg',
+                  viewBox: '0 0 31 16'),
+              span('.display-4', 'Builder',
+                  style: buildStyle({
+                    'vertical-align': 'middle',
+                    'padding-left': '.3em',
+                    'font-family': "'Roboto'",
+                    'background': '-webkit-linear-gradient(#aaa, #ddd)',
+                    '-webkit-background-clip': 'text',
+                    '-webkit-text-fill-color': 'transparent'
+                  }))
+            ])
+          ]),
       div('.container', [
         ul('.list-group', [
           actions
