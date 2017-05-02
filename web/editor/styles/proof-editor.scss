@@ -2,8 +2,19 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
+.editex-placeholder {
+  background: repeating-linear-gradient(45deg,
+  transparent 0px, transparent 1px, #666 2px,
+  transparent 3px, transparent 4px);
+}
+
+.editex-cursor {
+  background: white;
+}
+
 .proof-editor {
   margin: 2em 0;
+  counter-reset: step-index;
 }
 
 .proof-row {
@@ -19,11 +30,8 @@
   font-family: KaTeX_Main;
 
   &:before {
-    content: '(';
-  }
-
-  &:after {
-    content: ')';
+    counter-increment: step-index;
+    content: '(' counter(step-index, decimal) ')';
   }
 }
 
@@ -34,10 +42,43 @@
 .proof-row-status {
   flex: 0 0 4em;
   text-align: center;
-}
 
-.proof-row-status.status-error:before {
-  content: '?';
-  font-size: 2em;
-  color: #b58900;
+  &.status-error:before {
+    content: '?';
+    font-size: 2em;
+    color: #b58900;
+    text-shadow: 1px 1px 1px #000;
+  }
+
+  &.status-exclaim:before {
+    content: '!';
+    font-size: 2em;
+    color: red;
+    text-shadow: 1px 1px 1px #000;
+  }
+
+  &.status-lock {
+    &:before {
+      content: '';
+      display: inline-block;
+      position: absolute;
+      background: #ccc;
+      width: 1.1em;
+      border-radius: .1em;
+      height: .8em;
+      margin-top: .7em;
+      box-shadow: 0 0 2px #000;
+    }
+
+    &:after {
+      content: '';
+      display: inline-block;
+      box-sizing: border-box;
+      width: .7em;
+      height: 1em;
+      margin: .2em;
+      border: .2em solid #ccc;
+      border-radius: 1em;
+    }
+  }
 }

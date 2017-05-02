@@ -12,7 +12,7 @@ final createProofPage = new Page(
     template: (s) {
       return createResourceTemplate(s, 'proof', inputs: (data) {
         return [
-          div('#proof-editor'),
+          div('#proof-editor.proof-editor'),
           input('#data', type: 'hidden', name: 'data')
         ];
       }, bodyTags: [
@@ -45,7 +45,8 @@ final listProofsPage = new Page(template: (s) {
               button('.btn.btn-outline-secondary', 'To rule', type: 'submit'),
               input(type: 'hidden', name: 'proof', value: '${proof.id}')
             ]),
-        a('.btn.btn-outline-secondary', 'Extend', href: '#')
+        a('.btn.btn-outline-secondary', 'Extend',
+            href: '/proof/create?initialstep=${proof.lastStep.id}')
       ]))
     ];
   }, bodyTags: [

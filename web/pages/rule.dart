@@ -86,7 +86,8 @@ final listRulesPage = new Page(template: (s) {
       td(div('.btn-group.btn-group-sm', role: 'group', c: [
         a('.btn.btn.btn-outline-secondary', 'Delete',
             href: '${rule.id}/delete'),
-        a('.btn.btn.btn-outline-secondary', 'Derive rule', href: '#')
+        a('.btn.btn.btn-outline-secondary', 'Derive rule',
+            href: '/proof/create?initialrule=${rule.id}')
       ]))
     ];
   }, bodyTags: [

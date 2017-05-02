@@ -155,6 +155,11 @@ class EqDB {
               .toList(),
           [language]);
 
+  @ApiMethod(path: 'rule/{id}/read', method: 'GET')
+  Future<RuleResource> readRule(int id) =>
+      _runRequestSession<RuleResource>((s) async => new RuleResource()
+        ..loadRow((await api.listRules(s, [id])).single, s.data));
+
   @ApiMethod(path: 'rule/{id}/delete', method: 'GET')
   Future<RuleResource> deleteRule(int id) =>
       _runRequestSession<RuleResource>((s) async =>
@@ -185,6 +190,11 @@ class EqDB {
           (await api.listProofSteps(s, id))
               .map((r) => new StepResource()..loadRow(r, s.data))
               .toList());
+
+  @ApiMethod(path: 'step/{id}/read', method: 'GET')
+  Future<StepResource> readStep(int id) =>
+      _runRequestSession<StepResource>((s) async =>
+          new StepResource()..loadRow(await api.readStep(s, id), s.data));
 }
 
 /// Utility to reuse method calling boilerplate.

@@ -26,8 +26,8 @@ dev_dependencies:
   sass:         ^0.4.2+7
   browser:      ^0.10.0+2
   katex_js:     ^0.1.0+1
-  editex:       ^0.1.5
-  eqdb_client:  ^0.0.12
+  editex:       ^0.1.7
+  eqdb_client:  ^0.0.13
   shelf_static: ^0.2.4
 
 transformers:

@@ -27,6 +27,7 @@ part 'src/operator.dart';
 part 'src/expression.dart';
 part 'src/rule.dart';
 part 'src/expression_difference.dart';
+part 'src/step.dart';
 part 'src/proof_create.dart';
 part 'src/proof_read.dart';
 

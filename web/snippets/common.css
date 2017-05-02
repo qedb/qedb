@@ -13,3 +13,11 @@
   border-color: transparent;
   box-shadow: 0 0 0 2px #2aa198;
 }
+
+.btn + .btn {
+  margin-left: 1em;
+}
+
+code {
+  color: #000;
+}

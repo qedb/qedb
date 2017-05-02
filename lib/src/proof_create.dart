@@ -5,11 +5,15 @@
 part of eqdb;
 
 class ProofData {
+  int initialStepId;
+  int initialRuleId;
   List<DifferenceBranch> steps;
 }
 
 enum StepType {
   setExpression,
+  copyRule,
+  copyProof,
   rearrange,
   ruleNormal,
   ruleInvert,
@@ -30,7 +34,9 @@ class _StepData {
 
   String get typeString => {
         StepType.setExpression: 'set',
-        StepType.rearrange: 'rearrange',
+        StepType.copyRule: 'copy_rule',
+        StepType.rearrange: 'copy_proof',
+        StepType.copyProof: 'rearrange',
         StepType.ruleNormal: 'rule_normal',
         StepType.ruleInvert: 'rule_invert',
         StepType.ruleMirror: 'rule_mirror',
