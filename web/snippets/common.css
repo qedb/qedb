@@ -21,3 +21,7 @@
 code {
   color: #000;
 }
+
+th, td {
+  border-color: rgba(0, 0, 0, .2) !important;
+}
