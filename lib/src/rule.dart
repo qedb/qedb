@@ -138,9 +138,18 @@ Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
     throw new UnprocessableEntityError('rule is directly resolvable');
   }
 
+  // Retrieve computable functions.
+  final computable = await _loadComputableFunctions(s);
+  final compute =
+      (int id, List<num> args) => _exprCompute(id, args, computable);
+
+  // Evaluate expressions.
+  final leftEval = leftExpr.evaluate(compute);
+  final rightEval = rightExpr.evaluate(compute);
+
   // Insert expressions.
-  final leftRow = await _createExpression(s, leftExpr);
-  final rightRow = await _createExpression(s, rightExpr);
+  final leftRow = await _createExpression(s, leftEval);
+  final rightRow = await _createExpression(s, rightEval);
 
   return s.insert(
       db.rule,
@@ -150,8 +159,8 @@ Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
         'is_definition': isDefinition,
         'left_expression_id': leftRow.id,
         'right_expression_id': rightRow.id,
-        'left_array_data': ARRAY(leftExpr.toArray(), 'integer'),
-        'right_array_data': ARRAY(rightExpr.toArray(), 'integer')
+        'left_array_data': ARRAY(leftEval.toArray(), 'integer'),
+        'right_array_data': ARRAY(rightEval.toArray(), 'integer')
       }));
 }
 

@@ -6,5 +6,8 @@ var spans = document.getElementsByClassName('latex')
 for (var i = 0; i < spans.length; i++) {
   var span = spans[i]
   var latex = span.innerText
+  latex = latex.replace(/(\$(?:(\d+)|\(([^\d]?)(\d+)([^\d]?)\)))/g, function (match, g1) {
+    return '\\mathit{\\' + g1 + '}'
+  })
   katex.render(latex, span, {displayMode: true})
 }

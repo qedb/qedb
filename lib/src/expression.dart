@@ -171,5 +171,9 @@ Future<String> _renderExpressionLaTeX(
   }
 
   // Print expression.
-  return printer.render(expr, getLbl, ops);
+  final rendered = printer.render(expr, getLbl, ops);
+
+  // Replace - of negative numbers with \text{-}.
+  return rendered.replaceAllMapped(
+      new RegExp('-([0-9])'), (match) => '\\text{-}${match.group(1)}');
 }

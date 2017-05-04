@@ -91,7 +91,6 @@ final updateFunctionPage = new Page(
       final map = new Map<String, dynamic>();
       if (data.containsKey('subject')) {
         map['subject'] = {'id': int.parse(data['subject'])};
-        data.remove('subject');
       }
       if (data.containsKey('keyword')) {
         map['keyword'] = data['keyword'];
@@ -123,7 +122,7 @@ final listFunctionsPage = new Page(template: (s) {
       td(descriptorHyperlink(() => function.descriptor)),
       td(safe(() => function.keyword.toString(), span('.none'))),
       td(safe(() => function.keywordType.toString(), span('.none'))),
-      td(safe(() => code(function.latexTemplate), span('.none'))),
+      td(safe(() => span('.latex', function.latexTemplate), span('.none'))),
       td(function.generic ? 'yes' : 'no'),
       td([
         a('.btn.btn-outline-secondary.btn-sm', 'Update',
@@ -135,6 +134,7 @@ final listFunctionsPage = new Page(template: (s) {
         '.katex-display { margin: 0 !important; text-align: left !important; }'
         'tr { line-height: 3em; }')
   ], bodyTags: [
-    katexSource(s)
+    katexSource(s),
+    script(s.snippets['render-latex.js'])
   ]);
 });
