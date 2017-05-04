@@ -25,23 +25,26 @@ enum StepType {
 /// The [DifferenceBranch] is first flattened into this class.
 class _StepData {
   StepType type;
-  int position;
+  int position = 0;
+  db.StepRow row;
+
   Expr subExprRight;
   Expr expression;
+
   List<int> rearrange;
   int ruleId;
   Rule rule;
 
-  String get typeString => {
-        StepType.setExpression: 'set',
-        StepType.copyRule: 'copy_rule',
-        StepType.rearrange: 'copy_proof',
-        StepType.copyProof: 'rearrange',
-        StepType.ruleNormal: 'rule_normal',
-        StepType.ruleInvert: 'rule_invert',
-        StepType.ruleMirror: 'rule_mirror',
-        StepType.ruleRevert: 'rule_revert'
-      }[type];
+  static const typeValues = const {
+    StepType.setExpression: 'set',
+    StepType.copyRule: 'copy_rule',
+    StepType.copyProof: 'copy_proof',
+    StepType.rearrange: 'rearrange',
+    StepType.ruleNormal: 'rule_normal',
+    StepType.ruleInvert: 'rule_invert',
+    StepType.ruleMirror: 'rule_mirror',
+    StepType.ruleRevert: 'rule_revert'
+  };
 }
 
 Future<db.ProofRow> createProof(Session s, ProofData body) async {
@@ -51,10 +54,19 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
 
   /// Create intermediary data list.
   final steps = new List<_StepData>();
-  steps.add(new _StepData()
-    ..position = 0
-    ..type = StepType.setExpression
-    ..expression = new Expr.fromBase64(body.steps.first.leftExpression));
+
+  if (body.initialStepId != null) {
+    steps.add(await _getStepData(s, body.initialStepId));
+  } else if (body.initialRuleId != null) {
+    steps.add(new _StepData()
+      ..type = StepType.copyRule
+      ..ruleId = body.initialRuleId
+      ..expression = await _getRuleAsExpression(s, body.initialRuleId));
+  } else {
+    steps.add(new _StepData()
+      ..type = StepType.setExpression
+      ..expression = new Expr.fromBase64(body.steps.first.leftExpression));
+  }
 
   /// Flatten list of difference branches into a step list.
   for (final branch in body.steps) {
@@ -70,28 +82,12 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     }
   }
 
-  // Retrieve all rules at once.
-  final ruleIds = steps.where((st) => st.ruleId != null).map((st) => st.ruleId);
-  final rules = await s.selectByIds(db.rule, ruleIds);
-
-  // Retrieve all rule expressions at once.
-  final expressionIds = new List<int>();
-  rules.forEach((rule) {
-    expressionIds.add(rule.leftExpressionId);
-    expressionIds.add(rule.rightExpressionId);
-  });
-  final expressions = await listExpressions(s, expressionIds);
-
-  // Build expression map.
-  final expressionMap = new Map<int, Expr>.fromIterable(expressions,
-      key: (expr) => expr.id, value: (expr) => new Expr.fromBase64(expr.data));
-
-  // Add parsed rules to steps.
-  steps.where((st) => st.ruleId != null).forEach((step) async {
-    final rule = await s.selectById(db.rule, step.ruleId);
-    step.rule = new Rule(expressionMap[rule.leftExpressionId],
-        expressionMap[rule.rightExpressionId]);
-  });
+  // Retrieve all rules.
+  for (final step in steps) {
+    if (step.ruleId != null) {
+      step.rule = await _getEqLibRule(s, step.ruleId);
+    }
+  }
 
   // Retrieve rearrangeable functions.
   final rearrangeableIds =
@@ -106,26 +102,34 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   Expr expr;
   final processedSteps = new List<_StepData>();
   for (final step in steps) {
-    // Apply step to [expr].
-    // As a convention we evaluate the expression after each step.
-    final nextExpr = _computeProofStep(expr, step, rearrangeableIds, compute)
-        .evaluate(compute);
-
-    // If there is no difference with the previous expression, remove this step.
-    if (nextExpr == expr) {
-      continue;
+    // If no step type is set (existing step) or this is a copy_rule step. The
+    // expression is already computed.
+    if (step.type == null || step.type == StepType.copyRule) {
+      expr = step.expression.evaluate(compute).clone();
     } else {
-      expr = nextExpr;
-    }
+      // Apply step to [expr].
+      // As a convention we evaluate the expression after each step.
+      final nextExpr =
+          (await _computeProofStep(s, expr, step, rearrangeableIds, compute))
+              .evaluate(compute);
 
-    if (step.expression != null && step.expression.evaluate(compute) != expr) {
-      // If an expression is already set for this step, it should be the same
-      // after evaluation.
-      throw new UnprocessableEntityError('proof reconstruction failed');
-    }
+      // If there is no difference with the previous expression, remove this step.
+      if (nextExpr == expr) {
+        continue;
+      } else {
+        expr = nextExpr;
+      }
 
-    // Set/override the expression.
-    step.expression = expr.clone();
+      if (step.expression != null &&
+          step.expression.evaluate(compute) != expr) {
+        // If an expression is already set for this step, it should be the same
+        // after evaluation.
+        throw new UnprocessableEntityError('proof reconstruction failed');
+      }
+
+      // Set/override the expression.
+      step.expression = expr.clone();
+    }
 
     // Add to processed steps.
     processedSteps.add(step);
@@ -134,13 +138,19 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   // Insert all steps into database.
   final rows = new List<db.StepRow>();
   for (final step in processedSteps) {
+    // Skip if this is an existing step.
+    if (step.row != null) {
+      rows.add(step.row);
+      continue;
+    }
+
     final expressionRow = await _createExpression(s, step.expression);
 
     // Create map with insert values.
     final values = {
       'expression_id': expressionRow.id,
       'position': step.position,
-      'step_type': step.typeString
+      'step_type': _StepData.typeValues[step.type]
     };
     if (rows.isNotEmpty) {
       values['previous_id'] = rows.last.id;
@@ -166,12 +176,15 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
 /// cases the computation is backwards. This means the substitution that is
 /// applied to [previous] is computed in part based on the resulting expression
 /// (fetched from [DifferenceBranch.rightExpression]).
-Expr _computeProofStep(Expr previous, _StepData step,
-    List<int> rearrangeableIds, ExprCompute compute) {
+Future<Expr> _computeProofStep(Session s, Expr previous, _StepData step,
+    List<int> rearrangeableIds, ExprCompute compute) async {
   assert(step.type != null);
   switch (step.type) {
     case StepType.setExpression:
       return step.expression;
+
+    case StepType.copyProof:
+      throw new UnimplementedError('copy_proof is not implemented');
 
     case StepType.rearrange:
       return previous.rearrangeAt(
@@ -200,7 +213,7 @@ Expr _computeProofStep(Expr previous, _StepData step,
           step.position);
 
     default:
-      throw new ArgumentError('unknown step type');
+      throw new UnimplementedError('unexpected enum value');
   }
 }
 
@@ -248,4 +261,25 @@ List<_StepData> _flattenDifferenceBranch(DifferenceBranch branch) {
   } else {
     return [];
   }
+}
+
+/// Retrieve step with given [id] and return data.
+Future<_StepData> _getStepData(Session s, int id) async {
+  final step = new _StepData();
+  step.row = await s.selectById(db.step, id);
+  final exprRow = await s.selectById(db.expression, step.row.expressionId);
+  step.expression = new Expr.fromBase64(exprRow.data);
+  return step;
+}
+
+/// Expand rule with [id] into an equation expression.
+Future<Expr> _getRuleAsExpression(Session s, int id) async {
+  final eqOperator =
+      await s.selectOne(db.operator, WHERE({'character': IS('=')}));
+  final rule = await s.selectById(db.rule, id);
+  final map = await getExpressionMap(
+      s, [rule.leftExpressionId, rule.rightExpressionId]);
+
+  return new FunctionExpr(eqOperator.functionId, false,
+      [map[rule.leftExpressionId], map[rule.rightExpressionId]]);
 }

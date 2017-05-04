@@ -109,11 +109,10 @@ Future<List<db.ExpressionRow>> listExpressions(
 }
 
 /// Run [listExpressions] and return as ID->row map.
-Future<Map<int, db.ExpressionRow>> getExpressionMap(
-    Session s, Iterable<int> ids) async {
+Future<Map<int, Expr>> getExpressionMap(Session s, Iterable<int> ids) async {
   final expressions = await listExpressions(s, ids);
-  return new Map<int, db.ExpressionRow>.fromIterable(expressions,
-      key: (expr) => expr.id, value: (expr) => expr);
+  return new Map<int, Expr>.fromIterable(expressions,
+      key: (expr) => expr.id, value: (expr) => new Expr.fromBase64(expr.data));
 }
 
 Future<OperatorConfig> _loadOperatorConfig(Session s) async {

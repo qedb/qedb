@@ -91,10 +91,7 @@ Future<db.RuleRow> createRuleFromSteps(
     final lastId = steps.last.expressionId;
     final map = await getExpressionMap(s, [firstId, lastId]);
 
-    final leftExpr = new Expr.fromBase64(map[firstId].data);
-    final rightExpr = new Expr.fromBase64(map[lastId].data);
-
-    return _createRule(s, leftExpr, rightExpr, proofId: proofId);
+    return _createRule(s, map[firstId], map[lastId], proofId: proofId);
   }
 }
 
@@ -116,12 +113,12 @@ Future<db.RuleRow> createRuleFromStep(Session s, int stepId) async {
       // Retrieve left and right expression.
       assert(expr.nodeArguments.length == 2);
       final map = await getExpressionMap(s, expr.nodeArguments);
-      final leftExpr = new Expr.fromBase64(map[expr.nodeArguments[0]].data);
-      final rightExpr = new Expr.fromBase64(map[expr.nodeArguments[1]].data);
-      return _createRule(s, leftExpr, rightExpr, stepId: step.id);
+      return _createRule(
+          s, map[expr.nodeArguments[0]], map[expr.nodeArguments[1]],
+          stepId: step.id);
     } else {
       throw new UnprocessableEntityError(
-          "inital parent of step is not a 'copy_rule' or 'copy_proof' step");
+          "origin of step does not have type 'copy_rule' or 'copy_proof'");
     }
   } else {
     throw new UnprocessableEntityError('step expression is not an equation');
@@ -156,6 +153,14 @@ Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
         'left_array_data': ARRAY(leftExpr.toArray(), 'integer'),
         'right_array_data': ARRAY(rightExpr.toArray(), 'integer')
       }));
+}
+
+/// Retrieve rule as [Rule] object from eqlib.
+Future<Rule> _getEqLibRule(Session s, int id) async {
+  final rule = await s.selectById(db.rule, id);
+  final map = await getExpressionMap(
+      s, [rule.leftExpressionId, rule.rightExpressionId]);
+  return new Rule(map[rule.leftExpressionId], map[rule.rightExpressionId]);
 }
 
 Future<List<db.RuleRow>> listRules(Session s, [Iterable<int> ids]) async {

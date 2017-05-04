@@ -60,7 +60,7 @@ final createRulePage = new Page(template: (s) {
     };
   } else if (notEmpty(data['step'])) {
     return {
-      'step': {'id': int.parse(data['step'])}
+      'step': {'id': int.parse(data['step'], radix: 36)}
     };
   } else {
     return {};
