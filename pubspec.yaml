@@ -31,4 +31,5 @@ dev_dependencies:
   shelf_static: ^0.2.4
 
 transformers:
-- sass
+- sass:
+    style: compact

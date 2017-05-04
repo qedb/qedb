@@ -5,7 +5,6 @@ node_modules
 npm-debug.log
 dev-config.yaml
 tool/docker/eqdb-postgres/*.sql
-web/views/compiled.dart
 cover_db
 coverage.json.lcov
 

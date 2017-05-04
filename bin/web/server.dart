@@ -35,8 +35,8 @@ Future<Null> main() async {
 
   // Create router.
   final router = route.router();
-  await setupRouter(
-      conf.string('API_BASE', 'http://localhost:8080/eqdb/v0/'), router);
+  await setupRouter(conf.string('API_BASE', 'http://localhost:8080/eqdb/v0/'),
+      conf.string('STATIC_BASE', 'build/web/'), router);
 
   // Create shelf handler.
   final handler = const shelf.Pipeline()

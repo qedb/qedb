@@ -16,13 +16,10 @@ final logoSvgContent = [
 /// Shorthand
 String stylesheet(String href) => link(rel: 'stylesheet', href: href);
 
-List editexStyles(PageSessionData s) => [
-      style(s.snippets['editex.css']),
-      stylesheet(s.settings['editex.css.href'])
+List katexSource(PageSessionData s) => [
+      stylesheet('/external/katex.min.css'),
+      script(src: '/external/katex.min.js')
     ];
-
-List katexSource(PageSessionData s) =>
-    [stylesheet('/static/katex.min.css'), script(src: '/static/katex.min.js')];
 
 /// Bootstrap .form-group
 String formGroup(String labelText, String id, List widget) {
@@ -85,8 +82,8 @@ List defaultHead(PageSessionData s) => [
       meta(
           name: 'viewport',
           content: 'width=device-width,initial-scale=1,shrink-to-fit=no'),
-      link(rel: 'stylesheet', href: '/static/bootstrap.min.css'),
-      style(s.snippets['common.css'])
+      link(rel: 'stylesheet', href: '/external/bootstrap.min.css'),
+      stylesheet('/snippets/common.css')
     ];
 
 /// Path breadcrumb.

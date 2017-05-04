@@ -18,8 +18,6 @@ class Page {
 
 /// Page session data
 class PageSessionData {
-  final Map<String, String> settings;
-  final Map<String, String> snippets;
   final Map<String, dynamic> additional;
   final Set<String> allRoutes;
 
@@ -29,8 +27,7 @@ class PageSessionData {
   List<String> path;
   Map<String, Object> pathParameters;
 
-  PageSessionData(this.settings, this.snippets, this.allRoutes)
-      : additional = new Map<String, dynamic>() {
+  PageSessionData(this.allRoutes) : additional = new Map<String, dynamic>() {
     request = new JsonObject();
     response = new JsonObject();
   }

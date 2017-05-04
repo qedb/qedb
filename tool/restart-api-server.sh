@@ -20,9 +20,9 @@ export EQDB_API_LOG='testlog.txt'
 if [ ! -z $1 ];
 then
   echo "Observe at :$1"
-  dart --checked --observe=$1 bin/server.dart > /dev/null 2>&1 &
+  dart --checked --observe=$1 bin/api/server.dart > /dev/null 2>&1 &
 else
-  dart --checked bin/server.dart > /dev/null 2>&1 &
+  dart --checked bin/api/server.dart > /dev/null 2>&1 &
 fi
 
 # Wait untill server has started.

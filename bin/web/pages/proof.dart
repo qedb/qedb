@@ -17,9 +17,9 @@ final createProofPage = new Page(
         ];
       }, bodyTags: [
         katexSource(s),
-        editexStyles(s),
-        stylesheet(s.settings['editorsrc'] + 'styles/main.css'),
-        script(src: s.settings['editorsrc'] + 'src/main.dart.js')
+        stylesheet('/snippets/editex.css'),
+        stylesheet('/snippets/proof_editor.css'),
+        script(src: '/src/proof_editor.dart.js')
       ]);
     },
     onPost: (data) => JSON.decode(data['data']));
@@ -50,9 +50,9 @@ final listProofsPage = new Page(template: (s) {
       ]))
     ];
   }, bodyTags: [
-    style(s.snippets['latex-table.css']),
+    stylesheet('/snippets/latex_table.css'),
     katexSource(s),
-    script(s.snippets['render-latex.js'])
+    script(src: '/snippets/render_latex.js')
   ]);
 });
 
@@ -68,8 +68,8 @@ final listProofStepsPage = new Page(template: (s) {
                   ]))
               .toList()),
       bodyTags: [
-        style(s.snippets['proof.css']),
+        stylesheet('/snippets/proof.css'),
         katexSource(s),
-        script(s.snippets['render-latex.js'])
+        script(src: '/snippets/render_latex.js')
       ]);
 });

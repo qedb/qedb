@@ -37,8 +37,8 @@ final createRulePage = new Page(template: (s) {
     ];
   }, bodyTags: [
     katexSource(s),
-    editexStyles(s),
-    script(src: s.settings['editorsrc'] + 'src/editex_form.dart.js')
+    stylesheet('/snippets/editex.css'),
+    script(src: '/src/editex_form.dart.js')
   ]);
 }, onPost: (data) {
   if (notEmpty(data['left']) && notEmpty(data['right'])) {
@@ -92,8 +92,8 @@ final listRulesPage = new Page(template: (s) {
     ];
   }, bodyTags: [
     katexSource(s),
-    style(s.snippets['latex-table.css']),
-    script(s.snippets['render-latex.js'])
+    stylesheet('/snippets/latex_table.css'),
+    script(src: '/snippets/render_latex.js')
   ]);
 });
 

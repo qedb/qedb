@@ -135,6 +135,6 @@ final listFunctionsPage = new Page(template: (s) {
         'tr { line-height: 3em; }')
   ], bodyTags: [
     katexSource(s),
-    script(s.snippets['render-latex.js'])
+    script(src: '/snippets/render_latex.js')
   ]);
 });

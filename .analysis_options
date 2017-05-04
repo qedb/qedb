@@ -1,7 +1,5 @@
 analyzer:
   strong-mode: true
-  exclude:
-  - web/views/compiled.dart
 linter:
   rules:
   # Error rules

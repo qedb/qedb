@@ -6,7 +6,6 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:yaml/yaml.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_route/shelf_route.dart';
 import 'package:shelf_static/shelf_static.dart';
@@ -44,20 +43,8 @@ Map<String, Page> pages = {
 };
 
 /// Entry point to create router.
-Future<Null> setupRouter(String apiBase, Router router) async {
-  // Read settings file.
-  final settings = loadYaml(await new File('web/settings.yaml').readAsString());
-
-  // Read all snippets.
-  final entities = await new Directory('web/snippets').list().toList();
-  final snippets = new Map<String, String>();
-  for (final entity in entities) {
-    final file = new File.fromUri(entity.uri);
-    if (await file.exists()) {
-      snippets[file.path.split('/').last] = await file.readAsString();
-    }
-  }
-
+Future<Null> setupRouter(
+    String apiBase, String staticBase, Router router) async {
   // Serve favicon.
   final faviconData = new File('web/favicon.ico').readAsBytesSync();
   router.get('/favicon.ico', (_) {
@@ -66,13 +53,17 @@ Future<Null> setupRouter(String apiBase, Router router) async {
   });
 
   // Serve static files.
-  router.add('/static/', ['GET'], createStaticHandler('web/static'),
-      exactMatch: false);
+  final staticEndpoints = ['external', 'snippets', 'src'];
+  for (final endpoint in staticEndpoints) {
+    router.add(
+        '/$endpoint/', ['GET'], createStaticHandler(staticBase + endpoint),
+        exactMatch: false);
+  }
 
   // Add handlers for all pages.
   pages.forEach((path, page) {
     router.add(path, ['GET', 'POST'], (Request request) async {
-      final data = new PageSessionData(settings, snippets, pages.keys.toSet());
+      final data = new PageSessionData(pages.keys.toSet());
       data.path = request.requestedUri.path.split('/');
       data.path.removeWhere((str) => str.isEmpty);
       data.pathParameters = getPathParameters(request);
