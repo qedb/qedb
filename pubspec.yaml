@@ -31,5 +31,7 @@ dev_dependencies:
   shelf_static: ^0.2.4
 
 transformers:
+- $dart2js:
+    commandLineOptions: [--enable-experimental-mirrors]
 - sass:
     style: compact

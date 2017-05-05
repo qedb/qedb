@@ -102,6 +102,12 @@ Future<Null> setupRouter(
           final response = await http
               .get('$apiBase${request.requestedUri.path.substring(1)}');
           data.response = jsonify(JSON.decode(response.body));
+
+          // If response contains an error, display it.
+          if (data.response is Map && data.response.containsKey('error')) {
+            return new Response.ok(errorPageTemplate(data),
+                headers: {'Content-Type': 'text/html'});
+          }
         }
 
         return new Response.ok(page.template(data),
