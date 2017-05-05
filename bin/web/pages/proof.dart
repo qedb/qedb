@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:json_object/json_object.dart';
+
 import '../htgen/htgen.dart';
 import '../page.dart';
 import 'templates.dart';
@@ -62,7 +64,7 @@ final listProofStepsPage = new Page(template: (s) {
           '.proof',
           s.response
               .map((step) => li([
-                    span('.latex', step.expression.latex),
+                    span('.latex', generateStepLaTeX(step)),
                     ' ',
                     span([code(step.id.toRadixString(36).padLeft(6, '0'))]),
                   ]))
@@ -73,3 +75,15 @@ final listProofStepsPage = new Page(template: (s) {
         script(src: '/snippets/render_latex.js')
       ]);
 });
+
+String generateStepLaTeX(JsonObject step) {
+  if (step.containsKey('rule')) {
+    final r = step.rule;
+    return '${step.expression.latex}\\quad'
+        '\\color{#666}{\\left['
+        '${r.leftExpression.latex}=${r.rightExpression.latex}'
+        '\\right]}';
+  } else {
+    return step.expression.latex;
+  }
+}

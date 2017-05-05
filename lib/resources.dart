@@ -246,7 +246,7 @@ class StepResource extends ResourceBase<db.StepRow> {
 
   void loadFields(row, data) {
     expression = new ExpressionResource()..load(row.expressionId, data);
-    rule = new RuleResource()..load(row.ruleId, data);
+    rule = getResource(row.ruleId, data, new RuleResource());
     position = row.position;
     type = row.type;
     rearrange = row.rearrange;
