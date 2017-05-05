@@ -79,9 +79,13 @@ final listProofStepsPage = new Page(template: (s) {
 String generateStepLaTeX(JsonObject step) {
   if (step.containsKey('rule')) {
     final r = step.rule;
+    var sides = [r.leftExpression.latex, r.rightExpression.latex];
+    if (['rule_invert', 'rule_revert'].contains(step.type)) {
+      sides = sides.reversed.toList();
+    }
     return '${step.expression.latex}\\quad'
         '\\color{#666}{\\left['
-        '${r.leftExpression.latex}=${r.rightExpression.latex}'
+        '${sides.first}=${sides.last}'
         '\\right]}';
   } else {
     return step.expression.latex;
