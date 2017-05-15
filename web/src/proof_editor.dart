@@ -12,9 +12,10 @@ import 'package:eqlib/eqlib.dart';
 import 'package:editex/editex.dart';
 import 'package:eqdb_client/eqdb_client.dart';
 import 'package:eqdb_client/browser_client.dart';
+
+import 'package:htgen/dynamic.dart' as ht;
 import 'package:katex_js/katex_js.dart' as katex;
 
-import 'utils.dart';
 import 'editex_interface.dart';
 
 part 'step_editor_base.dart';

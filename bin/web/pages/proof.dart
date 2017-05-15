@@ -5,8 +5,8 @@
 import 'dart:convert';
 
 import 'package:json_object/json_object.dart';
+import 'package:htgen/static.dart';
 
-import '../htgen/htgen.dart';
 import '../page.dart';
 import 'templates.dart';
 

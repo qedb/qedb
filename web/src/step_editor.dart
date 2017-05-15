@@ -11,10 +11,10 @@ class StepEditor extends StepEditorBase {
 
   factory StepEditor(EdiTeXInterface interface, EqdbApi db, Element root,
       StepEditorBase prev) {
-    final container = div('.proof-row-editor.editex.editex-align-left');
-    final status = div('.proof-row-status');
-    final row = root.append(
-        div('.proof-row', c: [div('.proof-row-number'), container, status]));
+    final container = ht.div('.proof-row-editor.editex.editex-align-left');
+    final status = ht.div('.proof-row-status');
+    final row = root.append(ht.div('.proof-row',
+        c: [ht.div('.proof-row-number'), container, status]));
 
     // Create editor.
     final editor = new EdiTeX(container, interface);
@@ -111,10 +111,10 @@ class StaticStepEditor extends StepEditorBase {
       Expr expression,
       String latex,
       ProofDataModifier modifier) {
-    final container = div('.proof-row-editor.editex.editex-align-left');
-    final status = div('.proof-row-status');
-    final row = root.append(
-        div('.proof-row', c: [div('.proof-row-number'), container, status]));
+    final container = ht.div('.proof-row-editor.editex.editex-align-left');
+    final status = ht.div('.proof-row-status');
+    final row = root.append(ht.div('.proof-row',
+        c: [ht.div('.proof-row-number'), container, status]));
 
     // Render latex.
     final target = new DivElement();

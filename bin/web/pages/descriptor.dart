@@ -2,9 +2,9 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
+import 'package:htgen/static.dart';
 import 'package:json_object/json_object.dart';
 
-import '../htgen/htgen.dart';
 import '../page.dart';
 import 'templates.dart';
 

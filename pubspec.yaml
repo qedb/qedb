@@ -23,6 +23,7 @@ dev_dependencies:
   csv:          ^3.1.1
 
   # UI
+  htgen:        ^0.0.1
   sass:         ^0.4.2+7
   browser:      ^0.10.0+2
   katex_js:     ^0.1.0+1
