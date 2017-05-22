@@ -21,3 +21,4 @@ package. This can also be used as direct database client.
 + Use subject overlap to allow keyword reuse.
 + Add (subject specific) keywords for quick insertion of specific expressions.
 + Make parenthesis type in LaTeX type configurable (eqlib improvement).
++ Add integer only generics (no arguments) and implement in pattern matching.
