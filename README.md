@@ -8,17 +8,9 @@ package. This can also be used as direct database client.
 
 ## Suggested improvements for next iteration
 
-+ Enable explicit boundaries in LaTeX templates. This is useful in the case of
-  the unary minus where the '-' often visually collides with other code. E.g.
-  consider `diff(a, -1)`. Its template could be `$-$0` where the '$' denotes a
-  boundary.
-+ Refactor LaTeX printing of negative integers. The easiers way is to built an
-  extension into eqlib that applies the negation template to negative integers.
-+ Enable usage of tabs to navigate to empty placeholders in EdiTeX.
++ Find way to use generics for integer-only rules.
 + Add API call that expands a proof into all possible rules (for fundamentals).
-+ Introduce subject properties that defines that two given subjects are
-  definitively non-overlapping.
-+ Use subject overlap to allow keyword reuse.
-+ Add (subject specific) keywords for quick insertion of specific expressions.
-+ Make parenthesis type in LaTeX type configurable (eqlib improvement).
-+ Add integer only generics (no arguments) and implement in pattern matching.
++ Add shotcut snippets with keyword for quick expression insertion.
++ Allow keyword reuse within different subjects, guess target function based
+  on context subject (determine based on involved functions). Add autocomplete
+  UI to EdiTeX to select alternative functions with the same keyword.

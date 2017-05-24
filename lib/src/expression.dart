@@ -149,31 +149,29 @@ Future<OperatorConfig> _loadOperatorConfig(Session s) async {
 /// Expression LaTeX rendering.
 /// Internal function. Allows reuse of codec data for more efficient function ID
 Future<String> _renderExpressionLaTeX(
-    Session s, Expr expr, OperatorConfig ops) async {
-  final printer = new LaTeXPrinter();
-
-  // Retrieve latex templates and populate printer dictionary.
-  var getLbl = (int id) => '\\#$id';
+    Session s, Expr expr, OperatorConfig operators) async {
+  // Get all function IDs in expression.
   final functionIds = expr.functionIds;
-  if (functionIds.isNotEmpty) {
-    final functions = await s.selectByIds(db.function, functionIds);
 
-    // Create new LaTeX printer and populate dictionary.
-    functions.forEach((row) {
-      if (row.latexTemplate != null) {
-        printer.dict[row.id] = row.latexTemplate;
-      }
-    });
+  // Ad-hoc fix: always add ID for negate operator. The LaTeX printer will wrap
+  // negative integers in a negate function for proper formatting. So this
+  // template must be available.
+  functionIds.add(operators.byChar['~'.codeUnitAt(0)].id);
 
-    // Also look for fallback labels in function keywords.
-    // A constraint ensures that either a template or a keyword is present.
-    getLbl = (int id) => functions.singleWhere((r) => r.id == id).keyword;
-  }
+  // Retrieve functions in expression.
+  final functions = await s.selectByIds(db.function, functionIds);
 
-  // Print expression.
-  final rendered = printer.render(expr, getLbl, ops);
+  // Label fallback function.
+  final getLabel = (int id) => functions.singleWhere((r) => r.id == id).keyword;
 
-  // Replace - of negative numbers with \text{-}.
-  return rendered.replaceAllMapped(
-      new RegExp('-([0-9])'), (match) => '\\text{-}${match.group(1)}');
+  // Create new LaTeX printer and populate dictionary.
+  final printer = new LaTeXPrinter(getLabel, operators);
+  functions.forEach((row) {
+    if (row.latexTemplate != null) {
+      printer.addTemplate(row.id, row.latexTemplate);
+    }
+  });
+
+  // Returned rendered expression.
+  return printer.render(expr);
 }

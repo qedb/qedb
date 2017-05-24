@@ -96,7 +96,7 @@ packages:
       name: editex
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.7"
+    version: "0.1.7+1"
   either:
     description:
       name: either
@@ -114,7 +114,7 @@ packages:
       name: eqlib
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.13.1"
+    version: "0.14.2"
   gcloud:
     description:
       name: gcloud

@@ -123,7 +123,10 @@ final listFunctionsPage = new Page(template: (s) {
       td(descriptorHyperlink(() => function.descriptor)),
       td(safe(() => function.keyword.toString(), span('.none'))),
       td(safe(() => function.keywordType.toString(), span('.none'))),
-      td(safe(() => span('.latex', function.latexTemplate), span('.none'))),
+      td(safe(
+          () => span('.latex', function.latexTemplate,
+              title: function.latexTemplate),
+          span('.none'))),
       td(function.generic ? 'yes' : 'no'),
       td([
         a('.btn.btn-outline-secondary.btn-sm', 'Update',

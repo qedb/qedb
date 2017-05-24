@@ -7,19 +7,24 @@ library eqdb.web.interface;
 import 'dart:async';
 
 import 'package:eqlib/eqlib.dart';
+import 'package:eqlib/latex.dart';
 import 'package:editex/editex.dart';
 import 'package:eqdb_client/eqdb_client.dart';
 
 /// Implements command resolvers for EdiTeX.
 class EqDBEdiTeXInterface implements EdiTeXInterface {
-  static const extraInstantCommands = const {
-    '(': const EdiTeXCommand('(', r'\left($0\right)', r'($0)'),
-    '[': const EdiTeXCommand('(', r'\left[$0\right]', r'($0)'),
-  };
+  final extraInstantCommands = new Map<String, EdiTeXCommand>();
 
   List<FunctionResource> functions;
   List<OperatorResource> operators;
   final operatorConfig = new OperatorConfig();
+
+  EqDBEdiTeXInterface() {
+    extraInstantCommands['('] = new EdiTeXCommand(
+        '(', parseLaTeXTemplate(r'\left($0\right)', operatorConfig), r'($0)');
+    extraInstantCommands['['] = new EdiTeXCommand(
+        '[', parseLaTeXTemplate(r'\left[$0\right]', operatorConfig), r'($0)');
+  }
 
   Future loadData(EqdbApi db) async {
     functions = await db.listFunctions();
@@ -93,23 +98,24 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
     final fns = functions.where((fn) => fn.keyword == command);
     if (fns.isNotEmpty) {
       final fn = fns.single;
-      var template = fn.latexTemplate;
+      var templateStr = fn.latexTemplate;
 
       // Generate fallback template.
-      if (template == null) {
-        template = fn.generic ? r'{}_\text{?}' : '';
+      if (templateStr == null) {
+        templateStr = fn.generic ? r'{}_\text{?}' : '';
 
         // Add keywords and arguments.
         if (fn.argumentCount == 0) {
-          template = '$template${fn.keyword}';
+          templateStr = '$templateStr${fn.keyword}';
         } else {
           final args =
               new List<String>.generate(fn.argumentCount, (i) => '\$$i');
-          template =
-              '$template\\text{${fn.keyword}}{\\left(${args.join(',\,')}\\right)}';
+          templateStr = '$templateStr\\text{${fn.keyword}}'
+              '{\\left(${args.join(',\,')}\\right)}';
         }
       }
 
+      final template = parseLaTeXTemplate(templateStr, operatorConfig);
       return new EdiTeXCommand(
           fn.keyword, template, _generateFunctionParseTemplate(fn));
     }
@@ -139,10 +145,11 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
       // operators have a maximum of two arguments, this means at most one
       // argument is present in the operator. If this is the case the parse
       // template will also contain one argument.
-      final template = op.editorTemplate;
+      final templateStr = op.editorTemplate;
       final parseTemplate =
-          template.contains(r'$0') ? '${op.character}(\$0)' : op.character;
+          templateStr.contains(r'$0') ? '${op.character}(\$0)' : op.character;
 
+      final template = parseLaTeXTemplate(templateStr, operatorConfig);
       return new EdiTeXCommand(op.character, template, parseTemplate);
     }
     return null;
