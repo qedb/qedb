@@ -13,19 +13,25 @@ import 'package:eqdb_client/eqdb_client.dart';
 
 /// Implements command resolvers for EdiTeX.
 class EqDBEdiTeXInterface implements EdiTeXInterface {
-  final extraInstantCommands = new Map<String, EdiTeXCommand>();
+  /// Additional templates for parentheses.
+  final instantAdditional = new Map<String, EdiTeXTemplate>();
+  final additionalList = new List<EdiTeXTemplate>();
 
   List<FunctionResource> functions;
   List<OperatorResource> operators;
   final operatorConfig = new OperatorConfig();
 
   EqDBEdiTeXInterface() {
-    extraInstantCommands['('] = new EdiTeXCommand(
-        '(', parseLaTeXTemplate(r'\left($0\right)', operatorConfig), r'($0)');
-    extraInstantCommands['['] = new EdiTeXCommand(
-        '[', parseLaTeXTemplate(r'\left[$0\right]', operatorConfig), r'($0)');
+    // Load additional templates.
+    instantAdditional['('] = new EdiTeXTemplate((0 << 2) | 4, '',
+        parseLaTeXTemplate(r'\left(${0}\right)', operatorConfig), r'($0)');
+    additionalList.add(instantAdditional['(']);
+    instantAdditional['['] = new EdiTeXTemplate((1 << 2) | 4, '',
+        parseLaTeXTemplate(r'\left[${0}\right]', operatorConfig), r'($0)');
+    additionalList.add(instantAdditional['[']);
   }
 
+  /// Load functions and operators from database.
   Future loadData(EqdbApi db) async {
     functions = await db.listFunctions();
     operators = await db.listOperators();
@@ -84,80 +90,103 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
     }
   }
 
-  String _generateFunctionParseTemplate(FunctionResource fn) {
-    final generic = fn.generic ? '?' : '';
-    if (fn.argumentCount > 0) {
-      final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
-      return '$generic#${fn.id.toRadixString(16)}#(${args.join(',')})';
-    } else {
-      return '$generic#${fn.id.toRadixString(16)}#';
+  @override
+  EdiTeXTemplate getTemplate(id) {
+    // First two bits are used to specify in which sub-collection we look:
+    // - 00: functions
+    // - 01: operators
+    // - 10: shortcuts
+    // - 11: custom instant templates
+
+    final subCollection = id & 3;
+    final index = id >> 2;
+    switch (subCollection) {
+      case 0:
+        return createFunctionTemplate(index);
+      case 1:
+        return createOperatorTemplate(index);
+      case 3:
+        return additionalList[index];
+      default:
+        return null;
     }
   }
 
-  EdiTeXCommand resolveCommand(command) {
-    final fns = functions.where((fn) => fn.keyword == command);
-    if (fns.isNotEmpty) {
-      final fn = fns.single;
-      var templateStr = fn.latexTemplate;
-
-      // Generate fallback template.
-      if (templateStr == null) {
-        templateStr = fn.generic ? r'{}_\text{?}' : '';
-
-        // Add keywords and arguments.
-        if (fn.argumentCount == 0) {
-          templateStr = '$templateStr${fn.keyword}';
-        } else {
-          final args =
-              new List<String>.generate(fn.argumentCount, (i) => '\$$i');
-          templateStr = '$templateStr\\text{${fn.keyword}}'
-              '{\\left(${args.join(',\,')}\\right)}';
-        }
-      }
-
-      final template = parseLaTeXTemplate(templateStr, operatorConfig);
-      return new EdiTeXCommand(
-          fn.keyword, template, _generateFunctionParseTemplate(fn));
+  @override
+  EdiTeXTemplate lookupCharacter(char) {
+    if (instantAdditional.containsKey(char)) {
+      return instantAdditional[char];
     }
+
+    final ops = operators.where((op) => op.character == char);
+    if (ops.isNotEmpty) {
+      final op = ops.single;
+      const specialOperators = const ['/'];
+      if (specialOperators.contains(op.character)) {
+        return null;
+      } else {
+        return createOperatorTemplate(op.id);
+      }
+    }
+
     return null;
+  }
+
+  EdiTeXTemplate createOperatorTemplate(int id) {
+    final op = operators.singleWhere((op) => op.id == id);
+
+    // Generate parse template.
+    // This is a dirty solution (happens to work with binary operators).
+    final templateStr = op.editorTemplate;
+    final parsableTemplate =
+        templateStr.contains(r'${0}') ? '${op.character}(\$0)' : op.character;
+
+    final template = parseLaTeXTemplate(templateStr, operatorConfig);
+    return new EdiTeXTemplate((op.id << 2) | 1, '', template, parsableTemplate);
+  }
+
+  @override
+  List<EdiTeXTemplate> lookupKeyword(keyword) {
+    final fns = functions.where((fn) => fn.keyword == keyword);
+    return fns.map((fn) => createFunctionTemplate(fn.id)).toList();
+  }
+
+  EdiTeXTemplate createFunctionTemplate(int id) {
+    final fn = functions.singleWhere((fn) => fn.id == id);
+    var templateStr = fn.latexTemplate;
+
+    // Generate fallback template.
+    if (templateStr == null) {
+      templateStr = fn.generic ? r'{}_\text{?}' : '';
+
+      // Add keywords and arguments.
+      if (fn.argumentCount == 0) {
+        templateStr = '$templateStr${fn.keyword}';
+      } else {
+        final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
+        templateStr = '$templateStr\\text{${fn.keyword}}'
+            '{\\left(${args.join(',\,')}\\right)}';
+      }
+    }
+
+    final template = parseLaTeXTemplate(templateStr, operatorConfig);
+    final desc = fn.descriptor;
+    final label = desc != null ? desc.translations.first.content : '?';
+    return new EdiTeXTemplate(
+        fn.id << 2, label, template, _generateFunctionParseTemplate(fn));
   }
 
   bool hasCommand(command) {
     return functions.any((fn) => fn.keyword == command);
   }
+}
 
-  EdiTeXCommand resolveInstantCommand(command) {
-    if (extraInstantCommands.containsKey(command)) {
-      return extraInstantCommands[command];
-    }
-
-    final ops = operators.where((op) => op.character == command);
-    if (ops.isNotEmpty) {
-      final op = ops.single;
-      if (op.character == '/') {
-        // This operator has a special behavior.
-        return null;
-      }
-
-      // Generate parse template.
-      // The operator editor template can never contain arguments that come
-      // before the operator (that would have been typed already). Since our
-      // operators have a maximum of two arguments, this means at most one
-      // argument is present in the operator. If this is the case the parse
-      // template will also contain one argument.
-      final templateStr = op.editorTemplate;
-      final parseTemplate =
-          templateStr.contains(r'$0') ? '${op.character}(\$0)' : op.character;
-
-      final template = parseLaTeXTemplate(templateStr, operatorConfig);
-      return new EdiTeXCommand(op.character, template, parseTemplate);
-    }
-    return null;
-  }
-
-  bool hasInstantCommand(command) {
-    return command != '/' &&
-        (extraInstantCommands.containsKey(command) ||
-            operators.any((op) => op.character == command));
+String _generateFunctionParseTemplate(FunctionResource fn) {
+  final generic = fn.generic ? '?' : '';
+  if (fn.argumentCount > 0) {
+    final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
+    return '$generic#${fn.id.toRadixString(16)}#(${args.join(',')})';
+  } else {
+    return '$generic#${fn.id.toRadixString(16)}#';
   }
 }

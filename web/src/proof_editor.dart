@@ -14,7 +14,7 @@ import 'package:eqdb_client/eqdb_client.dart';
 import 'package:eqdb_client/browser_client.dart';
 
 import 'package:htgen/dynamic.dart' as ht;
-import 'package:katex_js/katex_js.dart' as katex;
+import 'package:editex/katex.dart' as katex;
 
 import 'editex_interface.dart';
 
@@ -22,8 +22,6 @@ part 'step_editor_base.dart';
 part 'step_editor.dart';
 
 Future main() async {
-  CursorList.selectionColor = '#2aa198';
-
   // Retrieve operators and functions.
   final db = new EqdbApi(new BrowserClient());
   final interface = new EqDBEdiTeXInterface();

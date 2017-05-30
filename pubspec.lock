@@ -96,7 +96,7 @@ packages:
       name: editex
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.7+1"
+    version: "0.2.0+2"
   either:
     description:
       name: either
@@ -193,12 +193,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.19+1"
-  katex_js:
-    description:
-      name: katex_js
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.1.0+1"
   logging:
     description:
       name: logging
@@ -300,7 +294,7 @@ packages:
       name: sass
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.4.2+7"
+    version: "1.0.0-alpha.9"
   shelf:
     description:
       name: shelf
@@ -385,6 +379,12 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.12.18+1"
+  transform_sass:
+    description:
+      name: transform_sass
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
   tuple:
     description:
       name: tuple
@@ -428,4 +428,4 @@ packages:
     source: hosted
     version: "2.1.12"
 sdks:
-  dart: ">=1.21.0-dev.2.0 <2.0.0"
+  dart: ">=1.22.0 <2.0.0"

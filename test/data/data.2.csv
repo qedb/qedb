@@ -4,7 +4,7 @@ ID,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Arr.,Pre.,A
 3,"Basic Algebra",Subtract,,,2,${.0}-${1(+).},FALSE,FALSE,2,ltr,-,infix,{}-{}
 4,"Basic Algebra",Multiply,,,2,${.0(+):}${:1(*).},FALSE,TRUE,3,ltr,*,infix,{}\cdot{}
 5,"Basic Algebra",Divide,frac,latex,2,"\frac{\,${0}\,}{\,${1}\,}",FALSE,FALSE,3,ltr,/,infix,{}\div{}
-6,"Basic Algebra",Power,,,2,${.0(*)}^{${1}},FALSE,FALSE,4,rtl,^,infix,^{$0}
+6,"Basic Algebra",Power,,,2,${.0(*)}^{${1}},FALSE,FALSE,4,rtl,^,infix,^{${0}}
 7,"Basic Algebra",Negate,,,1,$!-${0(^).},FALSE,FALSE,5,ltr,~,prefix,-
 8,Combinatorics,Factorial,,,1,${.0(~):}!,FALSE,FALSE,6,rtl,!,postfix,"!\,"
 9,"Basic Algebra",,a,symbol,0,,TRUE,FALSE,,,,,

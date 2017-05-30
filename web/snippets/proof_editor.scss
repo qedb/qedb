@@ -5,11 +5,11 @@
 .editex-placeholder {
   background: repeating-linear-gradient(45deg,
   transparent 0px, transparent 1px, #666 2px,
-  transparent 3px, transparent 4px);
+  transparent 3px, transparent 4px) !important;
 }
 
 .editex-cursor {
-  background: white;
+  background: white !important;
 }
 
 .proof-editor {

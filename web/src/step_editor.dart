@@ -26,7 +26,7 @@ class StepEditor extends StepEditorBase {
   StepEditor._(EdiTeXInterface interface, EqdbApi db, Element root, Element r,
       Element c, Element s, this.editor, StepEditorBase prev)
       : super(interface, db, root, r, c, s, prev) {
-    editor.container.onKeyDown.listen((e) {
+    editor.onIdleKeyDown.listen((e) {
       if (e.keyCode == KeyCode.UP) {
         if (prev != null) {
           prev.focus();
@@ -39,7 +39,7 @@ class StepEditor extends StepEditorBase {
         next.focus();
         if (next.isEmpty) {
           next.load(editor.getData());
-          next.setCursor(editor.cursors.single);
+          next.setCursor(editor.cursorIndex);
         }
       } else {
         return;
@@ -74,7 +74,7 @@ class StepEditor extends StepEditorBase {
 
   /// Note that the state is already updated by the base class.
   ExpressionData getExpression() {
-    final content = editor.getParsableContent();
+    final content = editor.getParsable();
     if (content.trim().isEmpty) {
       return new ExpressionData(null, valid: true, empty: true);
     } else {

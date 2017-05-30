@@ -1383,7 +1383,7 @@ COPY operator (id, function_id, precedence_level, associativity, operator_type, 
 3	3	2	ltr	infix	-	{}-{}
 4	4	3	ltr	infix	*	{}\\cdot{}
 5	5	3	ltr	infix	/	{}\\div{}
-6	6	4	rtl	infix	^	^{$0}
+6	6	4	rtl	infix	^	^{${0}}
 7	7	5	ltr	prefix	~	-
 8	8	6	rtl	postfix	!	!\\,
 \.
