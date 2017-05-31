@@ -11,6 +11,9 @@ import 'package:eqlib/latex.dart';
 import 'package:editex/editex.dart';
 import 'package:eqdb_client/eqdb_client.dart';
 
+import 'package:editex/katex.dart' as katex;
+import 'package:editex/src/utils.dart' as editex_utils;
+
 /// Implements command resolvers for EdiTeX.
 class EqDBEdiTeXInterface implements EdiTeXInterface {
   /// Additional templates for parentheses.
@@ -142,15 +145,26 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
           templateStr = '$templateStr${fn.keyword}';
         } else {
           final args =
-              new List<String>.generate(fn.argumentCount, (i) => '\$$i');
+              new List<String>.generate(fn.argumentCount, (i) => '\${$i}');
           templateStr = '$templateStr\\text{${fn.keyword}}'
               '{\\left(${args.join(',\,')}\\right)}';
         }
       }
 
       final template = parseLaTeXTemplate(templateStr, operatorConfig);
-      final desc = fn.descriptor;
-      final label = desc != null ? desc.translations.first.content : '?';
+
+      // Get a label. According to the constraints we can expect at least a
+      // template or a descriptor.
+      var label = '?';
+      if (fn.descriptor != null) {
+        label = fn.descriptor.translations.first.content;
+      } else {
+        final args = new List<String>.generate(
+            template.parameterCount, (i) => '{}_\\textsf{\\\$}$i');
+        final latex = editex_utils.renderLaTeXTemplate(template, args);
+        label = katex.renderToStringNoMathML(latex);
+      }
+
       return new EdiTeXTemplate(
           fn.id << 2, label, template, _generateFunctionParseTemplate(fn));
     } else {

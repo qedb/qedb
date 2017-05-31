@@ -96,7 +96,7 @@ packages:
       name: editex
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.0+2"
+    version: "0.2.1"
   either:
     description:
       name: either

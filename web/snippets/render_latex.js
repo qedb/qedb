@@ -8,7 +8,7 @@ for (var i = 0; i < spans.length; i++) {
   var latex = span.innerText
   latex = latex.replace(/\$!/g, '')
   latex = latex.replace(/\${[\.:]?([0-9]+)(?:\(.\))?[\.:]?}/g, function (_, g1) {
-    return '\\mathsf{\\$' + g1 + '}'
+    return '{}_\\textsf{\\$}' + g1
   })
   katex.render(latex, span, {displayMode: true})
 }

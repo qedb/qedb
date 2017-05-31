@@ -13,3 +13,11 @@
 .editex:focus {
   outline: none;
 }
+
+.editex-autocomplete-popup {
+  z-index: 9999;
+}
+
+.editex-autocomplete-item {
+  color: #111;
+}
