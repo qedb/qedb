@@ -17,11 +17,14 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   final instantAdditional = new Map<String, EdiTeXTemplate>();
   final additionalList = new List<EdiTeXTemplate>();
 
-  List<FunctionResource> functions;
-  List<OperatorResource> operators;
-  final operatorConfig = new OperatorConfig();
+  final List<FunctionResource> functions;
+  final List<OperatorResource> operators;
+  final Map<int, FunctionResource> functionMap;
+  final Map<int, OperatorResource> operatorMap;
+  final OperatorConfig operatorConfig;
 
-  EqDBEdiTeXInterface() {
+  EqDBEdiTeXInterface(this.functions, this.operators, this.functionMap,
+      this.operatorMap, this.operatorConfig) {
     // Load additional templates.
     instantAdditional['('] = new EdiTeXTemplate((0 << 2) | 4, '',
         parseLaTeXTemplate(r'\left(${0}\right)', operatorConfig), r'($0)');
@@ -29,37 +32,6 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
     instantAdditional['['] = new EdiTeXTemplate((1 << 2) | 4, '',
         parseLaTeXTemplate(r'\left[${0}\right]', operatorConfig), r'($0)');
     additionalList.add(instantAdditional['[']);
-  }
-
-  /// Load functions and operators from database.
-  Future loadData(EqdbApi db) async {
-    functions = await db.listFunctions();
-    operators = await db.listOperators();
-
-    // Populate operator config.
-    for (final op in operators) {
-      operatorConfig.add(new Operator(
-          op.id,
-          op.precedenceLevel,
-          op.associativity == 'ltr' ? Associativity.ltr : Associativity.rtl,
-          op.character.runes.first,
-          op.operatorType == 'infix'
-              ? OperatorType.infix
-              : op.operatorType == 'prefix'
-                  ? OperatorType.prefix
-                  : OperatorType.postfix));
-    }
-
-    // Use the same associativity and precedence as the multiplication operator.
-    // Since the input is already structured (editex), there is no need for
-    // special behavior. In fact this behavior causes problems (e.g. a^b c^d).
-    final multiplyOp = operatorConfig.byId[operatorConfig.id('*')];
-    operatorConfig.add(new Operator(
-        operatorConfig.implicitMultiplyId,
-        multiplyOp.precedenceLevel,
-        multiplyOp.associativity,
-        -1,
-        OperatorType.infix));
   }
 
   int assignId(String label, bool generic) {
@@ -133,16 +105,21 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   }
 
   EdiTeXTemplate createOperatorTemplate(int id) {
-    final op = operators.singleWhere((op) => op.id == id);
+    if (operatorMap.containsKey(id)) {
+      final op = operatorMap[id];
 
-    // Generate parse template.
-    // This is a dirty solution (happens to work with binary operators).
-    final templateStr = op.editorTemplate;
-    final parsableTemplate =
-        templateStr.contains(r'${0}') ? '${op.character}(\$0)' : op.character;
+      // Generate parse template.
+      // This is a dirty solution (happens to work with binary operators).
+      final templateStr = op.editorTemplate;
+      final parsableTemplate =
+          templateStr.contains(r'${0}') ? '${op.character}(\$0)' : op.character;
 
-    final template = parseLaTeXTemplate(templateStr, operatorConfig);
-    return new EdiTeXTemplate((op.id << 2) | 1, '', template, parsableTemplate);
+      final template = parseLaTeXTemplate(templateStr, operatorConfig);
+      return new EdiTeXTemplate(
+          (op.id << 2) | 1, '', template, parsableTemplate);
+    } else {
+      return null;
+    }
   }
 
   @override
@@ -152,28 +129,33 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   }
 
   EdiTeXTemplate createFunctionTemplate(int id) {
-    final fn = functions.singleWhere((fn) => fn.id == id);
-    var templateStr = fn.latexTemplate;
+    if (functionMap.containsKey(id)) {
+      final fn = functionMap[id];
 
-    // Generate fallback template.
-    if (templateStr == null) {
-      templateStr = fn.generic ? r'{}_\text{?}' : '';
+      // Generate fallback template.
+      var templateStr = fn.latexTemplate;
+      if (templateStr == null) {
+        templateStr = fn.generic ? r'{}_\text{?}' : '';
 
-      // Add keywords and arguments.
-      if (fn.argumentCount == 0) {
-        templateStr = '$templateStr${fn.keyword}';
-      } else {
-        final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
-        templateStr = '$templateStr\\text{${fn.keyword}}'
-            '{\\left(${args.join(',\,')}\\right)}';
+        // Add keywords and arguments.
+        if (fn.argumentCount == 0) {
+          templateStr = '$templateStr${fn.keyword}';
+        } else {
+          final args =
+              new List<String>.generate(fn.argumentCount, (i) => '\$$i');
+          templateStr = '$templateStr\\text{${fn.keyword}}'
+              '{\\left(${args.join(',\,')}\\right)}';
+        }
       }
-    }
 
-    final template = parseLaTeXTemplate(templateStr, operatorConfig);
-    final desc = fn.descriptor;
-    final label = desc != null ? desc.translations.first.content : '?';
-    return new EdiTeXTemplate(
-        fn.id << 2, label, template, _generateFunctionParseTemplate(fn));
+      final template = parseLaTeXTemplate(templateStr, operatorConfig);
+      final desc = fn.descriptor;
+      final label = desc != null ? desc.translations.first.content : '?';
+      return new EdiTeXTemplate(
+          fn.id << 2, label, template, _generateFunctionParseTemplate(fn));
+    } else {
+      return null;
+    }
   }
 
   bool hasCommand(command) {
@@ -189,4 +171,44 @@ String _generateFunctionParseTemplate(FunctionResource fn) {
   } else {
     return '$generic#${fn.id.toRadixString(16)}#';
   }
+}
+
+/// Construct [EqDBEdiTeXInterface] instance from database.
+Future<EqDBEdiTeXInterface> createEqDBEdiTeXInterface(EqdbApi db) async {
+  final functions = await db.listFunctions();
+  final operators = await db.listOperators();
+
+  final functionMap = new Map<int, FunctionResource>.fromIterable(functions,
+      key: (fn) => fn.id, value: (fn) => fn);
+  final operatorMap = new Map<int, OperatorResource>.fromIterable(operators,
+      key: (op) => op.id, value: (op) => op);
+
+  // Load operator configuration.
+  final operatorConfig = new OperatorConfig();
+  for (final op in operators) {
+    operatorConfig.add(new Operator(
+        op.id,
+        op.precedenceLevel,
+        op.associativity == 'ltr' ? Associativity.ltr : Associativity.rtl,
+        op.character.runes.first,
+        op.operatorType == 'infix'
+            ? OperatorType.infix
+            : op.operatorType == 'prefix'
+                ? OperatorType.prefix
+                : OperatorType.postfix));
+  }
+
+  // Use the same associativity and precedence as the multiplication operator.
+  // Since the input is already structured (editex), there is no need for
+  // special behavior. In fact this behavior causes problems (e.g. a^b c^d).
+  final multiplyOp = operatorConfig.byId[operatorConfig.id('*')];
+  operatorConfig.add(new Operator(
+      operatorConfig.implicitMultiplyId,
+      multiplyOp.precedenceLevel,
+      multiplyOp.associativity,
+      -1,
+      OperatorType.infix));
+
+  return new EqDBEdiTeXInterface(
+      functions, operators, functionMap, operatorMap, operatorConfig);
 }

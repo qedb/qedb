@@ -24,8 +24,7 @@ part 'step_editor.dart';
 Future main() async {
   // Retrieve operators and functions.
   final db = new EqdbApi(new BrowserClient());
-  final interface = new EqDBEdiTeXInterface();
-  await interface.loadData(db);
+  final interface = await createEqDBEdiTeXInterface(db);
 
   // Construct editors.
   final root = querySelector('#proof-editor');
