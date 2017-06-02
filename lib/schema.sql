@@ -239,16 +239,16 @@ ALTER TABLE proof ADD FOREIGN KEY (last_step_id)  REFERENCES step(id);
 -- Create user and restrict access.
 --------------------------------------------------------------------------------
 
-REVOKE CONNECT ON DATABASE eqdb FROM public;
+REVOKE CONNECT ON DATABASE qedb FROM public;
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM public;
 
-CREATE USER eqdb WITH ENCRYPTED PASSWORD '$password' CONNECTION LIMIT 100;
-GRANT CONNECT ON DATABASE eqdb TO eqdb;
-GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA public TO eqdb;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO eqdb;
-GRANT USAGE ON LANGUAGE plperl TO eqdb;
+CREATE USER qedb WITH ENCRYPTED PASSWORD '$password' CONNECTION LIMIT 100;
+GRANT CONNECT ON DATABASE qedb TO qedb;
+GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA public TO qedb;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO qedb;
+GRANT USAGE ON LANGUAGE plperl TO qedb;
 
 -- Column specific update access.
-GRANT UPDATE (subject_id, keyword, keyword_type, latex_template) ON "function" TO eqdb;
-GRANT UPDATE (latex) ON "expression" TO eqdb;
-GRANT DELETE ON "rule" TO eqdb;
+GRANT UPDATE (subject_id, keyword, keyword_type, latex_template) ON "function" TO qedb;
+GRANT UPDATE (latex) ON "expression" TO qedb;
+GRANT DELETE ON "rule" TO qedb;

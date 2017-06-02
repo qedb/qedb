@@ -6,4 +6,4 @@
 
 # Note that this removes carriage returns using sed or else they will
 # accumulate over time.
-docker exec -t eqdb-postgres pg_dumpall -c -U postgres | sed 's/\r$//' > $1
+docker exec -t qedb-postgres pg_dumpall -c -U postgres | sed 's/\r$//' > $1

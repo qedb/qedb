@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqdb.web.proof_editor;
+part of qedb.web.proof_editor;
 
 /// Expression information
 class ExpressionData {
@@ -13,8 +13,8 @@ class ExpressionData {
 
 /// Base API for any step editor
 abstract class StepEditorBase {
-  final EqDBEdiTeXInterface interface;
-  final EqdbApi db;
+  final QEDbEdiTeXInterface interface;
+  final QedbApi db;
 
   /// DOM element that contains all steps
   final Element root;

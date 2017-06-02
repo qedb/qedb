@@ -7,7 +7,7 @@ import 'dart:async';
 import 'csvtest/csvtest.dart';
 
 Future main() async {
-  final baseUrl = 'http://localhost:8080/eqdb/v0/';
+  final baseUrl = 'http://localhost:8080/qedb/v0/';
   final pkey = new PrimaryKeyEmulator();
   final eqlib = new EqlibHelper();
 

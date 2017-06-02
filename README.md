@@ -1,7 +1,7 @@
-[![Travis](https://img.shields.io/travis/eqdb/eqdb.svg)](https://travis-ci.org/eqdb/eqdb)
-[![Codecov](https://img.shields.io/codecov/c/github/eqdb/eqdb.svg)](https://codecov.io/gh/eqdb/eqdb)
+[![Travis](https://img.shields.io/travis/qedb/qedb.svg)](https://travis-ci.org/qedb/qedb)
+[![Codecov](https://img.shields.io/codecov/c/github/qedb/qedb.svg)](https://codecov.io/gh/qedb/qedb)
 
-PostgreSQL backend for EqDB
+PostgreSQL backend for QEDb
 ===========================
 This repository implements a database schema and a REST API using the Dart RPC
 package. This can also be used as direct database client.

@@ -6,15 +6,15 @@ import 'dart:html';
 import 'dart:async';
 
 import 'package:editex/editex.dart';
-import 'package:eqdb_client/eqdb_client.dart';
-import 'package:eqdb_client/browser_client.dart';
+import 'package:qedb_client/qedb_client.dart';
+import 'package:qedb_client/browser_client.dart';
 
 import 'editex_interface.dart';
 
 Future main() async {
   // Retrieve operators and functions.
-  final db = new EqdbApi(new BrowserClient());
-  final interface = await createEqDBEdiTeXInterface(db);
+  final db = new QedbApi(new BrowserClient());
+  final interface = await createQEDbEdiTeXInterface(db);
 
   document.querySelectorAll('div.editex').forEach((Element element) {
     final editor = new EdiTeX(element, interface);

@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqdb.web.proof_editor;
+library qedb.web.proof_editor;
 
 import 'dart:html';
 import 'dart:async';
@@ -10,8 +10,8 @@ import 'dart:convert';
 
 import 'package:eqlib/eqlib.dart';
 import 'package:editex/editex.dart';
-import 'package:eqdb_client/eqdb_client.dart';
-import 'package:eqdb_client/browser_client.dart';
+import 'package:qedb_client/qedb_client.dart';
+import 'package:qedb_client/browser_client.dart';
 
 import 'package:htgen/dynamic.dart' as ht;
 import 'package:editex/katex.dart' as katex;
@@ -23,8 +23,8 @@ part 'step_editor.dart';
 
 Future main() async {
   // Retrieve operators and functions.
-  final db = new EqdbApi(new BrowserClient());
-  final interface = await createEqDBEdiTeXInterface(db);
+  final db = new QedbApi(new BrowserClient());
+  final interface = await createQEDbEdiTeXInterface(db);
 
   // Construct editors.
   final root = querySelector('#proof-editor');

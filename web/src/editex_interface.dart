@@ -2,20 +2,20 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqdb.web.interface;
+library qedb.web.interface;
 
 import 'dart:async';
 
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/latex.dart';
 import 'package:editex/editex.dart';
-import 'package:eqdb_client/eqdb_client.dart';
+import 'package:qedb_client/qedb_client.dart';
 
 import 'package:editex/katex.dart' as katex;
 import 'package:editex/src/utils.dart' as editex_utils;
 
 /// Implements command resolvers for EdiTeX.
-class EqDBEdiTeXInterface implements EdiTeXInterface {
+class QEDbEdiTeXInterface implements EdiTeXInterface {
   /// Additional templates for parentheses.
   final instantAdditional = new Map<String, EdiTeXTemplate>();
   final additionalList = new List<EdiTeXTemplate>();
@@ -26,13 +26,13 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
   final Map<int, OperatorResource> operatorMap;
   final OperatorConfig operatorConfig;
 
-  EqDBEdiTeXInterface(this.functions, this.operators, this.functionMap,
+  QEDbEdiTeXInterface(this.functions, this.operators, this.functionMap,
       this.operatorMap, this.operatorConfig) {
     // Load additional templates.
-    instantAdditional['('] = new EdiTeXTemplate((0 << 2) | 4, '',
+    instantAdditional['('] = new EdiTeXTemplate((0 << 2) | 3, '',
         parseLaTeXTemplate(r'\left(${0}\right)', operatorConfig), r'($0)');
     additionalList.add(instantAdditional['(']);
-    instantAdditional['['] = new EdiTeXTemplate((1 << 2) | 4, '',
+    instantAdditional['['] = new EdiTeXTemplate((1 << 2) | 3, '',
         parseLaTeXTemplate(r'\left[${0}\right]', operatorConfig), r'($0)');
     additionalList.add(instantAdditional['[']);
   }
@@ -179,16 +179,16 @@ class EqDBEdiTeXInterface implements EdiTeXInterface {
 
 String _generateFunctionParseTemplate(FunctionResource fn) {
   final generic = fn.generic ? '?' : '';
-  if (fn.argumentCount > 0) {
-    final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
-    return '$generic#${fn.id.toRadixString(16)}#(${args.join(',')})';
-  } else {
-    return '$generic#${fn.id.toRadixString(16)}#';
-  }
+
+  // Note that adding the argument list is essential, even if empty, to
+  // separate this function from the next one in the final string.
+  // (a trailing space is also possible but why not just one solution)
+  final args = new List<String>.generate(fn.argumentCount, (i) => '\$$i');
+  return '$generic#${fn.id.toRadixString(16)}#(${args.join(',')})';
 }
 
-/// Construct [EqDBEdiTeXInterface] instance from database.
-Future<EqDBEdiTeXInterface> createEqDBEdiTeXInterface(EqdbApi db) async {
+/// Construct [QEDbEdiTeXInterface] instance from database.
+Future<QEDbEdiTeXInterface> createQEDbEdiTeXInterface(QedbApi db) async {
   final functions = await db.listFunctions();
   final operators = await db.listOperators();
 
@@ -229,6 +229,6 @@ Future<EqDBEdiTeXInterface> createEqDBEdiTeXInterface(EqdbApi db) async {
         Associativity.ltr, -1, OperatorType.infix));
   }
 
-  return new EqDBEdiTeXInterface(
+  return new QEDbEdiTeXInterface(
       functions, operators, functionMap, operatorMap, operatorConfig);
 }

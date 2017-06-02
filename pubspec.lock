@@ -103,12 +103,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.8"
-  eqdb_client:
-    description:
-      name: eqdb_client
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.13"
   eqlib:
     description:
       name: eqlib
@@ -271,6 +265,12 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.3.2"
+  qedb_client:
+    description:
+      name: qedb_client
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
   quiver:
     description:
       name: quiver

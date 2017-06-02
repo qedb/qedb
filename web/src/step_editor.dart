@@ -2,14 +2,15 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqdb.web.proof_editor;
+part of qedb.web.proof_editor;
 
 /// Interactive step editor
+/// TODO: cancel window.onResize subscription on remove.
 class StepEditor extends StepEditorBase {
   /// Editing component
   final EdiTeX editor;
 
-  factory StepEditor(EdiTeXInterface interface, EqdbApi db, Element root,
+  factory StepEditor(EdiTeXInterface interface, QedbApi db, Element root,
       StepEditorBase prev) {
     final container = ht.div('.proof-row-editor.editex.editex-align-left');
     final status = ht.div('.proof-row-status');
@@ -23,7 +24,7 @@ class StepEditor extends StepEditorBase {
         interface, db, root, row, container, status, editor, prev);
   }
 
-  StepEditor._(EdiTeXInterface interface, EqdbApi db, Element root, Element r,
+  StepEditor._(EdiTeXInterface interface, QedbApi db, Element root, Element r,
       Element c, Element s, this.editor, StepEditorBase prev)
       : super(interface, db, root, r, c, s, prev) {
     editor.onIdleKeyDown.listen((e) {
@@ -36,11 +37,11 @@ class StepEditor extends StepEditorBase {
         next.focus();
       } else if (e.keyCode == KeyCode.ENTER) {
         ensureNext();
-        next.focus();
         if (next.isEmpty) {
           next.load(editor.getData());
           next.setCursor(editor.cursorIndex);
         }
+        next.focus();
       } else {
         return;
       }
@@ -105,7 +106,7 @@ class StaticStepEditor extends StepEditorBase {
 
   factory StaticStepEditor(
       EdiTeXInterface interface,
-      EqdbApi db,
+      QedbApi db,
       Element root,
       StepEditorBase prev,
       Expr expression,
@@ -127,7 +128,7 @@ class StaticStepEditor extends StepEditorBase {
 
   StaticStepEditor._(
       EdiTeXInterface interface,
-      EqdbApi db,
+      QedbApi db,
       Element root,
       Element r,
       Element c,

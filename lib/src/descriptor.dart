@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqdb;
+part of qedb;
 
 /// Design choice: never call this directly from the API. Create descriptor
 /// should be called when a descriptor is created for another record. This is

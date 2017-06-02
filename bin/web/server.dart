@@ -5,7 +5,7 @@
 import 'dart:io';
 import 'dart:async';
 
-import 'package:eqdb/utils.dart';
+import 'package:qedb/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_handlers/server_logging_handlers.dart';
 
@@ -17,7 +17,7 @@ import 'router.dart';
 
 Future<Null> main() async {
   final log = new Logger('server');
-  final conf = new EnvConfig('EQDB_', 'dev_config.yaml');
+  final conf = new EnvConfig('QEDb_', 'dev_config.yaml');
 
   // Read some configuration values.
   final logFile = conf.string('WEB_LOG');
@@ -35,7 +35,7 @@ Future<Null> main() async {
 
   // Create router.
   final router = route.router();
-  await setupRouter(conf.string('API_BASE', 'http://localhost:8080/eqdb/v0/'),
+  await setupRouter(conf.string('API_BASE', 'http://localhost:8080/qedb/v0/'),
       conf.string('STATIC_BASE', 'build/web/'), router);
 
   // Create shelf handler.

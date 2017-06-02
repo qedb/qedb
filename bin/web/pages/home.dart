@@ -20,7 +20,7 @@ final homePage = new Page(template: (s) {
           ]);
 
   return html([
-    head([title('EqDB Admin'), defaultHead(s)]),
+    head([title('QEDb Builder'), defaultHead(s)]),
     body([
       div('.jumbotron',
           style: 'background: repeating-linear-gradient(135deg,'

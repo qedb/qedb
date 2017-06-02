@@ -14,7 +14,7 @@ sleep 4
 truncate -s 0 testlog.txt
 
 # Set log file.
-export EQDB_API_LOG='testlog.txt'
+export QEDb_API_LOG='testlog.txt'
 
 # Run server.
 if [ ! -z $1 ];

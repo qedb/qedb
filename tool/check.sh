@@ -24,7 +24,7 @@ fi
 ./tool/restart-db.sh
 
 # Run tests.
-export EQDB_TEST_LOG=''
+export QEDb_TEST_LOG=''
 ./tool/run-test.sh ./test/run.sh coverage.json
 
 # Run Perl algorithm tests.

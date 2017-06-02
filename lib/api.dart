@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqdb.api;
+library qedb.api;
 
 import 'dart:async';
 
@@ -11,18 +11,18 @@ import 'package:logging/logging.dart';
 import 'package:postgresql/pool.dart';
 import 'package:postgresql/postgresql.dart';
 
-import 'package:eqdb/resources.dart';
-import 'package:eqdb/eqdb.dart' as api;
-import 'package:eqdb/schema.dart' as db;
+import 'package:qedb/resources.dart';
+import 'package:qedb/qedb.dart' as api;
+import 'package:qedb/schema.dart' as db;
 
-final log = new Logger('eqdb');
+final log = new Logger('qedb');
 const defaultLanguage = 'en_US';
 
-@ApiClass(name: 'eqdb', version: 'v0', description: 'EqDB read/write API')
-class EqDB {
+@ApiClass(name: 'qedb', version: 'v0', description: 'QEDb read/write API')
+class QEDb {
   final Pool pool;
 
-  EqDB(String dbUri, int minConnections, int maxConnections)
+  QEDb(String dbUri, int minConnections, int maxConnections)
       : pool = new Pool(dbUri,
             minConnections: minConnections, maxConnections: maxConnections);
 

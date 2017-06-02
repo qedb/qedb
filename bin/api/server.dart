@@ -6,8 +6,8 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:rpc/rpc.dart';
-import 'package:eqdb/api.dart';
-import 'package:eqdb/utils.dart';
+import 'package:qedb/api.dart';
+import 'package:qedb/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_handlers/server_logging_handlers.dart';
 
@@ -20,15 +20,15 @@ import 'middleware.dart';
 
 Future<Null> main() async {
   final log = new Logger('server');
-  final conf = new EnvConfig('EQDB_', 'dev_config.yaml');
+  final conf = new EnvConfig('QEDb_', 'dev_config.yaml');
 
   // Read some configuration values.
   final logFile = conf.string('API_LOG');
   final srvPort = conf.integer('API_PORT', 8080);
   final dbHost = conf.string('DB_HOST', '0.0.0.0');
   final dbPort = conf.integer('DB_PORT', 5432);
-  final dbName = conf.string('DB_NAME', 'eqdb');
-  final dbUser = conf.string('DB_USER', 'eqdb');
+  final dbName = conf.string('DB_NAME', 'qedb');
+  final dbUser = conf.string('DB_USER', 'qedb');
   final dbPass = conf.string('DB_PASS', 'unconfigured');
   final minConnections = conf.integer('DB_MIN_CONNECTIONS', 2);
   final maxConnections = conf.integer('DB_MAX_CONNECTIONS', 100);
@@ -50,7 +50,7 @@ Future<Null> main() async {
   // Create RPC API handler.
   final ApiServer apiServer = new ApiServer();
 
-  final eqapi = new EqDB(connectionUri, minConnections, maxConnections);
+  final eqapi = new QEDb(connectionUri, minConnections, maxConnections);
   await eqapi.initialize();
 
   apiServer.addApi(eqapi);

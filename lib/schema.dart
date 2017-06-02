@@ -2,10 +2,10 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqdb.schema;
+library qedb.schema;
 
-import 'package:eqdb/utils.dart';
-import 'package:eqdb/sqlbuilder.dart';
+import 'package:qedb/utils.dart';
+import 'package:qedb/sqlbuilder.dart';
 import 'package:postgresql/postgresql.dart';
 
 part 'src/generated/tables.dart';

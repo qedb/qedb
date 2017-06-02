@@ -2,12 +2,12 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqdb.resources;
+library qedb.resources;
 
 import 'package:rpc/rpc.dart';
-import 'package:eqdb/sqlbuilder.dart';
+import 'package:qedb/sqlbuilder.dart';
 
-import 'package:eqdb/schema.dart' as db;
+import 'package:qedb/schema.dart' as db;
 
 /// Boilerplate for resource classes.
 abstract class ResourceBase<T extends Record> {

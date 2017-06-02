@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqdb.test.csvtest;
+part of qedb.test.csvtest;
 
 /// Value resolver that always resolves to true.
 bool resolveTrue(_) => true;

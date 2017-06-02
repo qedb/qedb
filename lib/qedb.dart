@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqdb;
+library qedb;
 
 import 'dart:async';
 import 'dart:convert';
@@ -13,10 +13,10 @@ import 'package:eqlib/latex.dart';
 import 'package:logging/logging.dart';
 import 'package:postgresql/postgresql.dart';
 
-import 'package:eqdb/utils.dart';
-import 'package:eqdb/sqlbuilder.dart';
-import 'package:eqdb/resources.dart';
-import 'package:eqdb/schema.dart' as db;
+import 'package:qedb/utils.dart';
+import 'package:qedb/sqlbuilder.dart';
+import 'package:qedb/resources.dart';
+import 'package:qedb/schema.dart' as db;
 
 part 'src/language.dart';
 part 'src/descriptor.dart';
@@ -31,7 +31,7 @@ part 'src/step.dart';
 part 'src/proof_create.dart';
 part 'src/proof_read.dart';
 
-final log = new Logger('eqdb');
+final log = new Logger('qedb');
 
 class Session extends SessionState<db.SessionData> {
   // Targeted languages.

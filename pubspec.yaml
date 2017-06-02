@@ -1,8 +1,8 @@
-name:         eqdb
+name:         qedb
 version:      0.0.0
 author:       Herman Bergwerf <hermanbergwerf@gmail.com>
-description:  PostgreSQL backend for EqDB
-homepage:     https://github.com/eqdb/eqdb
+description:  Database of mathematical proofs using PostgreSQL
+homepage:     https://github.com/qedb/qedb
 environment:
   sdk:        '>=1.8.0 <2.0.0'
 dependencies:
@@ -27,7 +27,7 @@ dev_dependencies:
   sass:         ^1.0.0-alpha
   browser:      ^0.10.0+2
   editex:       ^0.2.1
-  eqdb_client:  ^0.0.13
+  qedb_client:  ^0.1.0
   shelf_static: ^0.2.4
   transform_sass: ^0.1.0
 

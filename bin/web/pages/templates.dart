@@ -96,7 +96,7 @@ dynamic breadcrumb(PageSessionData s) {
   return nav('.breadcrumb',
       style: 'word-spacing: .3em; margin-bottom: 2em;',
       c: [
-        a('EqDB', href: '/'),
+        a('QEDb', href: '/'),
         span(' / '),
         new List.generate(s.path.length, (i) {
           final numberRegex = new RegExp(r'^[0-9]+$');

@@ -7,7 +7,7 @@ import 'package:htgen/static.dart';
 import '../page.dart';
 import 'templates.dart';
 
-import 'package:eqdb/utils.dart';
+import 'package:qedb/utils.dart';
 
 final createRulePage = new Page(template: (s) {
   return createResourceTemplate(s, 'rule', inputs: (_) {

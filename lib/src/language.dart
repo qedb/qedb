@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqdb;
+part of qedb;
 
 Future<db.LanguageRow> createLanguage(Session s, LanguageResource body) async {
   // Prevent primary key gaps for languages (I am a control freak).
