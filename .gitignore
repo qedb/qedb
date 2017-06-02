@@ -3,7 +3,7 @@
 testlog.txt
 node_modules
 npm-debug.log
-dev-config.yaml
+dev_config.yaml
 tool/docker/eqdb-postgres/*.sql
 cover_db
 coverage.json.lcov

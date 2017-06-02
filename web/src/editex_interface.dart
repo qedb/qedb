@@ -214,14 +214,20 @@ Future<EqDBEdiTeXInterface> createEqDBEdiTeXInterface(EqdbApi db) async {
 
   // Use the same associativity and precedence as the multiplication operator.
   // Since the input is already structured (editex), there is no need for
-  // special behavior. In fact this behavior causes problems (e.g. a^b c^d).
-  final multiplyOp = operatorConfig.byId[operatorConfig.id('*')];
-  operatorConfig.add(new Operator(
-      operatorConfig.implicitMultiplyId,
-      multiplyOp.precedenceLevel,
-      multiplyOp.associativity,
-      -1,
-      OperatorType.infix));
+  // special behavior. In fact this behavior causes problems] (e.g. a^b c^d).
+  if (operatorConfig.byChar.containsKey('*'.codeUnitAt(0))) {
+    final multiplyOp = operatorConfig.byId[operatorConfig.id('*')];
+    operatorConfig.add(new Operator(
+        operatorConfig.implicitMultiplyId,
+        multiplyOp.precedenceLevel,
+        multiplyOp.associativity,
+        -1,
+        OperatorType.infix));
+  } else {
+    // Fallback
+    operatorConfig.add(new Operator(operatorConfig.implicitMultiplyId, 0,
+        Associativity.ltr, -1, OperatorType.infix));
+  }
 
   return new EqDBEdiTeXInterface(
       functions, operators, functionMap, operatorMap, operatorConfig);

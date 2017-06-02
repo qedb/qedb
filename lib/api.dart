@@ -50,6 +50,12 @@ class EqDB {
       // Resolve language codes.
       session.languages.addAll(api.getLanguageIds(session, languageIsoCodes));
 
+      // [session.languages] may not be empty. If this is the case (if user uses
+      // wrong language code in API request), add 0 as language code.
+      if (session.languages.isEmpty) {
+        session.languages.add(0);
+      }
+
       return handler(session);
     }, pool);
   }

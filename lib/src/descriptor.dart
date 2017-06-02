@@ -30,12 +30,14 @@ Future<List<db.DescriptorRow>> listDescriptors(Session s) async {
   final descriptors = await s.select(db.descriptor);
 
   // Select all translations.
-  await s.select(
-      db.translation,
-      WHERE({
-        'descriptor_id': IN_IDS(descriptors),
-        'language_id': IN(s.languages)
-      }));
+  if (descriptors.isNotEmpty) {
+    await s.select(
+        db.translation,
+        WHERE({
+          'descriptor_id': IN_IDS(descriptors),
+          'language_id': IN(s.languages)
+        }));
+  }
 
   return descriptors;
 }

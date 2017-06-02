@@ -17,7 +17,7 @@ import 'router.dart';
 
 Future<Null> main() async {
   final log = new Logger('server');
-  final conf = new EnvConfig('EQDB_', 'dev-config.yaml');
+  final conf = new EnvConfig('EQDB_', 'dev_config.yaml');
 
   // Read some configuration values.
   final logFile = conf.string('WEB_LOG');

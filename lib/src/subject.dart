@@ -17,12 +17,14 @@ Future<List<db.SubjectRow>> listSubjects(Session s) async {
       db.descriptor, subjects.map((row) => row.descriptorId));
 
   // Select all translations.
-  await s.select(
-      db.translation,
-      WHERE({
-        'descriptor_id': IN_IDS(descriptors),
-        'language_id': IN(s.languages)
-      }));
+  if (descriptors.isNotEmpty) {
+    await s.select(
+        db.translation,
+        WHERE({
+          'descriptor_id': IN_IDS(descriptors),
+          'language_id': IN(s.languages)
+        }));
+  }
 
   return subjects;
 }

@@ -34,8 +34,14 @@ restore-database-dump:
 check:
 	./tool/check.sh
 
-build-dev-environment: restart-web-server
-	./tool/kill-port.sh 8083 force
+build-dev-environment:	
+	./tool/restart-db.sh
+	./tool/restart-api-server.sh
+	./tool/kill-port.sh 8081 force
+	pub build
+	export EQDB_WEB_PORT=8081; dart -c bin/web/server.dart > /dev/null 2>&1 &
+
+build-tested-dev-environment: restart-web-server
 	./tool/restart-db.sh
 	./tool/run-test.sh ./test/run.sh
 	./tool/restart-api-server.sh
@@ -55,7 +61,7 @@ generate-openapi-spec: restart-database restart-api-server
 
 generate-dot-svg-schema: restart-database
 	sleep 4
-	PASSWORD=`cat dev-config.yaml | grep "DB_PASS" | awk '{print $2}'`
+	PASSWORD=`cat dev_config.yaml | grep "DB_PASS" | awk '{print $2}'`
 	postgresql_autodoc -d eqdb -h 172.17.0.2 -p 5432 -u eqdb --password=${PASSWORD} -t dot
 	mkdir -p doc
 	mv eqdb.dot doc/schema.dot

@@ -138,7 +138,9 @@ Future<OperatorConfig> _loadOperatorConfig(Session s) async {
   // (same precedence level as power operator).
   ops.add(new Operator(
       ops.implicitMultiplyId,
-      ops.byId[ops.id('^')].precedenceLevel,
+      ops.byChar.containsKey('^'.codeUnitAt(0))
+          ? ops.byId[ops.id('^')].precedenceLevel
+          : 0,
       Associativity.rtl,
       -1,
       OperatorType.infix));

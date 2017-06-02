@@ -43,7 +43,7 @@ final homePage = new Page(template: (s) {
                     'fill': 'url(#logo-gradient)'
                   }),
                   xmlns: 'http://www.w3.org/2000/svg',
-                  viewBox: '0 0 31 16'),
+                  viewBox: '0 0 45 16'),
               span('.display-4', 'Builder',
                   style: buildStyle({
                     'vertical-align': 'middle',

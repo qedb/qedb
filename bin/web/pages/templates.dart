@@ -9,10 +9,9 @@ import '../page.dart';
 typedef dynamic InlineHtmlBuilder(PageSessionData s);
 
 /// SVG logo data.
-final logoSvgContent = [
-  '<path d="M2 2v9h6V9H7v1H3V7h2V6H3V3h4v1h1V2zm14 0v1h1v7h-1v1h3c2.479396 0 4-2.0206 4-4.5S21.479396 2 19 2h-1zm2 1h1c1.938956 0 3 1.5611 3 3.5 0 1.939-1.061044 3.5-3 3.5h-1zm6-1v9h3.5c1.37479 0 2.487405-1.1253 2.5-2.5.01105-1.2059-.757689-2.0327-1.618433-2.4006.271667-.2357.618432-.7799.618432-1.5994 0-1.3748-1.12521-2.5-2.5-2.5zm1 1h1.5c.834349 0 1.5.6657 1.5 1.5 0 .8344-.665651 1.5-1.5 1.5H25zm0 4h2.5c.834349 0 1.5.6657 1.5 1.5 0 .8344-.665651 1.5-1.5 1.5H25zM11 3.9992c-1.65093 0-3 1.3491-3 3 0 1.651 1.34907 3 3 3s3-1.349 3-3c0-1.6509-1.34907-3-3-3zm0 1c1.110494 0 2 .8895 2 2s-.889506 2-2 2-2-.8895-2-2 .889506-2 2-2z"></path>',
-  '<path d="M13 3.9991v11.2598l4.197266-1.7988-.394532-.92L14 13.7413V3.9991h-1z"></path>'
-].join();
+final logoPath =
+    'M31 0v15h-2v-4h-2v3h-7V9h4V7h-4V2h7v3h2V0H18v14h-2c-.95 0-1.575-.202-2.145-.57C15.182 12 16 10.095 16 8c0-4.406-3.594-8-8-8-4.406 0-8 3.594-8 8 0 4.407 3.594 8 8 8 1.577 0 3.046-.468 4.287-1.262C13.24 15.468 14.444 16 16 16h29zM8 2c3.326 0 6 2.675 6 6 0 1.59-.615 3.026-1.617 4.098-.493-.537-1.023-1.153-1.676-1.805-1.775-1.775-4.045-2.08-5.87-1.94-1.38.103-2.29.4-2.76.57C2.033 8.62 2 8.314 2 8c0-3.325 2.674-6 6-6zm25 4l7 8h-7zM6.025 10.383c1.145.065 2.35.405 3.268 1.324.53.53 1 1.078 1.486 1.61C9.95 13.752 9.004 14 8 14c-2.3 0-4.288-1.28-5.295-3.172.476-.156 1.758-.534 3.32-.445z';
+final logoSvgContent = '<path d="$logoPath"></path>';
 
 /// Shorthand
 String stylesheet(String href) => link(rel: 'stylesheet', href: href);
@@ -36,11 +35,14 @@ String formInput(String labelText, {String name, String type: 'text'}) {
 /// Language select form element.
 String languageSelect(PageSessionData s,
     {String name: 'language', bool inGroup: true}) {
-  final selectHtml = select('#$name.form-control',
-      name: name,
-      c: s.additional['languages'].map((language) {
-        return option(language.code, value: language.code);
-      }).toList());
+  final options = s.additional['languages'].map((language) {
+    return option(language.code, value: language.code);
+  }).toList();
+  if (options.isEmpty) {
+    options.add(option('null', value: ''));
+  }
+
+  final selectHtml = select('#$name.form-control', name: name, c: options);
 
   if (inGroup) {
     return formGroup('Language', name, [selectHtml]);
@@ -52,13 +54,15 @@ String languageSelect(PageSessionData s,
 /// Subject select form element.
 String subjectSelect(PageSessionData s,
     {String name: 'language', bool inGroup: true}) {
-  final selectHtml = select('#$name.form-control',
-      name: name,
-      c: s.additional['subjects'].map((subject) {
-        return option(
-            safe(() => subject.descriptor.translations[0].content, ''),
-            value: subject.id);
-      }).toList());
+  final options = s.additional['subjects'].map((subject) {
+    return option(safe(() => subject.descriptor.translations[0].content, ''),
+        value: subject.id);
+  }).toList();
+  if (options.isEmpty) {
+    options.add(option('null', value: '0'));
+  }
+
+  final selectHtml = select('#$name.form-control', name: name, c: options);
 
   if (inGroup) {
     return formGroup('Subject', name, [selectHtml]);

@@ -42,11 +42,11 @@ export EQDB_DB_NAME="eqdb"
 export EQDB_DB_USER="eqdb"
 
 # Write config file.
-rm -f dev-config.yaml
-touch dev-config.yaml
-echo "DB_HOST: '${EQDB_DB_HOST}'" >> dev-config.yaml
-echo "DB_PORT: ${EQDB_DB_PORT}" >> dev-config.yaml
-echo "DB_NAME: ${EQDB_DB_NAME}" >> dev-config.yaml
-echo "DB_USER: ${EQDB_DB_USER}" >> dev-config.yaml
-echo "DB_PASS: ${EQDB_DB_PASS}" >> dev-config.yaml
-cat dev-config.yaml
+rm -f dev_config.yaml
+touch dev_config.yaml
+echo "DB_HOST: '${EQDB_DB_HOST}'" >> dev_config.yaml
+echo "DB_PORT: ${EQDB_DB_PORT}" >> dev_config.yaml
+echo "DB_NAME: ${EQDB_DB_NAME}" >> dev_config.yaml
+echo "DB_USER: ${EQDB_DB_USER}" >> dev_config.yaml
+echo "DB_PASS: ${EQDB_DB_PASS}" >> dev_config.yaml
+cat dev_config.yaml
