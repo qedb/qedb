@@ -5,10 +5,9 @@
 part of qedb.web.proof_editor;
 
 /// Interactive step editor
-/// TODO: cancel window.onResize subscription on remove.
 class StepEditor extends StepEditorBase {
   /// Editing component
-  final EdiTeX editor;
+  EdiTeX editor;
 
   factory StepEditor(EdiTeXInterface interface, QedbApi db, Element root,
       StepEditorBase prev) {
@@ -71,6 +70,15 @@ class StepEditor extends StepEditorBase {
       next.focus();
       next.setCursor(0);
     });
+  }
+
+  @override
+  Future remove([bool self = true]) async {
+    if (self) {
+      await editor.destruct();
+      editor = null;
+    }
+    await super.remove(self);
   }
 
   /// Note that the state is already updated by the base class.
