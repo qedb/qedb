@@ -36,11 +36,21 @@ class StepEditor extends StepEditorBase {
         next.focus();
       } else if (e.keyCode == KeyCode.ENTER) {
         ensureNext();
-        if (next.isEmpty) {
-          next.load(editor.getData());
-          next.setCursor(editor.cursorIndex);
-        }
+
+        // First focus, so that the difference is resolved and the next editor
+        // is triggered before we copy the expression.
         next.focus();
+
+        if (next.isEmpty) {
+          // Wait until the next editor afterResolve is triggered before copying
+          // the expression.
+          StreamSubscription sub;
+          sub = next.afterResolve.stream.listen((_) {
+            next.load(editor.getData());
+            next.setCursor(editor.cursorIndex);
+            sub.cancel();
+          });
+        }
       } else {
         return;
       }
