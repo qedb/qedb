@@ -2,6 +2,8 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
+@import 'difference_table';
+
 .editex-placeholder {
   background: repeating-linear-gradient(45deg,
   transparent 0px, transparent 1px, #666 2px,
@@ -37,6 +39,9 @@
 
 .proof-row-editor {
   flex: 1;
+
+  // Somehow this forces a max-width when the content expression flows over.
+  width: 1px;
 }
 
 .proof-row-status {

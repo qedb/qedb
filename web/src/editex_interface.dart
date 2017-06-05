@@ -16,6 +16,9 @@ import 'package:editex/src/utils.dart' as editex_utils;
 
 /// Implements command resolvers for EdiTeX.
 class QEDbEdiTeXInterface implements EdiTeXInterface {
+  /// LaTeX printer.
+  final LaTeXPrinter printer;
+
   /// Additional templates for parentheses.
   final instantAdditional = new Map<String, EdiTeXTemplate>();
   final additionalList = new List<EdiTeXTemplate>();
@@ -27,7 +30,17 @@ class QEDbEdiTeXInterface implements EdiTeXInterface {
   final OperatorConfig operatorConfig;
 
   QEDbEdiTeXInterface(this.functions, this.operators, this.functionMap,
-      this.operatorMap, this.operatorConfig) {
+      this.operatorMap, this.operatorConfig)
+      : printer = new LaTeXPrinter(
+            (int id) => functions.singleWhere((r) => r.id == id).keyword,
+            operatorConfig) {
+    // Populate LaTeX printer dictionary.
+    functions.forEach((row) {
+      if (row.latexTemplate != null) {
+        printer.addTemplate(row.id, row.latexTemplate);
+      }
+    });
+
     // Load additional templates.
     instantAdditional['('] = new EdiTeXTemplate((0 << 2) | 3, '',
         parseLaTeXTemplate(r'\left(${0}\right)', operatorConfig), r'($0)');
@@ -159,8 +172,7 @@ class QEDbEdiTeXInterface implements EdiTeXInterface {
       if (fn.descriptor != null) {
         label = fn.descriptor.translations.first.content;
       } else {
-        final args = new List<String>.generate(
-            template.parameterCount, (i) => '{}_\\textsf{\\\$}$i');
+        final args = new List<String>.filled(template.parameterCount, r'...');
         final latex = editex_utils.renderLaTeXTemplate(template, args);
         label = katex.renderToStringNoMathML(latex);
       }

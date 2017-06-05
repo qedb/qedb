@@ -5,10 +5,12 @@
 library qedb.web.proof_editor;
 
 import 'dart:html';
+import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:eqlib/eqlib.dart';
+import 'package:eqlib/utils.dart';
 import 'package:editex/editex.dart';
 import 'package:qedb_client/qedb_client.dart';
 import 'package:qedb_client/browser_client.dart';
@@ -20,6 +22,7 @@ import 'editex_interface.dart';
 
 part 'step_editor_base.dart';
 part 'step_editor.dart';
+part 'difference_table.dart';
 
 Future main() async {
   // Retrieve operators and functions.

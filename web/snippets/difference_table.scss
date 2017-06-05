@@ -1,0 +1,47 @@
+// Copyright (c) 2017, Herman Bergwerf. All rights reserved.
+// Use of this source code is governed by an AGPL-3.0-style license
+// that can be found in the LICENSE file.
+
+$difftablebg: #272b30;
+
+.proof-step-difference-table {
+  margin: 2em auto;
+  border-collapse: collapse;
+  border: 1px solid #202020;
+
+  & td {
+    padding: 1em;
+    text-align: center;
+  }
+
+  & > tr:nth-child(even) > td:nth-child(even) {
+    background: mix(#000, $difftablebg, 10);
+  }
+
+  & > tr:nth-child(even) > td:nth-child(odd) {
+    background: mix(#555, $difftablebg, 10);
+  }
+
+  & > tr:nth-child(odd) > td:nth-child(even) {
+    background: mix(#aaa, $difftablebg, 10);
+  }
+
+  & > tr:nth-child(odd) > td:nth-child(odd) {
+    background: mix(#fff, $difftablebg, 10);
+  }
+
+  & td.difftable-rearrange, td.difftable-rule {
+    background: mix(green, $difftablebg, 20) !important;
+    border: 1px solid #030;
+  }
+
+  & td.difftable-rule {
+    font-style: italic;
+    font-family: monospace;
+  }
+
+  & td.difftable-not-resolved {
+    background: mix(red, $difftablebg, 20) !important;
+    border: 1px solid #300;
+  }
+}

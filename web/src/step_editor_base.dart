@@ -31,6 +31,9 @@ abstract class StepEditorBase {
   /// Pending resolve data
   Future<DifferenceBranch> difference;
 
+  /// Difference table
+  TableElement difftable;
+
   /// Stream to be triggered by the implementation when the user is done with
   /// editing of any sort
   /// Important: the step implementation must call this.
@@ -61,6 +64,31 @@ abstract class StepEditorBase {
         afterResolve.add(valid);
       }));
     }
+
+    // When the status icon is clicked, show the current difference.
+    status.onClick.listen((_) async {
+      if (difference != null) {
+        if (difftable != null) {
+          difftable.remove();
+          difftable = null;
+        } else {
+          // Insert difference table.
+          final theDifference = await difference;
+          difftable = createDifferenceTable(interface, theDifference);
+          row.parent.insertBefore(difftable, row);
+        }
+      }
+    });
+
+    // Update difference table after expression difference is resolved.
+    subscriptions.add(afterResolve.stream.listen((resolved) async {
+      if (difftable != null && difference != null) {
+        difftable.remove();
+        final theDifference = await difference;
+        difftable = createDifferenceTable(interface, theDifference);
+        row.parent.insertBefore(difftable, row);
+      }
+    }));
   }
 
   /// Remove from DOM.
@@ -143,10 +171,12 @@ abstract class StepEditorBase {
     final thisExpr = getExpression();
     if (!thisExpr.valid) {
       setStatus('exclaim');
+      difference = null;
       afterResolve.add(false);
       return null;
     } else if (!prevExpr.valid || thisExpr.empty || prevExpr.empty) {
       setStatus('valid');
+      difference = null;
       afterResolve.add(false);
       return null;
     } else {
