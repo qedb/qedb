@@ -82,10 +82,27 @@ abstract class StepEditorBase {
 
     // Update difference table after expression difference is resolved.
     subscriptions.add(afterResolve.stream.listen((resolved) async {
-      if (difftable != null && difference != null) {
+      if (difftable != null) {
         difftable.remove();
-        final theDifference = await difference;
-        difftable = createDifferenceTable(interface, theDifference);
+
+        if (difference != null) {
+          // Await difference and use it to generate a table.
+          final theDifference = await difference;
+          difftable = createDifferenceTable(interface, theDifference);
+        } else {
+          // Generate table with a question mark.
+          final unresolvedHtml = katex.renderToStringNoMathML(r'?');
+          difftable = ht.table([
+            '.proof-step-difference-table',
+            ht.tr(ht.td([
+              '.difftable-not-resolved',
+              ht.span('')
+                ..setInnerHtml(unresolvedHtml,
+                    validator: EdiTeX.labelHtmlValidator)
+            ]))
+          ]);
+        }
+
         row.parent.insertBefore(difftable, row);
       }
     }));
@@ -100,6 +117,10 @@ abstract class StepEditorBase {
       await afterUpdate.close();
       await afterResolve.close();
       row.remove();
+
+      if (difftable != null) {
+        difftable.remove();
+      }
     }
     if (next != null) {
       await next.remove();
