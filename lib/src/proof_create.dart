@@ -15,10 +15,8 @@ enum StepType {
   copyRule,
   copyProof,
   rearrange,
-  ruleNormal,
-  ruleInvert,
-  ruleMirror,
-  ruleRevert
+  substituteRule,
+  substituteCondition
 }
 
 /// Intermediary data for building a step.
@@ -28,22 +26,29 @@ class _StepData {
   int position = 0;
   db.StepRow row;
 
+  /// Expression at node [position] in the right expression tree. This is used
+  /// to check rules when [reverseEvaluate] is set.
   Expr subExprRight;
+
+  /// Resulting expression.
   Expr expression;
 
-  List<int> rearrange;
+  bool reverseSides = false;
+  bool reverseEvaluate = false;
+
+  /// Rule ID and full rule data (retrieved seperately)
   int ruleId;
   Rule rule;
 
-  static const typeValues = const {
+  List<int> rearrangeFormat;
+
+  static const stepTypeValues = const {
     StepType.setExpression: 'set',
     StepType.copyRule: 'copy_rule',
     StepType.copyProof: 'copy_proof',
     StepType.rearrange: 'rearrange',
-    StepType.ruleNormal: 'rule_normal',
-    StepType.ruleInvert: 'rule_invert',
-    StepType.ruleMirror: 'rule_mirror',
-    StepType.ruleRevert: 'rule_revert'
+    StepType.substituteRule: 'substitute_rule',
+    StepType.substituteCondition: 'substitute_condition'
   };
 }
 
@@ -149,8 +154,10 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     // Create map with insert values.
     final values = {
       'expression_id': expressionRow.id,
+      'step_type': _StepData.stepTypeValues[step.type],
       'position': step.position,
-      'step_type': _StepData.typeValues[step.type]
+      'reverse_sides': step.reverseSides,
+      'reverse_evaluate': step.reverseEvaluate
     };
     if (rows.isNotEmpty) {
       values['previous_id'] = rows.last.id;
@@ -158,8 +165,8 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     if (step.ruleId != null) {
       values['rule_id'] = step.ruleId;
     }
-    if (step.rearrange != null) {
-      values['rearrange'] = ARRAY(step.rearrange, 'integer');
+    if (step.rearrangeFormat != null) {
+      values['rearrange_format'] = ARRAY(step.rearrangeFormat, 'integer');
     }
 
     rows.add(await s.insert(db.step, VALUES(values)));
@@ -188,29 +195,24 @@ Future<Expr> _computeProofStep(Session s, Expr previous, _StepData step,
 
     case StepType.rearrange:
       return previous.rearrangeAt(
-          step.rearrange, step.position, rearrangeableIds);
+          step.rearrangeFormat, step.position, rearrangeableIds);
 
-    case StepType.ruleNormal:
-      return previous.substituteAt(step.rule, step.position);
-
-    case StepType.ruleInvert:
-      return previous.substituteAt(step.rule.inverted, step.position);
-
-    case StepType.ruleMirror:
-    case StepType.ruleRevert:
-      final rule =
-          step.type == StepType.ruleMirror ? step.rule : step.rule.inverted;
-
-      // Reversed evaluation means that the right sub-expression at this
-      // position is used to construct the original expression. When evaluated
-      // this must match the expression in [previous] at the step position. From
-      // this a new rule can be constructed to substitute the sub-expression
-      // into [previous].
-
-      final original = step.subExprRight.substituteAt(rule.inverted, 0);
-      return previous.substituteAt(
-          new Rule(original.evaluate(compute), step.subExprRight),
-          step.position);
+    case StepType.substituteRule:
+      final rule = step.reverseSides ? step.rule.inverted : step.rule;
+      if (!step.reverseEvaluate) {
+        return previous.substituteAt(rule, step.position);
+      } else {
+        // Reversed evaluation means that the right sub-expression at this
+        // position is used to construct the original expression. When evaluated
+        // this must match the expression in [previous] at the step position.
+        // From this a new rule can be constructed to substitute the
+        // sub-expression into [previous].
+        final original = step.subExprRight.substituteAt(rule, 0);
+        return previous.substituteAt(
+            new Rule(original.evaluate(compute), step.subExprRight),
+            step.position);
+      }
+      break;
 
     default:
       throw new UnimplementedError('unexpected enum value');
@@ -227,27 +229,19 @@ List<_StepData> _flattenDifferenceBranch(DifferenceBranch branch) {
       // Add step for each rearrangement.
       for (final rearrangement in branch.rearrangements) {
         steps.add(new _StepData()
-          ..position = rearrangement.position
           ..type = StepType.rearrange
-          ..rearrange = rearrangement.format);
+          ..position = rearrangement.position
+          ..rearrangeFormat = rearrangement.format);
       }
     } else if (branch.rule != null) {
       // Add single step for rule.
       final step = new _StepData()
+        ..type = StepType.substituteRule
         ..position = branch.position
+        ..reverseSides = branch.reverseRule
+        ..reverseEvaluate = branch.reverseEvaluate
         ..ruleId = branch.rule.id
         ..subExprRight = new Expr.fromBase64(branch.rightExpression);
-
-      // Determine rule type.
-      if (!branch.reverseRule && !branch.reverseEvaluate) {
-        step.type = StepType.ruleNormal;
-      } else if (branch.reverseRule && !branch.reverseEvaluate) {
-        step.type = StepType.ruleInvert;
-      } else if (branch.reverseRule && branch.reverseEvaluate) {
-        step.type = StepType.ruleMirror;
-      } else {
-        step.type = StepType.ruleRevert;
-      }
 
       steps.add(step);
     } else {

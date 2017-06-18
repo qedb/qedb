@@ -5,6 +5,7 @@
 part of qedb.web.proof_editor;
 
 /// Interactive step editor
+/// TODO: remove difference table when row is removed or emptied.
 class StepEditor extends StepEditorBase {
   /// Editing component
   EdiTeX editor;

@@ -8,9 +8,7 @@ package. This can also be used as direct database client.
 
 ## Suggested improvements for next iteration
 
-+ Find way to use generics for integer-only rules.
++ Export simple .tex file from proof.
++ Implement conditions and built-in conditions (integer derivative).
 + Add API call that expands a proof into all possible rules (for fundamentals).
-+ Add shotcut snippets with keyword for quick expression insertion.
-+ Allow keyword reuse within different subjects, guess target function based
-  on context subject (determine based on involved functions). Add autocomplete
-  UI to EdiTeX to select alternative functions with the same keyword.
+

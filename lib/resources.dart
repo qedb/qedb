@@ -240,7 +240,7 @@ class StepResource extends ResourceBase<db.StepRow> {
 
   RuleResource rule;
   ProofResource proof;
-  List<int> rearrange;
+  List<int> rearrangeFormat;
 
   Map<int, db.StepRow> _getTableMap(data) => data.stepTable;
 
@@ -249,7 +249,7 @@ class StepResource extends ResourceBase<db.StepRow> {
     rule = getResource(row.ruleId, data, new RuleResource());
     position = row.position;
     type = row.type;
-    rearrange = row.rearrange;
+    rearrangeFormat = row.rearrangeFormat;
   }
 }
 

@@ -187,16 +187,31 @@ class StepRow implements Record {
   final int previousId;
   final int expressionId;
 
-  final int position;
   final String type;
-  final int proofId;
-  final int ruleId;
-  final List<int> rearrange;
+  final int position;
 
-  StepRow(this.id, this.previousId, this.expressionId, this.position, this.type,
-      this.proofId, this.ruleId, this.rearrange);
+  final bool reverseSides;
+  final bool reverseEvaluate;
+
+  final int proofId;
+  final int conditionId;
+  final int ruleId;
+  final List<int> rearrangeFormat;
+
+  StepRow(
+      this.id,
+      this.previousId,
+      this.expressionId,
+      this.type,
+      this.position,
+      this.reverseSides,
+      this.reverseEvaluate,
+      this.proofId,
+      this.conditionId,
+      this.ruleId,
+      this.rearrangeFormat);
 
   static const select = '*';
-  static StepRow map(Row r) =>
-      new StepRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6], pgIntArray(r[5]));
+  static StepRow map(Row r) => new StepRow(r[0], r[1], r[2], r[3], r[4], r[5],
+      r[6], r[7], r[8], r[9], pgIntArray(r[10]));
 }

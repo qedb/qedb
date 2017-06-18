@@ -110,6 +110,19 @@ CREATE TABLE function (
 
 CREATE INDEX function_keyword_index ON function(keyword);
 
+CREATE TYPE function_flag_type AS ENUM (
+  'rearrangeable',
+  'derrivative'
+);
+
+-- Function flags
+CREATE TABLE function_flag (
+  function_id  integer  REFERENCES function(id),
+  flag function_flag_type,
+
+  PRIMARY KEY (function_id, flag)
+);
+
 -- Operator evaluation (relevant for printing parentheses)
 CREATE TYPE operator_associativity AS ENUM ('ltr', 'rtl');
 
@@ -159,15 +172,33 @@ CREATE INDEX expression_functions_index on expression USING GIN (functions);
 -- Rule
 --------------------------------------------------------------------------------
 
+-- Condition that can be substituted.
+-- Here we choose to repeat most of the rule table for the sake of simplicity.
+CREATE TABLE condition (
+  id                   serial     PRIMARY KEY,
+
+  left_expression_id   integer    NOT NULL REFERENCES expression(id),
+  right_expression_id  integer    NOT NULL REFERENCES expression(id),
+  left_array_data      integer[]  NOT NULL,
+  right_array_data     integer[]  NOT NULL,
+
+  UNIQUE (left_expression_id, right_expression_id),
+
+  CONSTRAINT left_is_not_right CHECK
+    (left_expression_id != right_expression_id)
+);
+
 -- Rule (equation of two expression)
 -- Optimizations that could be implemented in the future:
 -- + Set explicit reversibility (adds ability to force single direction).
 -- + Add index for top level function ID.
 CREATE TABLE rule (
   id                   serial     PRIMARY KEY,
+
   step_id              integer,
   proof_id             integer,
   is_definition        boolean    NOT NULL,
+
   left_expression_id   integer    NOT NULL REFERENCES expression(id),
   right_expression_id  integer    NOT NULL REFERENCES expression(id),
   left_array_data      integer[]  NOT NULL,
@@ -180,6 +211,15 @@ CREATE TABLE rule (
 
   CONSTRAINT step_or_proof_or_definition CHECK
     (step_id IS NOT NULL OR proof_id IS NOT NULL OR is_definition IS TRUE)
+);
+
+-- Conditions on rules
+CREATE TABLE rule_condition (
+  id            serial  PRIMARY KEY,
+  rule_id       integer NOT NULL REFERENCES rule(id),
+  condition_id  integer NOT NULL REFERENCES condition(id),
+
+  UNIQUE (rule_id, condition_id)
 );
 
 --------------------------------------------------------------------------------
@@ -199,13 +239,11 @@ ALTER TABLE rule ADD FOREIGN KEY (proof_id) REFERENCES proof(id);
 
 CREATE TYPE step_type AS ENUM (
   'set',         -- Set expression to arbitrary value.
-  'copy_rule',   -- Copy left and right expression of a rule.
   'copy_proof',  -- Copy first and last expression of a proof.
-  'rule_normal', -- Substitute a -> b, evaluate b from a.
-  'rule_invert', -- Substitute b -> a, evaluate a from b (invert rule sides).
-  'rule_mirror', -- Substitute a -> b, evaluate a from b (mirror evaluation).
-  'rule_revert', -- Substitute b -> a, evaluate b from a (invert and mirror).
-  'rearrange'    -- Rearrange using the given format.
+  'copy_rule',   -- Copy left and right expression of a rule.
+  'rearrange',   -- Rearrange using the given format.
+  'substitute_rule',
+  'substitute_condition'
 );
 
 -- Expression manipulation step
@@ -215,25 +253,62 @@ CREATE TABLE step (
   expression_id  integer    NOT NULL REFERENCES expression(id),
 
   -- Manipulation parameters
-  position       smallint   NOT NULL CHECK (position >= 0),
-  step_type      step_type  NOT NULL,
-  proof_id       integer    REFERENCES proof(id),
-  rule_id        integer    REFERENCES rule(id),
-  rearrange      smallint[],
+  step_type         step_type  NOT NULL,
+  position          smallint   NOT NULL CHECK (position >= 0) DEFAULT 0,
+
+  reverse_sides     boolean    NOT NULL DEFAULT FALSE,
+  reverse_evaluate  boolean    NOT NULL DEFAULT FALSE,
+
+  proof_id          integer    REFERENCES proof(id),
+  condition_id      integer    REFERENCES condition(id),
+  rule_id           integer    REFERENCES rule(id),
+  rearrange_format  smallint[],
 
   -- Enforce various constraints.
-  CONSTRAINT valid_type CHECK (
+  CONSTRAINT valid_parameterset CHECK (
     (previous_id = NULL AND step_type = 'set') OR
     (previous_id != NULL AND (
-      (step_type = 'copy_proof' AND proof_id IS NOT NULL) OR
-      (step_type = 'rearrange' AND rearrange IS NOT NULL) OR
-      (rule_id IS NOT NULL))))
+      (step_type = 'copy_proof' AND proof_id NOTNULL) OR
+      (step_type = 'copy_rule' AND rule_id NOTNULL) OR
+      (step_type = 'rearrange' AND rearrange_format NOTNULL) OR
+      (step_type = 'substitute_rule' AND rule_id NOTNULL) OR
+      (step_type = 'substitute_condition' AND condition_id NOTNULL))))
 );
 
 -- Add rule and proof step constraints.
 ALTER TABLE rule  ADD FOREIGN KEY (step_id)       REFERENCES step(id);
 ALTER TABLE proof ADD FOREIGN KEY (first_step_id) REFERENCES step(id);
 ALTER TABLE proof ADD FOREIGN KEY (last_step_id)  REFERENCES step(id);
+
+-- Rule condition proofs
+--
+-- Conditions must be self evident or proven by a rule. All generics between
+-- conditions for a single rule must map to consistent expressions. Conditions
+-- are processed in `ASC rule_condition(id)` order.
+CREATE TABLE rule_condition_proof (
+  id             serial   PRIMARY KEY,
+  condition_id   integer  NOT NULL REFERENCES rule_condition(id),
+  proof_rule_id  integer  REFERENCES rule(id),
+  self_evident   boolean  NOT NULL DEFAULT FALSE,
+
+  CONSTRAINT self_evident_or_rule CHECK (proof_rule_id NOTNULL != self_evident)
+);
+
+-- Rule condition proof for rule condition proof rule.
+CREATE TABLE rule_condition_proof_proof (
+  parent_id  integer  REFERENCES rule_condition_proof(id),
+  child_id   integer  REFERENCES rule_condition_proof(id),
+
+  PRIMARY KEY (parent_id, child_id)
+);
+
+-- Rule condition proof for step rule.
+CREATE TABLE step_rule_condition_proof (
+  step_id   integer  REFERENCES step(id),
+  proof_id  integer  REFERENCES rule_condition_proof(id),
+
+  PRIMARY KEY (step_id, proof_id)
+);
 
 --------------------------------------------------------------------------------
 -- Create user and restrict access.
