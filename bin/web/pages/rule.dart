@@ -80,7 +80,7 @@ final listRulesPage = new Page(template: (s) {
     return [
       td(rule.id.toString()),
       td(span('.latex', rule.leftExpression.latex)),
-      td(span('.latex', r'\rightarrow')),
+      td(span('.latex', r'\Longleftrightarrow')),
       td(span('.latex', rule.rightExpression.latex)),
       td(safe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
           rule.containsKey('step') ? span('step') : span('.none.text-muted'))),
