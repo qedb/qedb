@@ -14,7 +14,7 @@ part of qedb;
 /// 3. *From two connecting steps:* `proof.firstStep.id` and
 ///    `proof.lastStep.id` are set.
 /// 4. *From a single step:* `step.id` is set (must be an equation, e.g. the top
-///    level function is equal to the '=' operator).
+///    level function is [SpecialFunction.equals]).
 Future<db.RuleRow> createRule(Session s, RuleResource body) async {
   if (body.isDefinition != null && body.isDefinition) {
     return createRuleFromDefinition(
@@ -48,10 +48,10 @@ Future<db.RuleRow> createRuleFromProof(Session s, int proofId) async {
 
   // Load expressions.
   await _listStepsById(s, [proof.firstStepId, proof.lastStepId]);
-  final leftExpr = new Expr.fromBase64(s.data
-      .expressionTable[s.data.stepTable[proof.firstStepId].expressionId].data);
-  final rightExpr = new Expr.fromBase64(s.data
-      .expressionTable[s.data.stepTable[proof.lastStepId].expressionId].data);
+  final leftExpr = s.data
+      .expressionTable[s.data.stepTable[proof.firstStepId].expressionId].expr;
+  final rightExpr = s.data
+      .expressionTable[s.data.stepTable[proof.lastStepId].expressionId].expr;
 
   return _createRule(s, leftExpr, rightExpr, proofId: proofId);
 }
@@ -96,15 +96,12 @@ Future<db.RuleRow> createRuleFromSteps(
 }
 
 Future<db.RuleRow> createRuleFromStep(Session s, int stepId) async {
-  // Get ID of '=' operator.
-  final eqOperator =
-      await s.selectOne(db.operator, WHERE({'character': IS('=')}));
-
   // Get step expression.
   final step = await s.selectById(db.step, stepId);
   final expr = await s.selectById(db.expression, step.expressionId);
 
-  if (expr.nodeType == 'function' && expr.nodeValue == eqOperator.functionId) {
+  if (expr.nodeType == 'function' &&
+      expr.nodeValue == s.specialFunctions[SpecialFunction.equals]) {
     // Trace back to initial step.
     final steps = await _listStepsBetween(s, -1, stepId);
 
@@ -138,10 +135,8 @@ Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
     throw new UnprocessableEntityError('rule is directly resolvable');
   }
 
-  // Retrieve computable functions.
-  final computable = await _loadComputableFunctions(s);
-  final compute =
-      (int id, List<num> args) => _exprCompute(id, args, computable);
+  // Computing closure.
+  final compute = (int id, List<num> args) => _exprCompute(s, id, args);
 
   // Evaluate expressions.
   final leftEval = leftExpr.evaluate(compute);

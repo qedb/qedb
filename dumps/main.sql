@@ -44,8 +44,8 @@ ALTER ROLE qedb WITH NOSUPERUSER INHERIT NOCREATEROLE NOCREATEDB LOGIN NOREPLICA
 
 CREATE DATABASE qedb WITH TEMPLATE = template0 OWNER = postgres;
 REVOKE CONNECT,TEMPORARY ON DATABASE qedb FROM PUBLIC;
-GRANT CONNECT ON DATABASE qedb TO qedb;
 GRANT TEMPORARY ON DATABASE qedb TO PUBLIC;
+GRANT CONNECT ON DATABASE qedb TO qedb;
 REVOKE CONNECT,TEMPORARY ON DATABASE template1 FROM PUBLIC;
 GRANT CONNECT ON DATABASE template1 TO PUBLIC;
 
@@ -58,8 +58,8 @@ SET default_transaction_read_only = off;
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.2
--- Dumped by pg_dump version 9.6.2
+-- Dumped from database version 9.6.3
+-- Dumped by pg_dump version 9.6.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -103,8 +103,8 @@ SET default_transaction_read_only = off;
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.2
--- Dumped by pg_dump version 9.6.2
+-- Dumped from database version 9.6.3
+-- Dumped by pg_dump version 9.6.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -173,18 +173,6 @@ CREATE TYPE expression_type AS ENUM (
 ALTER TYPE expression_type OWNER TO postgres;
 
 --
--- Name: function_flag_type; Type: TYPE; Schema: public; Owner: postgres
---
-
-CREATE TYPE function_flag_type AS ENUM (
-    'rearrangeable',
-    'derrivative'
-);
-
-
-ALTER TYPE function_flag_type OWNER TO postgres;
-
---
 -- Name: keyword_type; Type: TYPE; Schema: public; Owner: postgres
 --
 
@@ -223,6 +211,22 @@ CREATE TYPE operator_type AS ENUM (
 
 
 ALTER TYPE operator_type OWNER TO postgres;
+
+--
+-- Name: special_function_type; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE special_function_type AS ENUM (
+    'equals',
+    'add',
+    'subtract',
+    'multiply',
+    'negate',
+    'derivative'
+);
+
+
+ALTER TYPE special_function_type OWNER TO postgres;
 
 --
 -- Name: step_type; Type: TYPE; Schema: public; Owner: postgres
@@ -758,6 +762,7 @@ CREATE TABLE function (
     keyword text,
     keyword_type keyword_type,
     latex_template text,
+    special_type special_function_type,
     CONSTRAINT function_argument_count_check CHECK ((argument_count >= 0)),
     CONSTRAINT function_check CHECK (((NOT generic) OR (argument_count < 2))),
     CONSTRAINT function_check1 CHECK ((NOT (rearrangeable AND (argument_count < 2)))),
@@ -770,18 +775,6 @@ CREATE TABLE function (
 
 
 ALTER TABLE function OWNER TO postgres;
-
---
--- Name: function_flag; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE function_flag (
-    function_id integer NOT NULL,
-    flag function_flag_type NOT NULL
-);
-
-
-ALTER TABLE function_flag OWNER TO postgres;
 
 --
 -- Name: function_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -925,7 +918,7 @@ CREATE TABLE rule (
     left_array_data integer[] NOT NULL,
     right_array_data integer[] NOT NULL,
     CONSTRAINT left_is_not_right CHECK ((left_expression_id <> right_expression_id)),
-    CONSTRAINT step_or_proof_or_definition CHECK (((step_id IS NOT NULL) OR (proof_id IS NOT NULL) OR (is_definition IS TRUE)))
+    CONSTRAINT step_or_proof_or_definition CHECK (((step_id IS NOT NULL) OR (proof_id IS NOT NULL) OR is_definition))
 );
 
 
@@ -973,6 +966,7 @@ CREATE TABLE rule_condition_proof (
     id integer NOT NULL,
     condition_id integer NOT NULL,
     proof_rule_id integer,
+    adopt_condition boolean DEFAULT false NOT NULL,
     self_evident boolean DEFAULT false NOT NULL,
     CONSTRAINT self_evident_or_rule CHECK (((proof_rule_id IS NOT NULL) <> self_evident))
 );
@@ -1366,39 +1360,31 @@ SELECT pg_catalog.setval('expression_id_seq', 48, true);
 -- Data for Name: function; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_count, keyword, keyword_type, latex_template) FROM stdin;
-1	1	6	f	f	2	\N	\N	${.0}=${1.}
-2	1	7	f	t	2	\N	\N	${.0}+${1(+).}
-3	1	8	f	f	2	\N	\N	${.0}-${1(+).}
-4	1	9	f	t	2	\N	\N	${.0(+):}${:1(*).}
-5	1	10	f	f	2	frac	latex	\\frac{\\,${0}\\,}{\\,${1}\\,}
-6	1	11	f	f	2	\N	\N	${.0(*)}^{${1}}
-7	1	12	f	f	1	\N	\N	$!-${0(^).}
-8	2	13	f	f	1	\N	\N	${.0(~):}!
-9	1	\N	t	f	0	a	symbol	\N
-10	1	\N	t	f	0	b	symbol	\N
-11	1	\N	t	f	0	c	symbol	\N
-12	1	\N	t	f	0	n	symbol	\N
-13	3	\N	f	f	0	e1	symbol	\\hat{e_1}
-14	3	\N	f	f	0	e2	symbol	\\hat{e_2}
-15	3	\N	f	f	0	e3	symbol	\\hat{e_3}
-16	4	14	f	f	1	sin	latex	\\sin${:0(+).}
-17	4	15	f	f	1	cos	latex	\\cos${:0(+).}
-18	5	\N	t	f	0	x	symbol	\N
-19	5	\N	t	f	0	y	symbol	\N
-20	5	\N	t	f	1	f	abbreviation	\N
-21	5	16	f	f	1	d	symbol	\\Delta${:0(+).}
-22	5	17	f	f	3	lim	latex	\\lim_{${0}\\to${1}}${:2(+).}
-23	5	18	f	f	2	diff	abbreviation	\\frac{\\partial}{\\partial${:0(+)}}${:1(+).}
-24	1	19	f	f	2	vec2	word	\\left(\\begin{matrix}${0}\\\\${1}\\end{matrix}\\right)
-\.
-
-
---
--- Data for Name: function_flag; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY function_flag (function_id, flag) FROM stdin;
+COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_count, keyword, keyword_type, latex_template, special_type) FROM stdin;
+1	1	6	f	f	2	\N	\N	${.0}=${1.}	equals
+2	1	7	f	t	2	\N	\N	${.0}+${1(+).}	add
+3	1	8	f	f	2	\N	\N	${.0}-${1(+).}	subtract
+4	1	9	f	t	2	\N	\N	${.0(+):}${:1(*).}	multiply
+5	1	10	f	f	2	frac	latex	\\frac{\\,${0}\\,}{\\,${1}\\,}	\N
+6	1	11	f	f	2	\N	\N	${.0(*)}^{${1}}	\N
+7	1	12	f	f	1	\N	\N	$!-${0(^).}	negate
+8	2	13	f	f	1	\N	\N	${.0(~):}!	\N
+9	1	\N	t	f	0	a	symbol	\N	\N
+10	1	\N	t	f	0	b	symbol	\N	\N
+11	1	\N	t	f	0	c	symbol	\N	\N
+12	1	\N	t	f	0	n	symbol	\N	\N
+13	3	\N	f	f	0	e1	symbol	\\hat{e_1}	\N
+14	3	\N	f	f	0	e2	symbol	\\hat{e_2}	\N
+15	3	\N	f	f	0	e3	symbol	\\hat{e_3}	\N
+16	4	14	f	f	1	sin	latex	\\sin${:0(+).}	\N
+17	4	15	f	f	1	cos	latex	\\cos${:0(+).}	\N
+18	5	\N	t	f	0	x	symbol	\N	\N
+19	5	\N	t	f	0	y	symbol	\N	\N
+20	5	\N	t	f	1	f	abbreviation	\N	\N
+21	5	16	f	f	1	d	symbol	\\Delta${:0(+).}	\N
+22	5	17	f	f	3	lim	latex	\\lim_{${0}\\to${1}}${:2(+).}	\N
+23	5	18	f	f	2	diff	abbreviation	\\frac{\\partial}{\\partial${:0(+)}}${:1(+).}	derivative
+24	1	19	f	f	2	vec2	word	\\left(\\begin{matrix}${0}\\\\${1}\\end{matrix}\\right)	\N
 \.
 
 
@@ -1477,6 +1463,7 @@ COPY rule (id, step_id, proof_id, is_definition, left_expression_id, right_expre
 5	\N	\N	t	17	18	{71005026,4,4,2,22,695795496,4,6,2,6,198119638,3,9,358130610,3,10,622151856,4,6,2,6,198119638,3,9,971369676,3,11}	{491848602,4,6,2,14,198119638,3,9,416255908,4,2,2,6,358130610,3,10,971369676,3,11}
 6	\N	\N	t	21	28	{909282448,4,23,2,11,910648714,3,18,129606980,5,20,1,3,910648714,3,18}	{298586446,4,22,3,58,662684094,4,21,1,3,910648714,3,18,1,1,0,976197574,4,5,2,42,396128080,4,3,2,29,76780122,5,20,1,16,1022394746,4,2,2,11,910648714,3,18,662684094,4,21,1,3,910648714,3,18,129606980,5,20,1,3,910648714,3,18,662684094,4,21,1,3,910648714,3,18}
 7	\N	\N	t	29	34	{853990810,4,24,2,6,198119638,3,9,358130610,3,10}	{88350546,4,2,2,22,352139162,4,4,2,6,198119638,3,9,665602766,2,13,1030378374,4,4,2,6,358130610,3,10,168365960,2,14}
+8	\N	1	f	35	48	{815027242,4,24,2,22,507440212,4,4,2,6,198119638,3,9,358130610,3,10,792166020,4,4,2,6,198119638,3,9,971369676,3,11}	{321065132,4,4,2,14,198119638,3,9,71476026,4,24,2,6,358130610,3,10,971369676,3,11}
 \.
 
 
@@ -1499,7 +1486,7 @@ SELECT pg_catalog.setval('rule_condition_id_seq', 1, false);
 -- Data for Name: rule_condition_proof; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY rule_condition_proof (id, condition_id, proof_rule_id, self_evident) FROM stdin;
+COPY rule_condition_proof (id, condition_id, proof_rule_id, adopt_condition, self_evident) FROM stdin;
 \.
 
 
@@ -1522,7 +1509,7 @@ COPY rule_condition_proof_proof (parent_id, child_id) FROM stdin;
 -- Name: rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('rule_id_seq', 7, true);
+SELECT pg_catalog.setval('rule_id_seq', 8, true);
 
 
 --
@@ -1596,7 +1583,7 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 15	15	1	Cosine
 16	16	1	Delta
 17	17	1	Limit
-18	18	1	Differential
+18	18	1	Derivative
 19	1	2	Basis algebra
 20	2	2	Combinatoriek
 21	3	2	Vectoralgebra
@@ -1614,7 +1601,7 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 33	15	2	Cosinus
 34	16	2	Delta
 35	17	2	Limiet
-36	18	2	Differentiaal
+36	18	2	Afgeleide
 37	19	1	2D Vector
 \.
 
@@ -1683,19 +1670,19 @@ ALTER TABLE ONLY function
 
 
 --
--- Name: function_flag function_flag_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY function_flag
-    ADD CONSTRAINT function_flag_pkey PRIMARY KEY (function_id, flag);
-
-
---
 -- Name: function function_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY function
     ADD CONSTRAINT function_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: function function_special_type_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY function
+    ADD CONSTRAINT function_special_type_key UNIQUE (special_type);
 
 
 --
@@ -1881,6 +1868,13 @@ CREATE INDEX function_keyword_index ON function USING btree (keyword);
 
 
 --
+-- Name: function_rearrangeable; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX function_rearrangeable ON function USING btree (rearrangeable);
+
+
+--
 -- Name: function function_latex_update; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1909,14 +1903,6 @@ ALTER TABLE ONLY condition
 
 ALTER TABLE ONLY function
     ADD CONSTRAINT function_descriptor_id_fkey FOREIGN KEY (descriptor_id) REFERENCES descriptor(id);
-
-
---
--- Name: function_flag function_flag_function_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY function_flag
-    ADD CONSTRAINT function_flag_function_id_fkey FOREIGN KEY (function_id) REFERENCES function(id);
 
 
 --
@@ -2203,13 +2189,6 @@ GRANT UPDATE(latex_template) ON TABLE function TO qedb;
 
 
 --
--- Name: function_flag; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,INSERT ON TABLE function_flag TO qedb;
-
-
---
 -- Name: function_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2368,8 +2347,8 @@ SET default_transaction_read_only = off;
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.2
--- Dumped by pg_dump version 9.6.2
+-- Dumped from database version 9.6.3
+-- Dumped by pg_dump version 9.6.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;

@@ -20,29 +20,3 @@ Future<db.OperatorRow> createOperator(Session s, OperatorResource body) {
 Future<List<db.OperatorRow>> listOperators(Session s) {
   return s.select(db.operator);
 }
-
-Future<Map<String, int>> _loadComputableFunctions(Session s) async {
-  // Get computable functions via operator tables.
-  // (it is reasonable to assume +-*~ are the operator characters)
-  final operators =
-      await s.select(db.operator, WHERE({'character': IN('+-*~'.split(''))}));
-  return new Map<String, int>.fromIterable(operators,
-      key: (db.OperatorRow row) => row.character,
-      value: (db.OperatorRow row) => row.id);
-}
-
-/// Compute function based on [computable] from [_loadComputableFunctions].
-num _exprCompute(int id, List<num> args, Map<String, int> computable) {
-  // Only do operations that given two integers will always return an integer.
-  if (id == computable['+']) {
-    return args[0] + args[1];
-  } else if (id == computable['-']) {
-    return args[0] - args[1];
-  } else if (id == computable['*']) {
-    return args[0] * args[1];
-  } else if (id == computable['~']) {
-    return -args[0];
-  } else {
-    return double.NAN;
-  }
-}

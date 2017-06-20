@@ -70,12 +70,12 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   } else {
     steps.add(new _StepData()
       ..type = StepType.setExpression
-      ..expression = new Expr.fromBase64(body.steps.first.leftExpression));
+      ..expression = body.steps.first.leftExpr);
   }
 
   /// Flatten list of difference branches into a step list.
   for (final branch in body.steps) {
-    if (new Expr.fromBase64(branch.leftExpression) != steps.last.expression) {
+    if (branch.leftExpr != steps.last.expression) {
       throw new UnprocessableEntityError('steps do not connect');
     } else {
       // Note: reverse flattened list so that position integers are unaffected.
@@ -83,7 +83,7 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
 
       // Use the right side of the branch to later validate that proof
       // reconstruction is correct.
-      steps.last.expression = new Expr.fromBase64(branch.rightExpression);
+      steps.last.expression = branch.rightExpr;
     }
   }
 
@@ -98,10 +98,8 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   final rearrangeableIds =
       await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
 
-  // Retrieve computable functions.
-  final computable = await _loadComputableFunctions(s);
-  final compute =
-      (int id, List<num> args) => _exprCompute(id, args, computable);
+  // Computing closure.
+  final compute = (int id, List<num> args) => _exprCompute(s, id, args);
 
   // Run through all steps.
   Expr expr;
@@ -241,7 +239,7 @@ List<_StepData> _flattenDifferenceBranch(DifferenceBranch branch) {
         ..reverseSides = branch.reverseRule
         ..reverseEvaluate = branch.reverseEvaluate
         ..ruleId = branch.rule.id
-        ..subExprRight = new Expr.fromBase64(branch.rightExpression);
+        ..subExprRight = branch.rightExpr;
 
       steps.add(step);
     } else {
@@ -262,18 +260,16 @@ Future<_StepData> _getStepData(Session s, int id) async {
   final step = new _StepData();
   step.row = await s.selectById(db.step, id);
   final exprRow = await s.selectById(db.expression, step.row.expressionId);
-  step.expression = new Expr.fromBase64(exprRow.data);
+  step.expression = exprRow.expr;
   return step;
 }
 
 /// Expand rule with [id] into an equation expression.
 Future<Expr> _getRuleAsExpression(Session s, int id) async {
-  final eqOperator =
-      await s.selectOne(db.operator, WHERE({'character': IS('=')}));
   final rule = await s.selectById(db.rule, id);
   final map = await getExpressionMap(
       s, [rule.leftExpressionId, rule.rightExpressionId]);
 
-  return new FunctionExpr(eqOperator.functionId, false,
+  return new FunctionExpr(s.specialFunctions[SpecialFunction.equals], false,
       [map[rule.leftExpressionId], map[rule.rightExpressionId]]);
 }

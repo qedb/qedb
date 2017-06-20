@@ -18,6 +18,7 @@ import 'package:qedb/sqlbuilder.dart';
 import 'package:qedb/resources.dart';
 import 'package:qedb/schema.dart' as db;
 
+part 'src/special_functions.dart';
 part 'src/language.dart';
 part 'src/descriptor.dart';
 part 'src/translation.dart';
@@ -27,6 +28,7 @@ part 'src/operator.dart';
 part 'src/expression.dart';
 part 'src/rule.dart';
 part 'src/expression_difference.dart';
+part 'src/expression_compute.dart';
 part 'src/step.dart';
 part 'src/proof_create.dart';
 part 'src/proof_read.dart';
@@ -34,8 +36,11 @@ part 'src/proof_read.dart';
 final log = new Logger('qedb');
 
 class Session extends SessionState<db.SessionData> {
-  // Targeted languages.
+  // Targeted languages in the session.
   final List<int> languages;
+
+  // All special function IDs.
+  final specialFunctions = new Map<SpecialFunction, int>();
 
   Session(Connection conn, db.SessionData data, this.languages)
       : super(conn, data);

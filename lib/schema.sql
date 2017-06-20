@@ -67,8 +67,20 @@ CREATE TYPE keyword_type AS ENUM (
   -- ([a-z]+ form of the function symbol)
   'symbol',
 
-  -- Special case: this keyword is directly related to a LaTeX command.
+  -- The keyword is directly related to a LaTeX command.
   'latex'
+);
+
+-- Special functions
+-- The backend has some awareness of these functions, and can use them in
+-- evaluation and rule checking.
+CREATE TYPE special_function_type AS ENUM (
+  'equals',
+  'add',
+  'subtract',
+  'multiply',
+  'negate',
+  'derivative'
 );
 
 -- Function
@@ -90,6 +102,9 @@ CREATE TABLE function (
   -- descriptor can also be used to print this function.
   latex_template  text      CHECK ((latex_template = '') IS NOT TRUE),
 
+  -- Optional special function code. Each code can only be assigned once.
+  special_type    special_function_type  UNIQUE,
+
   -- Do not repeat the same LaTeX template within the same subject.
   UNIQUE (subject_id, latex_template),
 
@@ -109,19 +124,7 @@ CREATE TABLE function (
 );
 
 CREATE INDEX function_keyword_index ON function(keyword);
-
-CREATE TYPE function_flag_type AS ENUM (
-  'rearrangeable',
-  'derrivative'
-);
-
--- Function flags
-CREATE TABLE function_flag (
-  function_id  integer  REFERENCES function(id),
-  flag function_flag_type,
-
-  PRIMARY KEY (function_id, flag)
-);
+CREATE INDEX function_rearrangeable ON function(rearrangeable);
 
 -- Operator evaluation (relevant for printing parentheses)
 CREATE TYPE operator_associativity AS ENUM ('ltr', 'rtl');
@@ -210,7 +213,7 @@ CREATE TABLE rule (
     (left_expression_id != right_expression_id),
 
   CONSTRAINT step_or_proof_or_definition CHECK
-    (step_id IS NOT NULL OR proof_id IS NOT NULL OR is_definition IS TRUE)
+    (step_id IS NOT NULL OR proof_id IS NOT NULL OR is_definition)
 );
 
 -- Conditions on rules
@@ -286,10 +289,11 @@ ALTER TABLE proof ADD FOREIGN KEY (last_step_id)  REFERENCES step(id);
 -- conditions for a single rule must map to consistent expressions. Conditions
 -- are processed in `ASC rule_condition(id)` order.
 CREATE TABLE rule_condition_proof (
-  id             serial   PRIMARY KEY,
-  condition_id   integer  NOT NULL REFERENCES rule_condition(id),
-  proof_rule_id  integer  REFERENCES rule(id),
-  self_evident   boolean  NOT NULL DEFAULT FALSE,
+  id               serial   PRIMARY KEY,
+  condition_id     integer  NOT NULL REFERENCES rule_condition(id),
+  proof_rule_id    integer  REFERENCES rule(id),
+  adopt_condition  boolean  NOT NULL DEFAULT FALSE,
+  self_evident     boolean  NOT NULL DEFAULT FALSE,
 
   CONSTRAINT self_evident_or_rule CHECK (proof_rule_id NOTNULL != self_evident)
 );

@@ -23,13 +23,17 @@ Future<db.FunctionRow> createFunction(Session s, FunctionResource body) async {
     values['descriptor_id'] = (await _createDescriptor(s, body.descriptor)).id;
   }
 
+  if (notEmpty(body.keyword) && body.keywordType != null) {
+    values['keyword'] = body.keyword;
+    values['keyword_type'] = body.keywordType;
+  }
+
   if (notEmpty(body.latexTemplate)) {
     values['latex_template'] = body.latexTemplate;
   }
 
-  if (notEmpty(body.keyword) && body.keywordType != null) {
-    values['keyword'] = body.keyword;
-    values['keyword_type'] = body.keywordType;
+  if (notEmpty(body.specialType)) {
+    values['special_type'] = body.specialType;
   }
 
   return await s.insert(db.function, VALUES(values));

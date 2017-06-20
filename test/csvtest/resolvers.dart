@@ -161,4 +161,7 @@ class EqlibHelper {
 
   ValueResolver functionIds(ValueResolver<String> expression) =>
       (row) => _parse(expression, row).functionIds;
+
+  ValueResolver arrayData(ValueResolver<String> expression) =>
+      (row) => _parse(expression, row).toArray();
 }

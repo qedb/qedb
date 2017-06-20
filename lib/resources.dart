@@ -120,15 +120,16 @@ class FunctionResource extends ResourceBase<db.FunctionRow> {
   String keyword;
 
   @ApiProperty(values: const {
-    'word': '',
-    'acronym': '',
-    'abbreviation': '',
-    'symbol': '',
-    'latex': ''
+    'word': '[a-z]+ form of the function name descriptor',
+    'acronym': 'Short form of the function name descriptor',
+    'abbreviation': 'Short form of the function name descriptor',
+    'symbol': '[a-z]+ form of the function symbol',
+    'latex': 'The keyword is directly related to a LaTeX command'
   })
   String keywordType;
 
   String latexTemplate;
+  String specialType;
 
   Map<int, db.FunctionRow> _getTableMap(data) => data.functionTable;
 
@@ -141,6 +142,7 @@ class FunctionResource extends ResourceBase<db.FunctionRow> {
     keyword = row.keyword;
     keywordType = row.keywordType;
     latexTemplate = row.latexTemplate;
+    specialType = row.specialType;
   }
 }
 

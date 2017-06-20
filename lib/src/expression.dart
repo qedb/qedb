@@ -91,13 +91,12 @@ Future<List<db.ExpressionRow>> listExpressions(
   final queue = new List<Future>();
   final ops = await _loadOperatorConfig(s);
   for (var i = 0; i < expressions.length; i++) {
-    final expr = expressions[i];
-    if (expr.latex == null) {
-      final latex =
-          await _renderExpressionLaTeX(s, new Expr.fromBase64(expr.data), ops);
+    final exprRow = expressions[i];
+    if (exprRow.latex == null) {
+      final latex = await _renderExpressionLaTeX(s, exprRow.expr, ops);
       queue.add(s
-          .update(
-              db.expression, SET({'latex': latex}), WHERE({'id': IS(expr.id)}))
+          .update(db.expression, SET({'latex': latex}),
+              WHERE({'id': IS(exprRow.id)}))
           .then((rows) {
         expressions[i] = rows.single;
       }));
@@ -112,7 +111,7 @@ Future<List<db.ExpressionRow>> listExpressions(
 Future<Map<int, Expr>> getExpressionMap(Session s, Iterable<int> ids) async {
   final expressions = await listExpressions(s, ids);
   return new Map<int, Expr>.fromIterable(expressions,
-      key: (expr) => expr.id, value: (expr) => new Expr.fromBase64(expr.data));
+      key: (row) => row.id, value: (row) => row.expr);
 }
 
 Future<OperatorConfig> _loadOperatorConfig(Session s) async {
@@ -158,7 +157,7 @@ Future<String> _renderExpressionLaTeX(
   // Ad-hoc fix: always add ID for negate operator. The LaTeX printer will wrap
   // negative integers in a negate function for proper formatting. So this
   // template must be available.
-  functionIds.add(operators.byChar['~'.codeUnitAt(0)].id);
+  functionIds.add(s.specialFunctions[SpecialFunction.negate]);
 
   // Retrieve functions in expression.
   final functions = await s.selectByIds(db.function, functionIds);

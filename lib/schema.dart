@@ -4,6 +4,7 @@
 
 library qedb.schema;
 
+import 'package:eqlib/eqlib.dart';
 import 'package:qedb/utils.dart';
 import 'package:qedb/sqlbuilder.dart';
 import 'package:postgresql/postgresql.dart';
@@ -75,6 +76,7 @@ class FunctionRow implements Record {
   final String keyword;
   final String keywordType;
   final String latexTemplate;
+  final String specialType;
 
   FunctionRow(
       this.id,
@@ -85,11 +87,12 @@ class FunctionRow implements Record {
       this.argumentCount,
       this.keyword,
       this.keywordType,
-      this.latexTemplate);
+      this.latexTemplate,
+      this.specialType);
 
   static const select = '*';
-  static FunctionRow map(Row r) =>
-      new FunctionRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+  static FunctionRow map(Row r) => new FunctionRow(
+      r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]);
 }
 
 /// Operator
@@ -129,6 +132,8 @@ class ExpressionRow implements Record {
   ExpressionRow(this.id, this.data, this.hash, this.latex, this.functions,
       this.nodeType, this.nodeValue, this.nodeArguments);
 
+  Expr get expr => new Expr.fromBase64(data);
+
   static final select = [
     'id',
     "encode(data, 'base64')",
@@ -148,7 +153,6 @@ class ExpressionRow implements Record {
 //------------------------------------------------------------------------------
 
 /// Rule
-/// Note: left_array_data and right_array_data are not included.
 class RuleRow implements Record {
   final int id;
   final int stepId;
@@ -160,8 +164,7 @@ class RuleRow implements Record {
   RuleRow(this.id, this.stepId, this.proofId, this.isDefinition,
       this.leftExpressionId, this.rightExpressionId);
 
-  static const select =
-      'id, step_id, proof_id, is_definition, left_expression_id, right_expression_id';
+  static const select = '*';
   static RuleRow map(Row r) => new RuleRow(r[0], r[1], r[2], r[3], r[4], r[5]);
 }
 

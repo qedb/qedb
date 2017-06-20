@@ -40,6 +40,9 @@ class QEDb {
       final data = new db.SessionData();
       final session = new api.Session(conn, data, []);
 
+      // Retrieve special functions.
+      session.specialFunctions.addAll(await api.getSpecialFunctions(session));
+
       // Retrieve all languages.
       // This may seem a bit ridiculous, but the overhead is not actually that
       // big. Additionally, this makes the rest of the code more convenient, and

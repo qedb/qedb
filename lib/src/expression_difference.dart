@@ -23,6 +23,9 @@ class DifferenceBranch {
   RuleResource rule;
   List<Rearrangement> rearrangements;
   List<DifferenceBranch> arguments;
+
+  Expr get leftExpr => new Expr.fromBase64(leftExpression);
+  Expr get rightExpr => new Expr.fromBase64(rightExpression);
 }
 
 /// Resolves difference between leftExpression and rightExpression.
@@ -51,16 +54,13 @@ Future<DifferenceBranch> _resolveExpressionDifference(
       ..different = true
       ..resolved = false;
   } else {
-    // Get computable functions.
-    final comp = await _loadComputableFunctions(s);
-    final computableIds = '+-*~'.split('').map((c) => comp[c]).toList();
-    final compute = (int id, List<num> args) => _exprCompute(id, args, comp);
-    return await resolveTreeDiff(s, result.branch, computableIds, compute);
+    final compute = (int id, List<num> args) => _exprCompute(s, id, args);
+    return await resolveTreeDiff(s, result.branch, compute);
   }
 }
 
-Future<DifferenceBranch> resolveTreeDiff(Session s, ExprDiffBranch branch,
-    List<int> computableIds, ExprCompute compute) async {
+Future<DifferenceBranch> resolveTreeDiff(
+    Session s, ExprDiffBranch branch, ExprCompute compute) async {
   final outputBranch = new DifferenceBranch()
     ..position = branch.position
     ..leftExpression = branch.left.toBase64()
@@ -98,7 +98,16 @@ Future<DifferenceBranch> resolveTreeDiff(Session s, ExprDiffBranch branch,
         ARRAY(right.toArray(), 'integer')
       ];
       final ruleParams = [SQL('left_array_data'), SQL('right_array_data')];
-      final computableIdsArray = ARRAY(computableIds, 'integer');
+
+      // Add, subtract, multiply, negate.
+      final computableIdsArray = ARRAY(
+          [
+            SpecialFunction.add,
+            SpecialFunction.subtract,
+            SpecialFunction.multiply,
+            SpecialFunction.negate
+          ].map((fn) => s.specialFunctions[fn]),
+          'integer');
 
       // Try to find rule (4 search methods: normal, invert, mirror, revert).
       for (var i = 0; i < 4; i++) {
@@ -125,7 +134,7 @@ Future<DifferenceBranch> resolveTreeDiff(Session s, ExprDiffBranch branch,
       // Fallback to processing individual arguments.
       if (branch.argumentDifference.isNotEmpty) {
         outputBranch.arguments = await Future.wait(branch.argumentDifference
-            .map((arg) => resolveTreeDiff(s, arg, computableIds, compute)));
+            .map((arg) => resolveTreeDiff(s, arg, compute)));
         outputBranch.resolved =
             outputBranch.arguments.every((arg) => arg.resolved);
       }

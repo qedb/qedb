@@ -82,7 +82,8 @@ Future main() async {
       'argumentCount': col('ArgC'),
       'keyword': ifNe('Keyword', col('Keyword')),
       'keywordType': ifNe('Keyword type', col('Keyword type')),
-      'latexTemplate': ifNe('LaTeX template', col('LaTeX template'))
+      'latexTemplate': ifNe('LaTeX template', col('LaTeX template')),
+      'specialType': ifNe('Special', col('Special'))
     }, response: {
       'id': col('ID'),
       'subject': {'id': pkey.get('subject', col('Subject'))},
@@ -101,7 +102,8 @@ Future main() async {
       'argumentCount': col('ArgC'),
       'keyword': ifNe('Keyword', col('Keyword')),
       'keywordType': ifNe('Keyword type', col('Keyword type')),
-      'latexTemplate': ifNe('LaTeX template', col('LaTeX template'))
+      'latexTemplate': ifNe('LaTeX template', col('LaTeX template')),
+      'specialType': ifNe('Special', col('Special'))
     }),
 
     // Create operator.
