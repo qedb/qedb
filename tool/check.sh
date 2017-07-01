@@ -16,7 +16,7 @@ then
 
   # Run analyzer checks.
   dartanalyzer \
-  --options .analysis_options \
+  --options analysis_options.yaml \
   --fatal-hints --fatal-warnings --fatal-lints ./
 fi
 
