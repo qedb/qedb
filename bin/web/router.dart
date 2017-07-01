@@ -56,7 +56,7 @@ Future<Null> setupRouter(
   final staticEndpoints = ['external', 'snippets', 'src'];
   for (final endpoint in staticEndpoints) {
     router.add(
-        '/$endpoint/', ['GET'], createStaticHandler(staticBase + endpoint),
+        '/$endpoint/', ['GET'], createStaticHandler('$staticBase$endpoint'),
         exactMatch: false);
   }
 

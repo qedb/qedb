@@ -83,7 +83,7 @@ Future<bool> submitForm(
     dataInput.value = JSON.encode(data.toJson());
     form.submit();
     return true;
-  } catch (e) {
+  } on Exception catch (e) {
     window.alert(e.toString());
     return false;
   }

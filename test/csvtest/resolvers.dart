@@ -48,25 +48,24 @@ ValueResolver<List<int>> intlist(ValueResolver input) => (row) {
 /// If not empty
 ///
 /// Alias for includeIf(not(empty(column([condCol]))), [value]).
-ValueResolver ifNe(String condCol, dynamic value) =>
+ValueResolver ifNe(String condCol, value) =>
     includeIf(not(empty(col(condCol))), value);
 
 /// If not a OR b
 ///
 /// Alias for includeIf(not(or([condA], [condB])), [value]).
-ValueResolver ifNor(ValueResolver condA, ValueResolver condB, dynamic value) =>
+ValueResolver ifNor(ValueResolver condA, ValueResolver condB, value) =>
     includeIf(not(or(condA, condB)), value);
 
 /// If not empty, include A, else include B.
-ValueResolver ifNeElse(String condCol, dynamic value, dynamic fallback) =>
+ValueResolver ifNeElse(String condCol, value, fallback) =>
     includeIf(not(empty(col(condCol))), value, fallback);
 
 /// Primary key emulator.
 class PrimaryKeyEmulator {
   final db = new Map<String, List<int>>();
 
-  ValueResolver<int> get(String table, dynamic value, [dynamic mixWith]) =>
-      (row) {
+  ValueResolver<int> get(String table, value, [mixWith]) => (row) {
         // Get hash code for targeted record.
         var recordHashCode =
             value is ValueResolver ? value(row).hashCode : value.hashCode;

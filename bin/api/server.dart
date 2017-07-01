@@ -48,7 +48,7 @@ Future<Null> main() async {
   }
 
   // Create RPC API handler.
-  final ApiServer apiServer = new ApiServer();
+  final apiServer = new ApiServer();
 
   final eqapi = new QEDb(connectionUri, minConnections, maxConnections);
   await eqapi.initialize();
@@ -68,7 +68,7 @@ Future<Null> main() async {
 
   // Log all requests for testing.
   final testLogFile = new File(conf.string('TEST_LOG'));
-  if (await testLogFile.exists()) {
+  if (testLogFile.existsSync()) {
     readRequestLog(testLogFile);
     pipeline = pipeline.addMiddleware(logRequestData(
         testLogFile, conf.boolean('TEST_LOG_CREATE_ONLY', true)));

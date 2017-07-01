@@ -14,6 +14,9 @@ final log = new Logger('sqlbuilder');
 /// Class for rows.
 abstract class Record {
   int get id;
+
+  // Used for normal querying.
+  static String get sqlSelect => '*';
 }
 
 /// Object mapping function.
@@ -90,7 +93,7 @@ class SessionState<D> {
     final records = new List<R>();
     final cache = table.getCache(data);
     final nonCachedIds = new List<int>();
-    ids.forEach((id) {
+    for (final id in ids) {
       // Skip null values. This way null values do not have to be filtered out
       // by client code.
       if (id != null) {
@@ -101,7 +104,7 @@ class SessionState<D> {
           nonCachedIds.add(id);
         }
       }
-    });
+    }
 
     if (nonCachedIds.isNotEmpty) {
       final selectedRecords = await _runMappedQuery<R, D>(
@@ -149,7 +152,9 @@ Future<List<R>> _runMappedQuery<R extends Record, D>(
   log.info(sql.statement);
   final result = await s.conn.query(sql.statement).map(table.mapRow).toList();
   if (store) {
-    result.forEach((record) => table.getCache(s.data)[record.id] = record);
+    for (final record in result) {
+      table.getCache(s.data)[record.id] = record;
+    }
   }
   return result;
 }
@@ -256,7 +261,7 @@ Sql SET(Map<String, dynamic> values) {
 }
 
 // ignore: non_constant_identifier_names
-Sql IS(dynamic value) {
+Sql IS(value) {
   if (value is Sql) {
     return SQL('= $value');
   } else {
@@ -266,7 +271,7 @@ Sql IS(dynamic value) {
 }
 
 // ignore: non_constant_identifier_names
-Sql IS_NOT(dynamic value) {
+Sql IS_NOT(value) {
   if (value is Sql) {
     return SQL('!= $value');
   } else {
@@ -276,7 +281,7 @@ Sql IS_NOT(dynamic value) {
 }
 
 // ignore: non_constant_identifier_names
-Sql CONTAINS(dynamic value) {
+Sql CONTAINS(value) {
   if (value is Sql) {
     return SQL('@> $value');
   } else {
@@ -286,7 +291,7 @@ Sql CONTAINS(dynamic value) {
 }
 
 // ignore: non_constant_identifier_names
-Sql IN(dynamic values) {
+Sql IN(values) {
   if (values is Sql) {
     return SQL('IN $values');
   } else if (values is Iterable) {
@@ -315,8 +320,7 @@ Sql SUBQUERY(Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
 }
 
 // ignore: non_constant_identifier_names
-Sql FUNCTION(String functionFormat,
-    [dynamic s1, dynamic s2, dynamic s3, dynamic s4, dynamic s5]) {
+Sql FUNCTION(String functionFormat, [s1, s2, s3, s4, s5]) {
   final args = [s1, s2, s3, s4, s5];
   args.removeWhere((s) => s == null);
   final encodedArgs = _encodeValues(args, new TypeConverter());
@@ -329,7 +333,7 @@ Sql FUNCTION(String functionFormat,
     final cast = functionInfo.last;
     return SQL('$name(${encodedArgs.join(',')})::$cast');
   } else {
-    throw new FormatException('cannot read function format');
+    throw const FormatException('cannot read function format');
   }
 }
 
@@ -341,7 +345,8 @@ Sql LIMIT(int limit) {
 // ignore: non_constant_identifier_names
 Sql ARRAY(Iterable values, String type) {
   final encoded = _encodeValues(values, new TypeConverter());
-  return SQL('ARRAY[${encoded.join(',')}]' + (type == null ? '' : '::$type[]'));
+  final cast = type == null ? '' : '::$type[]';
+  return SQL('ARRAY[${encoded.join(',')}]$cast');
 }
 
 // ignore: non_constant_identifier_names
@@ -365,11 +370,11 @@ Sql UNION_ALL(Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
 // Extension functions
 
 // ignore: non_constant_identifier_names
-Sql DECODE(dynamic data, String type) {
+Sql DECODE(data, String type) {
   return FUNCTION('decode', data, type);
 }
 
 // ignore: non_constant_identifier_names
-Sql DIGEST(dynamic data, String type) {
+Sql DIGEST(data, String type) {
   return FUNCTION('digest', data, type);
 }

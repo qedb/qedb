@@ -10,10 +10,8 @@ TableElement createDifferenceTable(
   final cells = _difftableBranch(interface, difference, new W<int>(0));
 
   // Insert cells into table.
-  return ht.table('.proof-step-difference-table',
-      c: cells.map((row) {
-        return ht.tr(row);
-      }).toList());
+  TableRowElement tr(List<TableCellElement> c) => ht.tr(c);
+  return ht.table('.proof-step-difference-table', c: cells.map(tr).toList());
 }
 
 List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
@@ -42,7 +40,7 @@ List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
     String label;
     try {
       label = interface.functionMap[fnId].descriptor.translations[0].content;
-    } catch (e) {
+    } on Exception {
       label = 'fn#$fnId';
     }
 
@@ -66,7 +64,7 @@ List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
     final leftExpression = ht.td('.difftable-latex');
     final rightExpression = ht.td('.difftable-latex');
 
-    final base64ToLaTeX = (String base64) =>
+    String base64ToLaTeX(String base64) =>
         interface.printer.render(new Expr.fromBase64(base64));
 
     katex.render(base64ToLaTeX(difference.leftExpression), leftExpression);
@@ -77,7 +75,8 @@ List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
     final unresolvedHtml = katex.renderToStringNoMathML(r'?');
     final rearrangeHtml = katex.renderToStringNoMathML(r'\leftrightharpoons');
     final nodifferenceHtml = katex.renderToStringNoMathML(r'\simeq');
-    final katexSpan = (String html) =>
+
+    SpanElement katexSpan(String html) =>
         ht.span('')..setInnerHtml(html, validator: EdiTeX.labelHtmlValidator);
 
     if (!difference.different) {
@@ -113,9 +112,13 @@ List<List<TableCellElement>> _difftableCombine(
 
   // Add row difference to rowspan of all central cells. There can be found by
   // checking if a rowspan property already exists.
-  small.forEach((row) => row
-      .where((cell) => cell.attributes.containsKey('rowspan'))
-      .forEach((cell) => cell.rowSpan += diff));
+  for (final row in small) {
+    for (final cell in row) {
+      if (cell.attributes.containsKey('rowspan')) {
+        cell.rowSpan += diff;
+      }
+    }
+  }
 
   // Copy small into large. To make sure the central cells end up in the right
   // spot, we copy rows to index i in this order: https://oeis.org/A130472.

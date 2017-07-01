@@ -15,8 +15,7 @@ final homePage = new Page(template: (s) {
           parts.length == 2 && ['create', 'list'].contains(parts.last))
       .map((parts) => [
             parts.join('/'),
-            ucfirst(parts.reversed.join(' ')) +
-                (parts.last == 'list' ? 's' : '')
+            '${ucfirst(parts.reversed.join(' '))}${parts.last == 'list' ? 's' : ''}'
           ]);
 
   return html([

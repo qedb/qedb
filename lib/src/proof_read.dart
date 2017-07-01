@@ -9,7 +9,10 @@ Future<List<db.ProofRow>> listProofs(Session s) async {
 
   // Select all first and last steps.
   final steps = new List<int>();
-  proofs.forEach((p) => steps..add(p.firstStepId)..add(p.lastStepId));
+  for (final proof in proofs) {
+    steps.add(proof.firstStepId);
+    steps.add(proof.lastStepId);
+  }
   await _listStepsById(s, steps);
 
   return proofs;

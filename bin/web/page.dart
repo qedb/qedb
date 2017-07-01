@@ -42,7 +42,7 @@ class PageSessionData {
 
 /// Convert given JSON data into a JsonObject, or if its not a Map, fallback to
 /// Dart object.
-dynamic jsonify(dynamic data) {
+dynamic jsonify(data) {
   if (data is Map) {
     return new JsonObject.fromMap(data);
   } else if (data is Iterable) {
@@ -52,17 +52,25 @@ dynamic jsonify(dynamic data) {
   }
 }
 
-/// Returns return value of [fn], or [fallback] if [fn] errors.
-dynamic safe(Function fn, [dynamic fallback = null]) {
+/// Run unsafe function (e.g. function that retrieves value from JsonObject that
+/// might not be there). Returns return value of [fn], or [fallback] if [fn]
+/// errors.
+dynamic unsafe(Function fn, [fallback = null]) {
   try {
     return fn();
-  } catch (e) {
+  } on Exception {
+    return fallback;
+  }
+  // JsonObject throws a NoSuchMethodError when an non-existing property is
+  // accessed.
+  // ignore: avoid_catching_errors
+  on NoSuchMethodError {
     return fallback;
   }
 }
 
 /// Convert first character in the string to upper case.
-String ucfirst(String str) => str[0].toUpperCase() + str.substring(1);
+String ucfirst(String str) => '${str[0].toUpperCase()}${str.substring(1)}';
 
 /// Pretty print error messages for alert box.
 String prettyPrintErrorMessage(String message) {

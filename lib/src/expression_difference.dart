@@ -54,7 +54,7 @@ Future<DifferenceBranch> _resolveExpressionDifference(
       ..different = true
       ..resolved = false;
   } else {
-    final compute = (int id, List<num> args) => _exprCompute(s, id, args);
+    num compute(int id, List<num> args) => _exprCompute(s, id, args);
     return await resolveTreeDiff(s, result.branch, compute);
   }
 }

@@ -11,6 +11,7 @@ import 'package:qedb/schema.dart' as db;
 
 /// Boilerplate for resource classes.
 abstract class ResourceBase<T extends Record> {
+  int get id;
   set id(int v);
 
   /// Get database row from the session [data] by [id].

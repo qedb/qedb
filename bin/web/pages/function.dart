@@ -49,12 +49,7 @@ final createFunctionPage = new Page(
       });
     },
     onPost: (data) {
-      int subjectId;
-      try {
-        subjectId = int.parse(data['subject']);
-      } catch (e) {
-        subjectId = null;
-      }
+      final subjectId = unsafe(() => int.parse(data['subject']), null);
       return {
         'subject': subjectId != null ? {'id': subjectId} : null,
         'descriptor': {
@@ -121,9 +116,9 @@ final listFunctionsPage = new Page(template: (s) {
       td(function.id.toString()),
       td(descriptorHyperlink(() => function.subject.descriptor)),
       td(descriptorHyperlink(() => function.descriptor)),
-      td(safe(() => function.keyword.toString(), span('.none'))),
-      td(safe(() => function.keywordType.toString(), span('.none'))),
-      td(safe(
+      td(unsafe(() => function.keyword.toString(), span('.none'))),
+      td(unsafe(() => function.keywordType.toString(), span('.none'))),
+      td(unsafe(
           () => span('.latex', function.latexTemplate,
               title: function.latexTemplate),
           span('.none'))),

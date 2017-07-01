@@ -163,15 +163,15 @@ Future<String> _renderExpressionLaTeX(
   final functions = await s.selectByIds(db.function, functionIds);
 
   // Label fallback function.
-  final getLabel = (int id) => functions.singleWhere((r) => r.id == id).keyword;
+  String getLabel(int id) => functions.singleWhere((r) => r.id == id).keyword;
 
   // Create new LaTeX printer and populate dictionary.
   final printer = new LaTeXPrinter(getLabel, operators);
-  functions.forEach((row) {
+  for (final row in functions) {
     if (row.latexTemplate != null) {
       printer.addTemplate(row.id, row.latexTemplate);
     }
-  });
+  }
 
   // Returned rendered expression.
   return printer.render(expr);

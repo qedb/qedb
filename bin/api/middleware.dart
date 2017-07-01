@@ -42,7 +42,7 @@ Middleware logRequestData(File file, bool createOnly) {
         final responseStr = (await response.readAsString()).trim();
         var path = request.url.path;
         if (request.url.query.isNotEmpty) {
-          path += '?${request.url.query}';
+          path = '$path?${request.url.query}';
         }
 
         // Write request data.

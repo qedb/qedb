@@ -26,7 +26,7 @@ Future main() async {
     editor.onUpdate.listen((_) {
       try {
         input.value = interface.parse(editor.getParsable()).toBase64();
-      } catch (e) {
+      } on Exception {
         input.value = '';
       }
     });

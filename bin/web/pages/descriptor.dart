@@ -10,13 +10,11 @@ import 'templates.dart';
 
 /// Helper for other pages.
 String descriptorHyperlink(JsonObject getDescriptor()) {
-  try {
+  return unsafe(() {
     final descriptor = getDescriptor();
     return a(descriptor.translations[0].content,
         href: '/descriptor/${descriptor.id}/read', scope: 'row');
-  } catch (e) {
-    return span('.none');
-  }
+  }, span('.none'));
 }
 
 final readDescriptorPage = new Page(template: (s) {

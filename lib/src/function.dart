@@ -69,9 +69,17 @@ Future<List<db.FunctionRow>> listFunctions(Session s) async {
   // Select all subjects and translations.
   final subjects =
       await s.selectByIds(db.subject, functions.map((row) => row.subjectId));
-  final descriptorIds = functions.map((row) => row.descriptorId).toList();
-  subjects.forEach((subject) => descriptorIds.add(subject.descriptorId));
-  descriptorIds.removeWhere(isNull);
+
+  // Get all descriptors.
+  final descriptorIds = new List<int>();
+  for (final fn in functions) {
+    if (fn.descriptorId != null) {
+      descriptorIds.add(fn.descriptorId);
+    }
+  }
+  for (final subject in subjects) {
+    descriptorIds.add(subject.descriptorId);
+  }
 
   if (descriptorIds.isNotEmpty) {
     await s.select(

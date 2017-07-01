@@ -35,7 +35,8 @@ final listSubjectsPage = new Page(template: (s) {
           a(subject.descriptor.id.toString(),
               href: '/descriptor/${subject.descriptor.id}/read'),
           scope: 'row'),
-      td(safe(() => subject.descriptor.translations[0].content, span('.none')))
+      td(unsafe(
+          () => subject.descriptor.translations[0].content, span('.none')))
     ];
   });
 });

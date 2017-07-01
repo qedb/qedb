@@ -17,48 +17,40 @@ part 'src/generated/session_data.dart';
 //------------------------------------------------------------------------------
 
 /// Language
-class LanguageRow implements Record {
+class LanguageRow extends Record {
   final int id;
   final String code;
 
   LanguageRow(this.id, this.code);
-
-  static const select = '*';
-  static LanguageRow map(Row r) => new LanguageRow(r[0], r[1]);
+  factory LanguageRow.from(Row r) => new LanguageRow(r[0], r[1]);
 }
 
 /// Descriptor
-class DescriptorRow implements Record {
+class DescriptorRow extends Record {
   final int id;
 
   DescriptorRow(this.id);
-
-  static const select = '*';
-  static DescriptorRow map(Row r) => new DescriptorRow(r[0]);
+  factory DescriptorRow.from(Row r) => new DescriptorRow(r[0]);
 }
 
 /// Translation
-class TranslationRow implements Record {
+class TranslationRow extends Record {
   final int id;
   final int descriptorId, languageId;
   final String content;
 
   TranslationRow(this.id, this.descriptorId, this.languageId, this.content);
-
-  static const select = '*';
-  static TranslationRow map(Row r) =>
+  factory TranslationRow.from(Row r) =>
       new TranslationRow(r[0], r[1], r[2], r[3]);
 }
 
 /// Subject
-class SubjectRow implements Record {
+class SubjectRow extends Record {
   final int id;
   final int descriptorId;
 
   SubjectRow(this.id, this.descriptorId);
-
-  static const select = '*';
-  static SubjectRow map(Row r) => new SubjectRow(r[0], r[1]);
+  factory SubjectRow.from(Row r) => new SubjectRow(r[0], r[1]);
 }
 
 //------------------------------------------------------------------------------
@@ -66,7 +58,7 @@ class SubjectRow implements Record {
 //------------------------------------------------------------------------------
 
 /// Function
-class FunctionRow implements Record {
+class FunctionRow extends Record {
   final int id;
   final int subjectId;
   final int descriptorId;
@@ -89,14 +81,12 @@ class FunctionRow implements Record {
       this.keywordType,
       this.latexTemplate,
       this.specialType);
-
-  static const select = '*';
-  static FunctionRow map(Row r) => new FunctionRow(
+  factory FunctionRow.from(Row r) => new FunctionRow(
       r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]);
 }
 
 /// Operator
-class OperatorRow implements Record {
+class OperatorRow extends Record {
   final int id;
   final int functionId;
   final int precedenceLevel;
@@ -113,14 +103,12 @@ class OperatorRow implements Record {
       this.operatorType,
       this.character,
       this.editorTemplate);
-
-  static const select = '*';
-  static OperatorRow map(Row r) =>
+  factory OperatorRow.from(Row r) =>
       new OperatorRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
 }
 
 /// Expression
-class ExpressionRow implements Record {
+class ExpressionRow extends Record {
   final int id;
   final String data, hash;
   final String latex;
@@ -131,21 +119,10 @@ class ExpressionRow implements Record {
 
   ExpressionRow(this.id, this.data, this.hash, this.latex, this.functions,
       this.nodeType, this.nodeValue, this.nodeArguments);
+  factory ExpressionRow.from(Row r) => new ExpressionRow(r[0], fixBase64(r[1]),
+      fixBase64(r[2]), r[3], pgIntArray(r[4]), r[5], r[6], pgIntArray(r[7]));
 
   Expr get expr => new Expr.fromBase64(data);
-
-  static final select = [
-    'id',
-    "encode(data, 'base64')",
-    "encode(hash, 'base64')",
-    'latex',
-    'functions',
-    'node_type',
-    'node_value',
-    'node_arguments'
-  ].join(',');
-  static ExpressionRow map(Row r) => new ExpressionRow(r[0], fixBase64(r[1]),
-      fixBase64(r[2]), r[3], pgIntArray(r[4]), r[5], r[6], pgIntArray(r[7]));
 }
 
 //------------------------------------------------------------------------------
@@ -153,7 +130,7 @@ class ExpressionRow implements Record {
 //------------------------------------------------------------------------------
 
 /// Rule
-class RuleRow implements Record {
+class RuleRow extends Record {
   final int id;
   final int stepId;
   final int proofId;
@@ -163,9 +140,8 @@ class RuleRow implements Record {
 
   RuleRow(this.id, this.stepId, this.proofId, this.isDefinition,
       this.leftExpressionId, this.rightExpressionId);
-
-  static const select = '*';
-  static RuleRow map(Row r) => new RuleRow(r[0], r[1], r[2], r[3], r[4], r[5]);
+  factory RuleRow.from(Row r) =>
+      new RuleRow(r[0], r[1], r[2], r[3], r[4], r[5]);
 }
 
 //------------------------------------------------------------------------------
@@ -173,19 +149,17 @@ class RuleRow implements Record {
 //------------------------------------------------------------------------------
 
 /// Proof
-class ProofRow implements Record {
+class ProofRow extends Record {
   final int id;
   final int firstStepId;
   final int lastStepId;
 
   ProofRow(this.id, this.firstStepId, this.lastStepId);
-
-  static const select = '*';
-  static ProofRow map(Row r) => new ProofRow(r[0], r[1], r[2]);
+  factory ProofRow.from(Row r) => new ProofRow(r[0], r[1], r[2]);
 }
 
 /// Step
-class StepRow implements Record {
+class StepRow extends Record {
   final int id;
   final int previousId;
   final int expressionId;
@@ -213,8 +187,6 @@ class StepRow implements Record {
       this.conditionId,
       this.ruleId,
       this.rearrangeFormat);
-
-  static const select = '*';
-  static StepRow map(Row r) => new StepRow(r[0], r[1], r[2], r[3], r[4], r[5],
+  factory StepRow.from(Row r) => new StepRow(r[0], r[1], r[2], r[3], r[4], r[5],
       r[6], r[7], r[8], r[9], pgIntArray(r[10]));
 }

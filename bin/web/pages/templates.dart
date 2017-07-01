@@ -55,7 +55,7 @@ String languageSelect(PageSessionData s,
 String subjectSelect(PageSessionData s,
     {String name: 'language', bool inGroup: true}) {
   final options = s.additional['subjects'].map((subject) {
-    return option(safe(() => subject.descriptor.translations[0].content, ''),
+    return option(unsafe(() => subject.descriptor.translations[0].content, ''),
         value: subject.id);
   }).toList();
   if (options.isEmpty) {
@@ -131,10 +131,7 @@ String errorAlert(PageSessionData s) {
 
 /// Template for every page.
 String pageTemplate(PageSessionData s, String pageTitle,
-    {InlineHtmlBuilder inputs,
-    dynamic headTags,
-    dynamic containerTags,
-    dynamic bodyTags}) {
+    {InlineHtmlBuilder inputs, headTags, containerTags, bodyTags}) {
   return html([
     head([title(pageTitle), defaultHead(s), headTags]),
     body([
@@ -149,10 +146,7 @@ String pageTemplate(PageSessionData s, String pageTitle,
 
 /// Resource creation page.
 String createResourceTemplate(PageSessionData s, String name,
-    {InlineHtmlBuilder inputs,
-    dynamic headTags,
-    dynamic bodyTags,
-    String overviewRoute}) {
+    {InlineHtmlBuilder inputs, headTags, bodyTags, String overviewRoute}) {
   // Build form.
   dynamic containerTags;
   if (s.response.containsKey('id')) {
@@ -184,9 +178,7 @@ String createResourceTemplate(PageSessionData s, String name,
 
 /// Resource update page.
 String updateResourceTemplate(PageSessionData s, String name,
-    {Map<String, InlineHtmlBuilder> fields,
-    dynamic headTags,
-    dynamic bodyTags}) {
+    {Map<String, InlineHtmlBuilder> fields, headTags, bodyTags}) {
   // Build form.
   final containerTags = new List();
   if (s.response.containsKey('id')) {
@@ -220,7 +212,7 @@ String updateResourceTemplate(PageSessionData s, String name,
       headTags: headTags, bodyTags: bodyTags, containerTags: containerTags);
 }
 
-typedef dynamic HtmlTableRowBuilder(dynamic data);
+typedef dynamic HtmlTableRowBuilder(data);
 
 /// Resource listing page.
 String listResourceTemplate(
@@ -229,8 +221,8 @@ String listResourceTemplate(
     String customCreateButton,
     List tableHead,
     HtmlTableRowBuilder row,
-    dynamic headTags,
-    dynamic bodyTags}) {
+    headTags,
+    bodyTags}) {
   String createButton;
   if (s.allRoutes.contains('/${s.path.first}/create')) {
     createButton = p(a(

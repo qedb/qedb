@@ -35,11 +35,11 @@ class QEDbEdiTeXInterface implements EdiTeXInterface {
             (int id) => functions.singleWhere((r) => r.id == id).keyword,
             operatorConfig) {
     // Populate LaTeX printer dictionary.
-    functions.forEach((row) {
-      if (row.latexTemplate != null) {
-        printer.addTemplate(row.id, row.latexTemplate);
+    for (final fn in functions) {
+      if (fn.latexTemplate != null) {
+        printer.addTemplate(fn.id, fn.latexTemplate);
       }
-    });
+    }
 
     // Load additional templates.
     instantAdditional['('] = new EdiTeXTemplate((0 << 2) | 3, '',
@@ -54,7 +54,7 @@ class QEDbEdiTeXInterface implements EdiTeXInterface {
     // We generate radix string labels (see [_generateFunctionParseTemplate]).
     try {
       return int.parse(label.substring(1, label.length - 1), radix: 16);
-    } catch (e) {
+    } on Exception {
       throw new Exception('invalid label');
     }
   }

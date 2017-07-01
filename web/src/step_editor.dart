@@ -100,7 +100,7 @@ class StepEditor extends StepEditorBase {
       try {
         return new ExpressionData(interface.parse(content),
             valid: true, empty: false);
-      } catch (e) {
+      } on Exception {
         return new ExpressionData(null, valid: false, empty: false);
       }
     }

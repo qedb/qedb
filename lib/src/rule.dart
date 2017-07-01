@@ -136,7 +136,7 @@ Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
   }
 
   // Computing closure.
-  final compute = (int id, List<num> args) => _exprCompute(s, id, args);
+  num compute(int id, List<num> args) => _exprCompute(s, id, args);
 
   // Evaluate expressions.
   final leftEval = leftExpr.evaluate(compute);
@@ -173,10 +173,10 @@ Future<List<db.RuleRow>> listRules(Session s, [Iterable<int> ids]) async {
 
   // Select left and right expressions.
   final expressionIds = new List<int>();
-  rules.forEach((rule) {
+  for (final rule in rules) {
     expressionIds.add(rule.leftExpressionId);
     expressionIds.add(rule.rightExpressionId);
-  });
+  }
   await listExpressions(s, expressionIds);
 
   return rules;

@@ -18,9 +18,6 @@ class UnprocessableEntityError extends RpcError {
 /// Check the given String is not null and not empty.
 bool notEmpty(String str) => str != null && str.isNotEmpty;
 
-/// Check if the given value is null (useful with [List.removeWhere]).
-bool isNull(dynamic value) => value == null;
-
 /// Execute function, collect return value, check it is not null, and return it.
 /// If it is null, or if the function itself fails, throw an
 /// [UnprocessableEntityError].
@@ -32,7 +29,7 @@ T checkNull<T>(T getter()) {
     } else {
       throw new UnprocessableEntityError('unexpected null value');
     }
-  } catch (e) {
+  } on Exception {
     throw new UnprocessableEntityError('unexpected null value');
   }
 }

@@ -106,8 +106,8 @@ class Row {
 /// API route test.
 CsvTest route(String method, String path,
         {Map<String, ValueResolver> url: const {},
-        dynamic request: const {},
-        dynamic response: const {},
+        request: const {},
+        response: const {},
         bool skip: false,
         ValueResolver runIf: resolveTrue}) =>
     (row, baseUrl) async {
@@ -153,7 +153,7 @@ CsvTest route(String method, String path,
       try {
         compare(expectedResponseBody, responseBody);
         return TestState.passed;
-      } catch (e) {
+      } on Exception catch (e) {
         // Print error details.
         print('Request failed');
         print(httpRequest);
@@ -161,14 +161,14 @@ CsvTest route(String method, String path,
         print('Body: $requestBody');
         print('Expected: $expectedResponseBody');
         print('Actual: $responseBody');
-        print('Where: ${e.message.trim()}');
+        print(e);
 
         return TestState.failed;
       }
     };
 
 /// Evaluate into a new object.
-dynamic evaluate(dynamic obj, Row row) {
+dynamic evaluate(obj, Row row) {
   if (obj is Map) {
     final map = new Map();
     for (final key in obj.keys) {
@@ -194,7 +194,7 @@ dynamic evaluate(dynamic obj, Row row) {
   }
 }
 
-void compare(dynamic src, dynamic dst, [String path = '']) {
+void compare(src, dst, [String path = '']) {
   if (src is Map) {
     if (dst is Map) {
       if (dst.length != src.length) {
@@ -273,9 +273,7 @@ ValueResolver accept(AcceptType type) =>
 class _RemoveMe {}
 
 /// Only include this item if the given value is not empty.
-ValueResolver includeIf(ValueResolver condition, dynamic value,
-        [dynamic fallback]) =>
-    (row) {
+ValueResolver includeIf(ValueResolver condition, value, [fallback]) => (row) {
       if (condition(row) == false) {
         return fallback == null ? new _RemoveMe() : evaluate(fallback, row);
       } else {

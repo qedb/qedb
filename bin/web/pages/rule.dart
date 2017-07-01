@@ -82,7 +82,7 @@ final listRulesPage = new Page(template: (s) {
       td(span('.latex', rule.leftExpression.latex)),
       td(span('.latex', r'\Longleftrightarrow')),
       td(span('.latex', rule.rightExpression.latex)),
-      td(safe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
+      td(unsafe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
           rule.containsKey('step') ? span('step') : span('.none.text-muted'))),
       td(div('.btn-group.btn-group-sm', role: 'group', c: [
         a('.btn.btn.btn-outline-secondary', 'Delete',

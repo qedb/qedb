@@ -99,7 +99,7 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
       await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
 
   // Computing closure.
-  final compute = (int id, List<num> args) => _exprCompute(s, id, args);
+  num compute(int id, List<num> args) => _exprCompute(s, id, args);
 
   // Run through all steps.
   Expr expr;
@@ -170,10 +170,7 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     rows.add(await s.insert(db.step, VALUES(values)));
   }
 
-  final Map<String, dynamic> values = {
-    'first_step_id': rows.first.id,
-    'last_step_id': rows.last.id
-  };
+  final values = {'first_step_id': rows.first.id, 'last_step_id': rows.last.id};
   return await s.insert(db.proof, VALUES(values));
 }
 

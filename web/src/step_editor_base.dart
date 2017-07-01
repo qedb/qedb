@@ -202,8 +202,7 @@ abstract class StepEditorBase {
       return null;
     } else {
       setStatus('progress');
-      final DifferenceBranch current =
-          difference == null ? null : await difference;
+      final current = difference == null ? null : await difference;
       final request = new DifferenceRequest()
         ..leftExpression = prevExpr.expression.toBase64()
         ..rightExpression = thisExpr.expression.toBase64();
@@ -232,8 +231,6 @@ abstract class StepEditorBase {
   }
 
   void ensureNext() {
-    if (next == null) {
-      next = new StepEditor(interface, db, root, this);
-    }
+    next ??= new StepEditor(interface, db, root, this);
   }
 }
