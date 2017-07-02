@@ -221,6 +221,8 @@ CREATE TYPE special_function_type AS ENUM (
     'add',
     'subtract',
     'multiply',
+    'divide',
+    'power',
     'negate',
     'derivative'
 );
@@ -1373,8 +1375,8 @@ COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_c
 2	1	7	f	t	2	\N	\N	${.0}+${1(+).}	add
 3	1	8	f	f	2	\N	\N	${.0}-${1(+).}	subtract
 4	1	9	f	t	2	\N	\N	${.0(+):}${:1(*).}	multiply
-5	1	10	f	f	2	frac	latex	\\frac{\\,${0}\\,}{\\,${1}\\,}	\N
-6	1	11	f	f	2	\N	\N	${.0(*)}^{${1}}	\N
+5	1	10	f	f	2	frac	latex	\\frac{\\,${0}\\,}{\\,${1}\\,}	divide
+6	1	11	f	f	2	\N	\N	${.0(*)}^{${1}}	power
 7	1	12	f	f	1	\N	\N	$!-${0(^).}	negate
 8	2	13	f	f	1	\N	\N	${.0(~):}!	\N
 9	1	\N	t	f	0	a	symbol	\N	\N

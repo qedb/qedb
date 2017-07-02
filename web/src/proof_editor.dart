@@ -50,8 +50,10 @@ Future main() async {
     } else if (q.containsKey('initialrule')) {
       // Retrieve rule and add readonly row.
       final r = await db.readRule(int.parse(q['initialrule']));
-      final eqOp = interface.operators.singleWhere((op) => op.character == '=');
-      final expr = new FunctionExpr(eqOp.function.id, false, [
+      final equals =
+          interface.functions.singleWhere((fn) => fn.specialType == 'equals');
+
+      final expr = new FunctionExpr(equals.id, false, [
         new Expr.fromBase64(r.leftExpression.data),
         new Expr.fromBase64(r.rightExpression.data)
       ]);

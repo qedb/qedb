@@ -5,7 +5,16 @@
 part of qedb;
 
 /// This enum is the same as the `special_function_type` enum in the database.
-enum SpecialFunction { equals, add, subtract, multiply, negate, derrivative }
+enum SpecialFunction {
+  equals,
+  add,
+  subtract,
+  multiply,
+  divide,
+  power,
+  negate,
+  derrivative
+}
 
 /// Map special function type string to enum value.
 const _specialTypeStr2Enum = const {
@@ -13,6 +22,8 @@ const _specialTypeStr2Enum = const {
   'add': SpecialFunction.add,
   'subtract': SpecialFunction.subtract,
   'multiply': SpecialFunction.multiply,
+  'divide': SpecialFunction.divide,
+  'power': SpecialFunction.power,
   'negate': SpecialFunction.negate,
   'derrivative': SpecialFunction.derrivative
 };
@@ -25,5 +36,6 @@ Future<Map<SpecialFunction, int>> getSpecialFunctions(Session s) async {
   for (final fn in functions) {
     map[_specialTypeStr2Enum[fn.specialType]] = fn.id;
   }
+
   return map;
 }

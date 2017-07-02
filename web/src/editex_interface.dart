@@ -28,9 +28,10 @@ class QEDbEdiTeXInterface implements EdiTeXInterface {
   final Map<int, FunctionResource> functionMap;
   final Map<int, OperatorResource> operatorMap;
   final OperatorConfig operatorConfig;
+  final Map<String, int> specialFunctions;
 
   QEDbEdiTeXInterface(this.functions, this.operators, this.functionMap,
-      this.operatorMap, this.operatorConfig)
+      this.operatorMap, this.operatorConfig, this.specialFunctions)
       : printer = new LaTeXPrinter(
             (int id) => functions.singleWhere((r) => r.id == id).keyword,
             operatorConfig) {
@@ -63,15 +64,17 @@ class QEDbEdiTeXInterface implements EdiTeXInterface {
     return parseExpression(content, operatorConfig, assignId);
   }
 
+  /// Use to evaluate expressions client-side.
+  /// Note: currently this function is not used.
   num compute(int id, List<num> args) {
     // Only do operations that given two integers will always return an integer.
-    if (id == operatorConfig.id('+')) {
+    if (id == specialFunctions['add']) {
       return args[0] + args[1];
-    } else if (id == operatorConfig.id('-')) {
+    } else if (id == specialFunctions['subtract']) {
       return args[0] - args[1];
-    } else if (id == operatorConfig.id('*')) {
+    } else if (id == specialFunctions['multiply']) {
       return args[0] * args[1];
-    } else if (id == operatorConfig.id('~')) {
+    } else if (id == specialFunctions['negate']) {
       return -args[0];
     } else {
       return double.NAN;
@@ -209,6 +212,14 @@ Future<QEDbEdiTeXInterface> createQEDbEdiTeXInterface(QedbApi db) async {
   final operatorMap = new Map<int, OperatorResource>.fromIterable(operators,
       key: (op) => op.id, value: (op) => op);
 
+  // Load special functions.
+  final specialFunctions = new Map<String, int>();
+  for (final function in functions) {
+    if (function.specialType != null) {
+      specialFunctions[function.specialType] = function.id;
+    }
+  }
+
   // Load operator configuration.
   final operatorConfig = new OperatorConfig();
   for (final op in operators) {
@@ -227,20 +238,14 @@ Future<QEDbEdiTeXInterface> createQEDbEdiTeXInterface(QedbApi db) async {
   // Use the same associativity and precedence as the multiplication operator.
   // Since the input is already structured (editex), there is no need for
   // special behavior. In fact this behavior causes problems] (e.g. a^b c^d).
-  if (operatorConfig.byChar.containsKey('*'.codeUnitAt(0))) {
-    final multiplyOp = operatorConfig.byId[operatorConfig.id('*')];
-    operatorConfig.add(new Operator(
-        operatorConfig.implicitMultiplyId,
-        multiplyOp.precedenceLevel,
-        multiplyOp.associativity,
-        -1,
-        OperatorType.infix));
-  } else {
-    // Fallback
-    operatorConfig.add(new Operator(operatorConfig.implicitMultiplyId, 0,
-        Associativity.ltr, -1, OperatorType.infix));
-  }
+  final multiply = operatorConfig.byId[specialFunctions['multiply']];
+  operatorConfig.add(new Operator(
+      operatorConfig.implicitMultiplyId,
+      multiply.precedenceLevel,
+      multiply.associativity,
+      -1,
+      OperatorType.infix));
 
-  return new QEDbEdiTeXInterface(
-      functions, operators, functionMap, operatorMap, operatorConfig);
+  return new QEDbEdiTeXInterface(functions, operators, functionMap, operatorMap,
+      operatorConfig, specialFunctions);
 }

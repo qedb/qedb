@@ -79,6 +79,8 @@ CREATE TYPE special_function_type AS ENUM (
   'add',
   'subtract',
   'multiply',
+  'divide',
+  'power',
   'negate',
   'derivative'
 );

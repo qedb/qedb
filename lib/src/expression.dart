@@ -89,10 +89,11 @@ Future<List<db.ExpressionRow>> listExpressions(
 
   // Check if there are any NULL latex fields.
   final queue = new List<Future>();
-  final ops = await _loadOperatorConfig(s);
+  OperatorConfig ops;
   for (var i = 0; i < expressions.length; i++) {
     final exprRow = expressions[i];
     if (exprRow.latex == null) {
+      ops ??= await _loadOperatorConfig(s);
       final latex = await _renderExpressionLaTeX(s, exprRow.expr, ops);
       queue.add(s
           .update(db.expression, SET({'latex': latex}),
@@ -133,13 +134,11 @@ Future<OperatorConfig> _loadOperatorConfig(Session s) async {
                 : OperatorType.postfix));
   }
 
-  // Add default setting for implicit multiplication.
-  // (same precedence level as power operator).
+  // Add default setting for implicit multiplication: same precedence as power
+  // function, right-to-left associativity.
   ops.add(new Operator(
       ops.implicitMultiplyId,
-      ops.byChar.containsKey('^'.codeUnitAt(0))
-          ? ops.byId[ops.id('^')].precedenceLevel
-          : 0,
+      ops.byId[s.specialFunctions[SpecialFunction.power]].precedenceLevel,
       Associativity.rtl,
       -1,
       OperatorType.infix));
