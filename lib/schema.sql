@@ -285,35 +285,26 @@ ALTER TABLE rule  ADD FOREIGN KEY (step_id)       REFERENCES step(id);
 ALTER TABLE proof ADD FOREIGN KEY (first_step_id) REFERENCES step(id);
 ALTER TABLE proof ADD FOREIGN KEY (last_step_id)  REFERENCES step(id);
 
--- Rule condition proofs
+-- Condition proof
 --
--- Conditions must be self evident or proven by a rule. All generics between
--- conditions for a single rule must map to consistent expressions. Conditions
--- are processed in `ASC rule_condition(id)` order.
-CREATE TABLE rule_condition_proof (
-  id               serial   PRIMARY KEY,
-  condition_id     integer  NOT NULL REFERENCES rule_condition(id),
-  proof_rule_id    integer  REFERENCES rule(id),
-  adopt_condition  boolean  NOT NULL DEFAULT FALSE,
-  self_evident     boolean  NOT NULL DEFAULT FALSE,
+-- Conditions must be self evident, or follow from a rule or proof. Generics
+-- across conditions must map to consistent expressions. Conditions are
+-- processed in `ASC rule_condition(id)` order.
+--
+-- If a rule or proof is provided, it may not have any conditions. To prove
+-- a condition with a proof or rule that has conditions, a new proof must be
+-- created.
+CREATE TABLE condition_proof (
+  id                serial   PRIMARY KEY,
+  step_id           integer  NOT NULL REFERENCES step(id),
+  condition_id      integer  NOT NULL REFERENCES rule_condition(id),
+  follows_rule_id   integer  REFERENCES rule(id),
+  follows_proof_id  integer  REFERENCES rule(id),
+  adopt_condition   boolean  NOT NULL DEFAULT FALSE,
+  self_evident      boolean  NOT NULL DEFAULT FALSE,
 
-  CONSTRAINT self_evident_or_rule CHECK (proof_rule_id NOTNULL != self_evident)
-);
-
--- Rule condition proof for rule condition proof rule.
-CREATE TABLE rule_condition_proof_proof (
-  parent_id  integer  REFERENCES rule_condition_proof(id),
-  child_id   integer  REFERENCES rule_condition_proof(id),
-
-  PRIMARY KEY (parent_id, child_id)
-);
-
--- Rule condition proof for step rule.
-CREATE TABLE step_rule_condition_proof (
-  step_id   integer  REFERENCES step(id),
-  proof_id  integer  REFERENCES rule_condition_proof(id),
-
-  PRIMARY KEY (step_id, proof_id)
+  CONSTRAINT self_evident_or_rule_or_proof CHECK -- XOR
+    ((follows_rule_id NOTNULL OR follows_proof_id NOTNULL) != self_evident)
 );
 
 --------------------------------------------------------------------------------
