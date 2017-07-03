@@ -129,6 +129,16 @@ class ExpressionRow extends Record {
 // Rule
 //------------------------------------------------------------------------------
 
+/// Condition
+class ConditionRow extends Record {
+  final int id;
+  final int leftExpressionId;
+  final int rightExpressionId;
+
+  ConditionRow(this.id, this.leftExpressionId, this.rightExpressionId);
+  factory ConditionRow.from(Row r) => new ConditionRow(r[0], r[1], r[2]);
+}
+
 /// Rule
 class RuleRow extends Record {
   final int id;

@@ -26,6 +26,8 @@ final expression = new TableInfo<ExpressionRow, SessionData>(
     "id, encode(data, 'base64'), encode(hash, 'base64'), latex, functions, node_type, node_value, node_arguments",
     (Row r) => new ExpressionRow.from(r),
     (data) => data.expressionTable);
+final condition = new TableInfo<ConditionRow, SessionData>('condition', "*",
+    (Row r) => new ConditionRow.from(r), (data) => data.conditionTable);
 final rule = new TableInfo<RuleRow, SessionData>(
     'rule', "*", (Row r) => new RuleRow.from(r), (data) => data.ruleTable);
 final step = new TableInfo<StepRow, SessionData>(

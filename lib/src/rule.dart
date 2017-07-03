@@ -35,6 +35,7 @@ Future<db.RuleRow> createRule(Session s, RuleResource body) async {
   }
 }
 
+/// TODO: add conditions
 Future<db.RuleRow> createRuleFromDefinition(
     Session s, String leftData, String rightData) {
   return _createRule(
@@ -42,6 +43,7 @@ Future<db.RuleRow> createRuleFromDefinition(
       isDefinition: true);
 }
 
+/// TODO: export conditions
 Future<db.RuleRow> createRuleFromProof(Session s, int proofId) async {
   // Load first and last expression from proof.
   final proof = await s.selectById(db.proof, proofId);
@@ -56,6 +58,7 @@ Future<db.RuleRow> createRuleFromProof(Session s, int proofId) async {
   return _createRule(s, leftExpr, rightExpr, proofId: proofId);
 }
 
+/// TODO: export conditions
 Future<db.RuleRow> createRuleFromSteps(
     Session s, int firstStepId, int lastStepId) async {
   /// Check if the steps connect.
@@ -95,6 +98,7 @@ Future<db.RuleRow> createRuleFromSteps(
   }
 }
 
+/// TODO: export conditions (initial rule/proof + steps?)
 Future<db.RuleRow> createRuleFromStep(Session s, int stepId) async {
   // Get step expression.
   final step = await s.selectById(db.step, stepId);
@@ -123,6 +127,7 @@ Future<db.RuleRow> createRuleFromStep(Session s, int stepId) async {
 }
 
 /// Create unchecked rule.
+/// TODO: process conditions
 Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
     {int stepId, int proofId, bool isDefinition: false}) async {
   // Check if a similar rule already exists.

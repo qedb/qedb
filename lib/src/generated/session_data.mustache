@@ -8,6 +8,10 @@ part of qedb.schema;
 
 class SessionData {
   {{# tables}}
-  Map<int, {{ className }}Row> {{ tableName }}Table = {};
+  final {{ tableName }}Table = new Map<int, {{ className }}Row>();
   {{/ tables}}
+
+  {{# relations}}
+  final {{.}} = new Map<int, List<int>>();
+  {{/ relations}}
 }

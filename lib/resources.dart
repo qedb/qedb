@@ -200,6 +200,21 @@ class ExpressionResource extends ResourceBase<db.ExpressionRow> {
 // Rule
 //------------------------------------------------------------------------------
 
+/// Condition
+class ConditionResource extends ResourceBase<db.ConditionRow> {
+  int id;
+  ExpressionResource leftExpression;
+  ExpressionResource rightExpression;
+
+  Map<int, db.ConditionRow> _getTableMap(data) => data.conditionTable;
+
+  void loadFields(row, data) {
+    leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
+    rightExpression = new ExpressionResource()
+      ..load(row.rightExpressionId, data);
+  }
+}
+
 /// Rule
 class RuleResource extends ResourceBase<db.RuleRow> {
   int id;
@@ -208,6 +223,7 @@ class RuleResource extends ResourceBase<db.RuleRow> {
   bool isDefinition;
   ExpressionResource leftExpression;
   ExpressionResource rightExpression;
+  List<ConditionResource> conditions;
 
   Map<int, db.RuleRow> _getTableMap(data) => data.ruleTable;
 
@@ -215,9 +231,18 @@ class RuleResource extends ResourceBase<db.RuleRow> {
     step = getResource(row.stepId, data, new StepResource());
     proof = getResource(row.proofId, data, new ProofResource());
     isDefinition = row.isDefinition;
+
     leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
     rightExpression = new ExpressionResource()
       ..load(row.rightExpressionId, data);
+
+    if (data.ruleConditions.containsKey(id)) {
+      conditions = data.ruleConditions[id]
+          .map((id) => new ConditionResource()..load(id, data))
+          .toList();
+    } else {
+      conditions = [];
+    }
   }
 }
 

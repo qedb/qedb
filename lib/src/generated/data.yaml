@@ -35,6 +35,10 @@ tables:
     node_value,
     node_arguments
 
+- tableName:  condition
+  className:  Condition
+  select:     '*'
+
 - tableName:  rule
   className:  Rule
   select:     '*'
@@ -46,3 +50,6 @@ tables:
 - tableName:  proof
   className:  Proof
   select:     '*'
+
+relations:
+- ruleConditions

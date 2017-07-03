@@ -163,7 +163,8 @@ Future main() async {
         'hash': eqlib.hash(col('Expression right')),
         'latex': accept(AcceptType.string),
         'functions': eqlib.functionIds(col('Expression right'))
-      }
+      },
+      'conditions': []
     })
   ]);
 }
