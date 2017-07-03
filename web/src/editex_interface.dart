@@ -42,13 +42,17 @@ class QEDbEdiTeXInterface implements EdiTeXInterface {
       }
     }
 
-    // Load additional templates.
-    instantAdditional['('] = new EdiTeXTemplate((0 << 2) | 3, '',
-        parseLaTeXTemplate(r'\left(${0}\right)', operatorConfig), r'($0)');
-    additionalList.add(instantAdditional['(']);
-    instantAdditional['['] = new EdiTeXTemplate((1 << 2) | 3, '',
-        parseLaTeXTemplate(r'\left[${0}\right]', operatorConfig), r'($0)');
-    additionalList.add(instantAdditional['[']);
+    // Add additional templates.
+    addInstantTemplate('(', r'\left(${0}\right)', r'($0)');
+    addInstantTemplate('[', r'\left[${0}\right]', r'($0)');
+    //addInstantTemplate('&', r'\quad\land\quad', r'&');
+  }
+
+  void addInstantTemplate(String character, String latex, String parsable) {
+    final id = (additionalList.length << 2) | 3;
+    instantAdditional[character] = new EdiTeXTemplate(
+        id, '', parseLaTeXTemplate(latex, operatorConfig), parsable);
+    additionalList.add(instantAdditional[character]);
   }
 
   int assignId(String label, bool generic) {
