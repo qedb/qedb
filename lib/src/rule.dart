@@ -17,48 +17,50 @@ part of qedb;
 ///    level function is [SpecialFunction.equals]).
 Future<db.RuleRow> createRule(Session s, RuleResource body) async {
   if (body.isDefinition != null && body.isDefinition) {
+    body.conditions ??= [];
+    final conditions = body.conditions.map((cond) {
+      final left = new Expr.fromBase64(cond.leftExpression.data);
+      final right = new Expr.fromBase64(cond.rightExpression.data);
+      return new Rule(left, right);
+    });
+
+    final left = new Expr.fromBase64(body.leftExpression.data);
+    final right = new Expr.fromBase64(body.rightExpression.data);
     return createRuleFromDefinition(
-        s,
-        checkNull(() => body.leftExpression.data),
-        checkNull(() => body.rightExpression.data));
+        s, new Rule(left, right), conditions.toList());
   } else if (body.proof != null) {
     if (body.proof.id != null) {
       return createRuleFromProof(s, body.proof.id);
     } else {
-      return createRuleFromSteps(s, checkNull(() => body.proof.firstStep.id),
-          checkNull(() => body.proof.lastStep.id));
+      return createRuleFromSteps(
+          s, body.proof.firstStep.id, body.proof.lastStep.id);
     }
   } else if (body.step != null) {
-    return createRuleFromStep(s, checkNull(() => body.step.id));
+    return createRuleFromStep(s, body.step.id);
   } else {
     throw new UnprocessableEntityError('not enough parameters');
   }
 }
 
-/// TODO: add conditions
 Future<db.RuleRow> createRuleFromDefinition(
-    Session s, String leftData, String rightData) {
-  return _createRule(
-      s, new Expr.fromBase64(leftData), new Expr.fromBase64(rightData),
+    Session s, Rule definition, List<Rule> conditions) async {
+  // Create conditions and collect ids.
+  final conditionIds = conditions.map((cond) async {
+    return (await _createCondition(s, cond)).id;
+  });
+
+  return _createRule(s, definition, await Future.wait(conditionIds),
       isDefinition: true);
 }
 
-/// TODO: export conditions
 Future<db.RuleRow> createRuleFromProof(Session s, int proofId) async {
   // Load first and last expression from proof.
   final proof = await s.selectById(db.proof, proofId);
 
-  // Load expressions.
-  await _listStepsById(s, [proof.firstStepId, proof.lastStepId]);
-  final leftExpr = s.data
-      .expressionTable[s.data.stepTable[proof.firstStepId].expressionId].expr;
-  final rightExpr = s.data
-      .expressionTable[s.data.stepTable[proof.lastStepId].expressionId].expr;
-
-  return _createRule(s, leftExpr, rightExpr, proofId: proofId);
+  // Less optimal but simpler.
+  return await createRuleFromSteps(s, proof.firstStepId, proof.lastStepId);
 }
 
-/// TODO: export conditions
 Future<db.RuleRow> createRuleFromSteps(
     Session s, int firstStepId, int lastStepId) async {
   /// Check if the steps connect.
@@ -66,39 +68,23 @@ Future<db.RuleRow> createRuleFromSteps(
   if (steps.first.id != firstStepId || steps.last.id != lastStepId) {
     throw new UnprocessableEntityError('steps do not connect');
   } else {
-    var proofId;
+    // Get proof record for these connecting steps.
+    final proof = await _getProofFor(s, steps.first.id, steps.last.id);
 
-    // Check if a proof ID exists.
-    final proofs = await s.select(
-        db.proof,
-        WHERE({
-          'first_step_id': IS(steps.first.id),
-          'last_step_id': IS(steps.last.id)
-        }));
-    if (proofs.isNotEmpty) {
-      proofId = proofs.single.id;
-    } else {
-      final proof = await s.insert(
-          db.proof,
-          VALUES({
-            'first_step_id': steps.first.id,
-            'last_step_id': steps.last.id
-          }));
-      proofId = proof.id;
-    }
-
-    assert(proofId != null);
-
-    // Pre-load expressions.
+    // Load rule expression.
     final firstId = steps.first.expressionId;
     final lastId = steps.last.expressionId;
     final map = await getExpressionMap(s, [firstId, lastId]);
+    final rule = new Rule(map[firstId], map[lastId]);
 
-    return _createRule(s, map[firstId], map[lastId], proofId: proofId);
+    // Get conditions.
+    final conditionIds =
+        await _findUnprovenConditions(s, steps.map((step) => step.id));
+
+    return _createRule(s, rule, conditionIds, proofId: proof.id);
   }
 }
 
-/// TODO: export conditions (initial rule/proof + steps?)
 Future<db.RuleRow> createRuleFromStep(Session s, int stepId) async {
   // Get step expression.
   final step = await s.selectById(db.step, stepId);
@@ -111,12 +97,33 @@ Future<db.RuleRow> createRuleFromStep(Session s, int stepId) async {
 
     // This must be a 'copy_rule' or 'copy_proof' step.
     if (['copy_rule', 'copy_proof'].contains(steps.first.type)) {
-      // Retrieve left and right expression.
+      final conditionIds = new List<int>();
+
+      // Find unproven conditions.
+      conditionIds.addAll(
+          await _findUnprovenConditions(s, steps.map((step) => step.id)));
+
+      // Append conditions of initial rule or proof.
+      if (steps.first.type == 'copy_rule') {
+        // Retrieve rule conditions.
+        final ruleConditions = await s.select(
+            db.ruleCondition, WHERE({'rule_id': IS(steps.first.ruleId)}));
+        conditionIds.addAll(ruleConditions.map((row) => row.conditionId));
+      } else if (steps.first.type == 'copy_proof') {
+        // Find all unproven conditions in given proof.
+        final proof = await s.selectById(db.proof, steps.first.proofId);
+        final proofSteps =
+            await _listStepsBetween(s, proof.firstStepId, proof.lastStepId);
+        final proofConditions =
+            await _findUnprovenConditions(s, proofSteps.map((st) => st.id));
+        conditionIds.addAll(proofConditions);
+      }
+
+      // Get rule expressions and create rule.
       assert(expr.nodeArguments.length == 2);
-      final map = await getExpressionMap(s, expr.nodeArguments);
-      return _createRule(
-          s, map[expr.nodeArguments[0]], map[expr.nodeArguments[1]],
-          stepId: step.id);
+      final m = await getExpressionMap(s, expr.nodeArguments);
+      final rule = new Rule(m[expr.nodeArguments[0]], m[expr.nodeArguments[1]]);
+      return _createRule(s, rule, conditionIds, stepId: step.id);
     } else {
       throw new UnprocessableEntityError(
           "origin of step does not have type 'copy_rule' or 'copy_proof'");
@@ -127,13 +134,13 @@ Future<db.RuleRow> createRuleFromStep(Session s, int stepId) async {
 }
 
 /// Create unchecked rule.
-/// TODO: process conditions
-Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
+Future<db.RuleRow> _createRule(Session s, Rule rule, List<int> conditionIds,
     {int stepId, int proofId, bool isDefinition: false}) async {
   // Check if a similar rule already exists.
   // It should not be possible to directly resolve this rule using
   // [resolveExpressionDifference].
-  final difference = await _resolveExpressionDifference(s, leftExpr, rightExpr);
+  final difference =
+      await _resolveExpressionDifference(s, rule.left, rule.right);
   if (!difference.different) {
     throw new UnprocessableEntityError('rule sides must be different');
   } else if (difference.resolved) {
@@ -144,14 +151,15 @@ Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
   num compute(int id, List<num> args) => _exprCompute(s, id, args);
 
   // Evaluate expressions.
-  final leftEval = leftExpr.evaluate(compute);
-  final rightEval = rightExpr.evaluate(compute);
+  final leftEval = rule.left.evaluate(compute);
+  final rightEval = rule.right.evaluate(compute);
 
   // Insert expressions.
   final leftRow = await _createExpression(s, leftEval);
   final rightRow = await _createExpression(s, rightEval);
 
-  return s.insert(
+  // Insert rule.
+  final ruleRow = await s.insert(
       db.rule,
       VALUES({
         'step_id': stepId,
@@ -162,10 +170,25 @@ Future<db.RuleRow> _createRule(Session s, Expr leftExpr, Expr rightExpr,
         'left_array_data': ARRAY(leftEval.toArray(), 'integer'),
         'right_array_data': ARRAY(rightEval.toArray(), 'integer')
       }));
+
+  // Insert conditions.
+  await Future.wait(conditionIds
+      .map((conditionId) => _createRuleCondition(s, ruleRow.id, conditionId)));
+
+  return ruleRow;
 }
 
-/// Retrieve rule as [Rule] object from eqlib.
-Future<Rule> _getEqLibRule(Session s, int id) async {
+/// Create rule_condition record.
+Future<db.RuleConditionRow> _createRuleCondition(
+    Session s, int ruleId, int conditionId) {
+  s.data.ruleConditions.putIfAbsent(ruleId, () => new List<int>());
+  s.data.ruleConditions[ruleId].add(conditionId);
+  return s.insert(db.ruleCondition,
+      VALUES({'rule_id': ruleId, 'condition_id': conditionId}));
+}
+
+/// Retrieve decoded [Rule] object.
+Future<Rule> _getRule(Session s, int id) async {
   final rule = await s.selectById(db.rule, id);
   final map = await getExpressionMap(
       s, [rule.leftExpressionId, rule.rightExpressionId]);

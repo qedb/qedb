@@ -32,3 +32,20 @@ Future<List<db.StepRow>> _listStepsBetween(Session s, int from, int to) async {
 
   return steps.reversed.toList();
 }
+
+/// Find conditions that have not been satisfied by a proof within the given
+/// range of steps. It is not validated if the given step IDs belong together.
+/// The returned condition IDs are not ordered.
+Future<List<int>> _findUnprovenConditions(
+    Session s, Iterable<int> stepIds) async {
+  final adoptedConditions = await s.select(db.conditionProof,
+      WHERE({'step_id': IN(stepIds), 'adopt_condition': IS(true)}));
+  final subConditions =
+      await s.select(db.step, WHERE({'condition_id': NOTNULL}));
+
+  final conditionIds = new List<int>();
+  conditionIds.addAll(adoptedConditions.map((proof) => proof.conditionId));
+  conditionIds.addAll(subConditions.map((step) => step.conditionId));
+
+  return conditionIds;
+}

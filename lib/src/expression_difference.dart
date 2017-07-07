@@ -31,8 +31,8 @@ class DifferenceBranch {
 /// Resolves difference between leftExpression and rightExpression.
 Future<DifferenceBranch> resolveExpressionDifference(
     Session s, DifferenceRequest body) async {
-  final left = new Expr.fromBase64(checkNull(() => body.leftExpression));
-  final right = new Expr.fromBase64(checkNull(() => body.rightExpression));
+  final left = new Expr.fromBase64(body.leftExpression);
+  final right = new Expr.fromBase64(body.rightExpression);
   return _resolveExpressionDifference(s, left, right);
 }
 

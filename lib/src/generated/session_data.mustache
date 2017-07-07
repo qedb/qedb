@@ -8,7 +8,7 @@ part of qedb.schema;
 
 class SessionData {
   {{# tables}}
-  final {{ tableName }}Table = new Map<int, {{ className }}Row>();
+  final {{ varName }}Table = new Map<int, {{ className }}Row>();
   {{/ tables}}
 
   {{# relations}}

@@ -177,22 +177,6 @@ CREATE INDEX expression_functions_index on expression USING GIN (functions);
 -- Rule
 --------------------------------------------------------------------------------
 
--- Condition that can be substituted.
--- Here we choose to repeat most of the rule table for the sake of simplicity.
-CREATE TABLE condition (
-  id                   serial     PRIMARY KEY,
-
-  left_expression_id   integer    NOT NULL REFERENCES expression(id),
-  right_expression_id  integer    NOT NULL REFERENCES expression(id),
-  left_array_data      integer[]  NOT NULL,
-  right_array_data     integer[]  NOT NULL,
-
-  UNIQUE (left_expression_id, right_expression_id),
-
-  CONSTRAINT left_is_not_right CHECK
-    (left_expression_id != right_expression_id)
-);
-
 -- Rule (equation of two expression)
 -- Optimizations that could be implemented in the future:
 -- + Set explicit reversibility (adds ability to force single direction).
@@ -218,7 +202,23 @@ CREATE TABLE rule (
     (step_id IS NOT NULL OR proof_id IS NOT NULL OR is_definition)
 );
 
--- Conditions on rules
+-- Condition that can be substituted.
+-- Here we choose to repeat most of the rule table for the sake of simplicity.
+CREATE TABLE condition (
+  id                   serial     PRIMARY KEY,
+
+  left_expression_id   integer    NOT NULL REFERENCES expression(id),
+  right_expression_id  integer    NOT NULL REFERENCES expression(id),
+  left_array_data      integer[]  NOT NULL,
+  right_array_data     integer[]  NOT NULL,
+
+  UNIQUE (left_expression_id, right_expression_id),
+
+  CONSTRAINT left_is_not_right CHECK
+    (left_expression_id != right_expression_id)
+);
+
+-- Connect conditions to rules.
 CREATE TABLE rule_condition (
   id            serial  PRIMARY KEY,
   rule_id       integer NOT NULL REFERENCES rule(id),

@@ -38,7 +38,7 @@ class TableInfo<R, D> {
 /// SQL snippet (used to distinguish raw sql from variables).
 class Sql {
   final String statement;
-  Sql(this.statement);
+  const Sql(this.statement);
   String toString() => statement;
 }
 
@@ -279,6 +279,9 @@ Sql IS_NOT(value) {
     return SQL('!= ${converter.encode(value, null)}');
   }
 }
+
+// ignore: constant_identifier_names
+const NOTNULL = const Sql('NOTNULL');
 
 // ignore: non_constant_identifier_names
 Sql CONTAINS(value) {

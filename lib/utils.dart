@@ -18,22 +18,6 @@ class UnprocessableEntityError extends RpcError {
 /// Check the given String is not null and not empty.
 bool notEmpty(String str) => str != null && str.isNotEmpty;
 
-/// Execute function, collect return value, check it is not null, and return it.
-/// If it is null, or if the function itself fails, throw an
-/// [UnprocessableEntityError].
-T checkNull<T>(T getter()) {
-  try {
-    final value = getter();
-    if (value != null) {
-      return value;
-    } else {
-      throw new UnprocessableEntityError('unexpected null value');
-    }
-  } on Exception {
-    throw new UnprocessableEntityError('unexpected null value');
-  }
-}
-
 /// Convert PostgreSQL integer array in [str] to List<int>.
 /// If [str] is null this function will also return null.
 List<int> pgIntArray(String str) {

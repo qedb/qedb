@@ -14,9 +14,11 @@ class SessionData {
   final functionTable = new Map<int, FunctionRow>();
   final operatorTable = new Map<int, OperatorRow>();
   final expressionTable = new Map<int, ExpressionRow>();
-  final conditionTable = new Map<int, ConditionRow>();
   final ruleTable = new Map<int, RuleRow>();
+  final conditionTable = new Map<int, ConditionRow>();
+  final ruleConditionTable = new Map<int, RuleConditionRow>();
   final stepTable = new Map<int, StepRow>();
+  final conditionProofTable = new Map<int, ConditionProofRow>();
   final proofTable = new Map<int, ProofRow>();
 
   final ruleConditions = new Map<int, List<int>>();

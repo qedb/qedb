@@ -26,11 +26,21 @@ final expression = new TableInfo<ExpressionRow, SessionData>(
     "id, encode(data, 'base64'), encode(hash, 'base64'), latex, functions, node_type, node_value, node_arguments",
     (Row r) => new ExpressionRow.from(r),
     (data) => data.expressionTable);
-final condition = new TableInfo<ConditionRow, SessionData>('condition', "*",
-    (Row r) => new ConditionRow.from(r), (data) => data.conditionTable);
 final rule = new TableInfo<RuleRow, SessionData>(
     'rule', "*", (Row r) => new RuleRow.from(r), (data) => data.ruleTable);
+final condition = new TableInfo<ConditionRow, SessionData>('condition', "*",
+    (Row r) => new ConditionRow.from(r), (data) => data.conditionTable);
+final ruleCondition = new TableInfo<RuleConditionRow, SessionData>(
+    'rule_condition',
+    "*",
+    (Row r) => new RuleConditionRow.from(r),
+    (data) => data.ruleConditionTable);
 final step = new TableInfo<StepRow, SessionData>(
     'step', "*", (Row r) => new StepRow.from(r), (data) => data.stepTable);
+final conditionProof = new TableInfo<ConditionProofRow, SessionData>(
+    'condition_proof',
+    "*",
+    (Row r) => new ConditionProofRow.from(r),
+    (data) => data.conditionProofTable);
 final proof = new TableInfo<ProofRow, SessionData>(
     'proof', "*", (Row r) => new ProofRow.from(r), (data) => data.proofTable);

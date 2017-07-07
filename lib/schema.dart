@@ -129,16 +129,6 @@ class ExpressionRow extends Record {
 // Rule
 //------------------------------------------------------------------------------
 
-/// Condition
-class ConditionRow extends Record {
-  final int id;
-  final int leftExpressionId;
-  final int rightExpressionId;
-
-  ConditionRow(this.id, this.leftExpressionId, this.rightExpressionId);
-  factory ConditionRow.from(Row r) => new ConditionRow(r[0], r[1], r[2]);
-}
-
 /// Rule
 class RuleRow extends Record {
   final int id;
@@ -152,6 +142,27 @@ class RuleRow extends Record {
       this.leftExpressionId, this.rightExpressionId);
   factory RuleRow.from(Row r) =>
       new RuleRow(r[0], r[1], r[2], r[3], r[4], r[5]);
+}
+
+/// Condition
+class ConditionRow extends Record {
+  final int id;
+  final int leftExpressionId;
+  final int rightExpressionId;
+
+  ConditionRow(this.id, this.leftExpressionId, this.rightExpressionId);
+  factory ConditionRow.from(Row r) => new ConditionRow(r[0], r[1], r[2]);
+}
+
+/// Rule condition
+class RuleConditionRow extends Record {
+  final int id;
+  final int ruleId;
+  final int conditionId;
+
+  RuleConditionRow(this.id, this.ruleId, this.conditionId);
+  factory RuleConditionRow.from(Row r) =>
+      new RuleConditionRow(r[0], r[1], r[2]);
 }
 
 //------------------------------------------------------------------------------
@@ -199,4 +210,20 @@ class StepRow extends Record {
       this.rearrangeFormat);
   factory StepRow.from(Row r) => new StepRow(r[0], r[1], r[2], r[3], r[4], r[5],
       r[6], r[7], r[8], r[9], pgIntArray(r[10]));
+}
+
+/// Step conditions proof
+class ConditionProofRow extends Record {
+  final int id;
+  final int stepId;
+  final int conditionId;
+  final int followsRuleId;
+  final int followsProofId;
+  final bool adoptCondition;
+  final bool selfEvident;
+
+  ConditionProofRow(this.id, this.stepId, this.conditionId, this.followsRuleId,
+      this.followsProofId, this.adoptCondition, this.selfEvident);
+  factory ConditionProofRow.from(Row r) =>
+      new ConditionProofRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
 }

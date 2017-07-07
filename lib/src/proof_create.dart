@@ -90,7 +90,7 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   // Retrieve all rules.
   for (final step in steps) {
     if (step.ruleId != null) {
-      step.rule = await _getEqLibRule(s, step.ruleId);
+      step.rule = await _getRule(s, step.ruleId);
     }
   }
 
@@ -269,4 +269,21 @@ Future<Expr> _getRuleAsExpression(Session s, int id) async {
 
   return new FunctionExpr(s.specialFunctions[SpecialFunction.equals], false,
       [map[rule.leftExpressionId], map[rule.rightExpressionId]]);
+}
+
+/// Get proof record for given first and last step ID. This function does not
+/// check if those steps actually connect and form a valid proof.
+Future<db.ProofRow> _getProofFor(
+    Session s, int firstStepId, int lastStepId) async {
+  final matchingProofs = await s.select(
+      db.proof,
+      WHERE(
+          {'first_step_id': IS(firstStepId), 'last_step_id': IS(lastStepId)}));
+
+  if (matchingProofs.isNotEmpty) {
+    return matchingProofs.single;
+  } else {
+    return await s.insert(db.proof,
+        VALUES({'first_step_id': firstStepId, 'last_step_id': lastStepId}));
+  }
 }

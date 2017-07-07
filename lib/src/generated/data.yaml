@@ -1,30 +1,37 @@
 tables:
 - tableName:  descriptor
   className:  Descriptor
+  varName:    descriptor
   select:     '*'
 
 - tableName:  subject
   className:  Subject
+  varName:    subject
   select:     '*'
 
 - tableName:  language
   className:  Language
+  varName:    language
   select:     '*'
 
 - tableName:  translation
   className:  Translation
+  varName:    translation
   select:     '*'
 
 - tableName:  function
   className:  Function
+  varName:    function
   select:     '*'
 
 - tableName:  operator
   className:  Operator
+  varName:    operator
   select:     '*'
 
 - tableName:  expression
   className:  Expression
+  varName:    expression
   select:     >-
     id,
     encode(data, 'base64'),
@@ -35,20 +42,34 @@ tables:
     node_value,
     node_arguments
 
-- tableName:  condition
-  className:  Condition
-  select:     '*'
-
 - tableName:  rule
   className:  Rule
+  varName:    rule
+  select:     '*'
+
+- tableName:  condition
+  className:  Condition
+  varName:    condition
+  select:     '*'
+
+- tableName:  rule_condition
+  className:  RuleCondition
+  varName:    ruleCondition
   select:     '*'
 
 - tableName:  step
   className:  Step
+  varName:    step
+  select:     '*'
+
+- tableName:  condition_proof
+  className:  ConditionProof
+  varName:    conditionProof
   select:     '*'
 
 - tableName:  proof
   className:  Proof
+  varName:    proof
   select:     '*'
 
 relations:

@@ -200,21 +200,6 @@ class ExpressionResource extends ResourceBase<db.ExpressionRow> {
 // Rule
 //------------------------------------------------------------------------------
 
-/// Condition
-class ConditionResource extends ResourceBase<db.ConditionRow> {
-  int id;
-  ExpressionResource leftExpression;
-  ExpressionResource rightExpression;
-
-  Map<int, db.ConditionRow> _getTableMap(data) => data.conditionTable;
-
-  void loadFields(row, data) {
-    leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
-    rightExpression = new ExpressionResource()
-      ..load(row.rightExpressionId, data);
-  }
-}
-
 /// Rule
 class RuleResource extends ResourceBase<db.RuleRow> {
   int id;
@@ -243,6 +228,21 @@ class RuleResource extends ResourceBase<db.RuleRow> {
     } else {
       conditions = [];
     }
+  }
+}
+
+/// Condition
+class ConditionResource extends ResourceBase<db.ConditionRow> {
+  int id;
+  ExpressionResource leftExpression;
+  ExpressionResource rightExpression;
+
+  Map<int, db.ConditionRow> _getTableMap(data) => data.conditionTable;
+
+  void loadFields(row, data) {
+    leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
+    rightExpression = new ExpressionResource()
+      ..load(row.rightExpressionId, data);
   }
 }
 
