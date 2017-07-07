@@ -22,9 +22,11 @@ final homePage = new Page(template: (s) {
     head([title('QEDb Builder'), defaultHead(s)]),
     body([
       div('.jumbotron',
-          style: 'background: repeating-linear-gradient(49deg,'
-              'transparent 0px, transparent 4px, rgba(42, 161, 152, 0.3) 8px,'
-              'transparent 9px, transparent 12px);',
+          style: 'background:'
+              'repeating-linear-gradient(90deg,'
+              'transparent 0px, transparent 9px, rgba(42, 161, 152, 0.3) 10px),'
+              'repeating-linear-gradient('
+              'transparent 0px, transparent 9px, rgba(42, 161, 152, 0.3) 10px);',
           c: [
             div('.container', style: 'text-align: center;', c: [
               svg([
