@@ -45,12 +45,12 @@ Future<db.RuleRow> createRule(Session s, RuleResource body) async {
 Future<db.RuleRow> createRuleFromDefinition(
     Session s, Rule definition, List<Rule> conditions) async {
   // Create conditions and collect ids.
-  final conditionIds = conditions.map((cond) async {
-    return (await _createCondition(s, cond)).id;
-  });
+  final conditionIds = new List<int>();
+  for (final condition in conditions) {
+    conditionIds.add((await _createCondition(s, condition)).id);
+  }
 
-  return _createRule(s, definition, await Future.wait(conditionIds),
-      isDefinition: true);
+  return _createRule(s, definition, conditionIds, isDefinition: true);
 }
 
 Future<db.RuleRow> createRuleFromProof(Session s, int proofId) async {

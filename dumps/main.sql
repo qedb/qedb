@@ -1251,6 +1251,8 @@ ALTER TABLE ONLY translation ALTER COLUMN id SET DEFAULT nextval('translation_id
 --
 
 COPY condition (id, left_expression_id, right_expression_id, left_array_data, right_array_data) FROM stdin;
+1	63	64	{668792982,4,27,2,6,358130610,3,10,198119638,3,9}	{99944244,2,28}
+2	65	64	{806519012,4,27,2,6,198119638,3,9,358130610,3,10}	{99944244,2,28}
 \.
 
 
@@ -1258,7 +1260,7 @@ COPY condition (id, left_expression_id, right_expression_id, left_array_data, ri
 -- Name: condition_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('condition_id_seq', 1, false);
+SELECT pg_catalog.setval('condition_id_seq', 2, true);
 
 
 --
@@ -1287,6 +1289,8 @@ COPY descriptor (id) FROM stdin;
 19
 20
 21
+22
+23
 \.
 
 
@@ -1294,7 +1298,7 @@ COPY descriptor (id) FROM stdin;
 -- Name: descriptor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('descriptor_id_seq', 21, true);
+SELECT pg_catalog.setval('descriptor_id_seq', 23, true);
 
 
 --
@@ -1356,6 +1360,9 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 53	\\x000001000400020002000000090000000a0000000200000006000000000000000200020002030004030104	\\x9d1ac72f5d137f09403a7c39451831873d26ff9cb6f5248b18947bbc8f2272a8	{}_\\text{?}a^{2}+{}_\\text{?}b^{2}	{9,10,2,6}	function	2	{51,52}
 54	\\x000001000500020002000000090000000a0000001a0000000200000006000000000000000100020002000203040005040105	\\x0811a758552f582c28ffc56143e17b4e9cf4be00276258497ab4524a89c5da64	\\sqrt{{}_\\text{?}a^{2}+{}_\\text{?}b^{2}~}	{9,10,26,2,6}	function	26	{53}
 49	\\x0000000004000200090000000a0000001900000018000000000000000100020002030001	\\x887cc2e366b25726821cd36bb976490fe90a60162d021b0b59dee24c41b944fc	\\left\\|\\left(\\begin{matrix}{}_\\text{?}a\\\\{}_\\text{?}b\\end{matrix}\\right)\\right\\|	{9,10,25,24}	function	25	{29}
+64	\\x00000000010000001c000000000000	\\xe55958fbb20942b5b2da84b4e60020f9daca56cb5a7832ea9425405a02c5711d	\\text{True}	{28}	function	28	{}
+63	\\x00000000030002000a000000090000001b000000000000000200020001	\\x5813a36715ab8f06bb594d7a3f53ef8338d1e4bf8dab520e79297c1180a0dfdc	{}_\\text{?}b\\leq{}_\\text{?}a	{10,9,27}	function	27	{2,1}
+65	\\x0000000003000200090000000a0000001b000000000000000200020001	\\x5401ec9a4f5b907348a9e9951e0510da6565c3bbf30e64d1196fb9362d97e8b1	{}_\\text{?}a\\leq{}_\\text{?}b	{9,10,27}	function	27	{1,2}
 \.
 
 
@@ -1363,7 +1370,7 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 -- Name: expression_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('expression_id_seq', 54, true);
+SELECT pg_catalog.setval('expression_id_seq', 65, true);
 
 
 --
@@ -1397,6 +1404,8 @@ COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_c
 24	1	19	f	f	2	vec2	word	\\left(\\begin{matrix}${0}\\\\${1}\\end{matrix}\\right)	\N
 26	1	21	f	f	1	sqrt	latex	\\sqrt{${0}~}	\N
 25	1	20	f	f	1	abs	abbreviation	\\left\\|${0}\\right\\|	\N
+28	1	23	f	f	0	true	word	\\text{True}	\N
+27	1	22	f	f	2	leq	abbreviation	${.0}\\leq${1.}	\N
 \.
 
 
@@ -1404,7 +1413,7 @@ COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_c
 -- Name: function_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('function_id_seq', 26, true);
+SELECT pg_catalog.setval('function_id_seq', 28, true);
 
 
 --
@@ -1477,6 +1486,7 @@ COPY rule (id, step_id, proof_id, is_definition, left_expression_id, right_expre
 7	\N	\N	t	29	34	{853990810,4,24,2,6,198119638,3,9,358130610,3,10}	{88350546,4,2,2,22,352139162,4,4,2,6,198119638,3,9,665602766,2,13,1030378374,4,4,2,6,358130610,3,10,168365960,2,14}
 8	\N	1	f	35	48	{815027242,4,24,2,22,507440212,4,4,2,6,198119638,3,9,358130610,3,10,792166020,4,4,2,6,198119638,3,9,971369676,3,11}	{321065132,4,4,2,14,198119638,3,9,71476026,4,24,2,6,358130610,3,10,971369676,3,11}
 9	\N	\N	t	49	54	{1057070576,4,25,1,11,853990810,4,24,2,6,198119638,3,9,358130610,3,10}	{413406680,4,26,1,27,688443628,4,2,2,22,1068305054,4,6,2,6,198119638,3,9,9,1,2,1061973566,4,6,2,6,358130610,3,10,9,1,2}
+10	\N	\N	t	1	2	{198119638,3,9}	{358130610,3,10}
 \.
 
 
@@ -1485,6 +1495,8 @@ COPY rule (id, step_id, proof_id, is_definition, left_expression_id, right_expre
 --
 
 COPY rule_condition (id, rule_id, condition_id) FROM stdin;
+1	10	1
+2	10	2
 \.
 
 
@@ -1492,7 +1504,7 @@ COPY rule_condition (id, rule_id, condition_id) FROM stdin;
 -- Name: rule_condition_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('rule_condition_id_seq', 1, false);
+SELECT pg_catalog.setval('rule_condition_id_seq', 2, true);
 
 
 --
@@ -1522,7 +1534,7 @@ COPY rule_condition_proof_proof (parent_id, child_id) FROM stdin;
 -- Name: rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('rule_id_seq', 9, true);
+SELECT pg_catalog.setval('rule_id_seq', 10, true);
 
 
 --
@@ -1618,6 +1630,8 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 37	19	1	2D Vector
 39	21	1	Square root
 38	20	1	Absolute value
+40	22	1	Less or equal
+41	23	1	true
 \.
 
 
@@ -1625,7 +1639,7 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 -- Name: translation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('translation_id_seq', 39, true);
+SELECT pg_catalog.setval('translation_id_seq', 41, true);
 
 
 --
