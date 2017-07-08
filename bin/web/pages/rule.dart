@@ -13,11 +13,25 @@ final createRulePage = new Page(template: (s) {
   return createResourceTemplate(s, 'rule', inputs: (_) {
     return [
       h4('From definition'),
-      formGroup('Left expression', 'left', [
-        div('#left.editex.editex-align-left.form-control', data_name: 'left')
+      formGroup('Definition', 'definition', [
+        div('.rule-input', [
+          div('#left.editex.editex-align-left.form-control', data_name: 'left'),
+          span('.rule-arrow'),
+          div('#right.editex.editex-align-left.form-control',
+              data_name: 'right')
+        ])
       ]),
-      formGroup('Right expression', 'right', [
-        div('#right.editex.editex-align-left.form-control', data_name: 'right')
+      formGroup('Conditions', 'conditions', [
+        div([
+          div('#conditions-wrapper'),
+          p(div('.btn-group', rule: 'group', c: [
+            button('#add-condition.btn.btn-secondary', 'Add condition',
+                type: 'button'),
+            button(
+                '#remove-condition.btn.btn-secondary', 'Remove last condition',
+                type: 'button')
+          ]))
+        ])
       ]),
       h4('From proof'),
       formInput('Proof ID', name: 'proof'),
@@ -38,15 +52,25 @@ final createRulePage = new Page(template: (s) {
     ];
   }, bodyTags: [
     katexSource(s),
+    stylesheet('/snippets/rule.css'),
     stylesheet('/snippets/editex.css'),
-    script(src: '/src/editex_form.dart.js')
+    script(src: '/src/create_rule.dart.js')
   ]);
 }, onPost: (data) {
   if (notEmpty(data['left']) && notEmpty(data['right'])) {
+    // Find condition count.
+    final conditionCount = int.parse(data['condition-count']);
+
     return {
       'isDefinition': true,
       'leftExpression': {'data': data['left']},
-      'rightExpression': {'data': data['right']}
+      'rightExpression': {'data': data['right']},
+      'conditions': new List.generate(conditionCount, (i) {
+        return {
+          'leftExpression': {'data': data['condition$i-left']},
+          'rightExpression': {'data': data['condition$i-right']}
+        };
+      })
     };
   } else if (notEmpty(data['proof'])) {
     return {
@@ -68,6 +92,39 @@ final createRulePage = new Page(template: (s) {
   }
 });
 
+final readRulePage = new Page(template: (s) {
+  final data = s.response;
+  final ruleLatex = //
+      '${data.leftExpression.latex}'
+      r'\leftrightharpoons '
+      '${data.rightExpression.latex}';
+
+  return pageTemplate(s, 'Rule #${data.id}', containerTags: [
+    br(),
+    p(span('.latex', ruleLatex)),
+    br(),
+    h4('Conditions'),
+    table('.table', [
+      thead([
+        tr([th('#'), th('Left'), th(''), th('Right')])
+      ]),
+      tbody(data.conditions.map((condition) {
+        return tr([
+          th(condition.id.toString(), scope: 'row'),
+          td(span('.latex', condition.leftExpression.latex)),
+          td(span('.rule-arrow')),
+          td(span('.latex', condition.rightExpression.latex))
+        ]);
+      }).toList())
+    ]),
+  ], bodyTags: [
+    katexSource(s),
+    stylesheet('/snippets/rule.css'),
+    stylesheet('/snippets/latex_table.css'),
+    script(src: '/snippets/render_latex.js')
+  ]);
+});
+
 final listRulesPage = new Page(template: (s) {
   return listResourceTemplate(s, 'rule', 'rules', tableHead: [
     th('ID'),
@@ -78,9 +135,9 @@ final listRulesPage = new Page(template: (s) {
     th('Actions', style: 'width: 1px;')
   ], row: (rule) {
     return [
-      td(rule.id.toString()),
+      td(a(rule.id.toString(), href: '/rule/${rule.id}/read')),
       td(span('.latex', rule.leftExpression.latex)),
-      td(span('.latex', r'\Longleftrightarrow')),
+      td(span('.rule-arrow')),
       td(span('.latex', rule.rightExpression.latex)),
       td(unsafe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
           rule.containsKey('step') ? span('step') : span('.none.text-muted'))),
@@ -93,6 +150,7 @@ final listRulesPage = new Page(template: (s) {
     ];
   }, bodyTags: [
     katexSource(s),
+    stylesheet('/snippets/rule.css'),
     stylesheet('/snippets/latex_table.css'),
     script(src: '/snippets/render_latex.js')
   ]);

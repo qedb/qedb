@@ -85,7 +85,7 @@ String generateStepLaTeX(JsonObject step) {
     }
     return '${step.expression.latex}\\quad'
         '\\color{#666}{\\left['
-        '${sides.first}=${sides.last}'
+        '${sides.first}\\leftrightharpoons ${sides.last}'
         '\\right]}';
   } else {
     return step.expression.latex;

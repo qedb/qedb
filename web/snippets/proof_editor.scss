@@ -44,6 +44,17 @@
   width: 1px;
 }
 
+.proof-row-static {
+  & > div {
+    padding: 1em;
+
+    & > .katex-display {
+      margin: 0;
+      text-align: left;
+    }
+  }
+}
+
 .proof-row-status {
   flex: 0 0 4em;
   text-align: center;

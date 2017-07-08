@@ -57,10 +57,14 @@ class QEDbEdiTeXInterface implements EdiTeXInterface {
 
   int assignId(String label, bool generic) {
     // We generate radix string labels (see [_generateFunctionParseTemplate]).
-    final id = int.parse(label.substring(1, label.length - 1),
-        radix: 16, onError: (_) => -1);
+    if (label.length < 3) {
+      throw new Exception('invalid label: $label');
+    }
+
+    final idStr = label.substring(1, label.length - 1);
+    final id = int.parse(idStr, radix: 16, onError: (_) => -1);
     if (id == -1) {
-      throw new Exception('invalid label');
+      throw new Exception('invalid label: $label');
     } else {
       return id;
     }

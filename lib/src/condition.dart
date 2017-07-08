@@ -31,3 +31,7 @@ Future<db.ConditionRow> _createCondition(Session s, Rule condition) async {
         }));
   }
 }
+
+Future<List<db.ConditionRow>> _listConditions(Session s, Iterable<int> ids) {
+  return s.selectByIds(db.condition, ids);
+}

@@ -130,15 +130,15 @@ class StaticStepEditor extends StepEditorBase {
       Expr expression,
       String latex,
       ProofDataModifier modifier) {
-    final container = ht.div('.proof-row-editor.editex.editex-align-left');
+    final container = ht.div('.proof-row-editor.proof-row-static.editex');
     final status = ht.div('.proof-row-status');
     final row = root.append(ht.div('.proof-row',
         c: [ht.div('.proof-row-number'), container, status]));
 
     // Render latex.
-    final target = new DivElement();
+    final target = ht.div([]);
     container.append(target);
-    katex.render(latex, target);
+    katex.render(latex, target, new katex.RenderingOptions(displayMode: true));
 
     return new StaticStepEditor._(interface, db, root, row, container, status,
         prev, expression, modifier);

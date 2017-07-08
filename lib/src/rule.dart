@@ -197,14 +197,34 @@ Future<Rule> _getRule(Session s, int id) async {
 
 Future<List<db.RuleRow>> listRules(Session s, [Iterable<int> ids]) async {
   final rules =
-      await (ids == null ? s.select(db.rule) : s.selectByIds(db.rule, ids));
+      ids == null ? await s.select(db.rule) : await s.selectByIds(db.rule, ids);
 
-  // Select left and right expressions.
+  // Select condition connections.
+  final allRuleConditions = ids == null
+      ? await s.select(db.ruleCondition)
+      : await s.select(db.ruleCondition, WHERE({'rule_id': IN(ids)}));
+  final conditionIds = new List<int>();
+  for (final row in allRuleConditions) {
+    s.data.ruleConditions.putIfAbsent(row.ruleId, () => new List<int>());
+    s.data.ruleConditions[row.ruleId].add(row.conditionId);
+    conditionIds.add(row.conditionId);
+  }
+
+  // Load conditions.
+  final conditions = await _listConditions(s, conditionIds);
+
+  // Aggregate all expression IDs.
   final expressionIds = new List<int>();
   for (final rule in rules) {
     expressionIds.add(rule.leftExpressionId);
     expressionIds.add(rule.rightExpressionId);
   }
+  for (final condition in conditions) {
+    expressionIds.add(condition.leftExpressionId);
+    expressionIds.add(condition.rightExpressionId);
+  }
+
+  // Load expressions.
   await listExpressions(s, expressionIds);
 
   return rules;

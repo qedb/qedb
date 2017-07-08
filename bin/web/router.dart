@@ -36,6 +36,7 @@ Map<String, Page> pages = {
   '/function/list': listFunctionsPage,
   '/rule/create': createRulePage,
   '/rule/list': listRulesPage,
+  '/rule/{id}/read': readRulePage,
   '/rule/{id}/delete': deleteRulePage,
   '/proof/create': createProofPage,
   '/proof/list': listProofsPage,
@@ -54,10 +55,19 @@ Future<Null> setupRouter(
 
   // Serve static files.
   final staticEndpoints = ['external', 'snippets', 'src'];
-  for (final endpoint in staticEndpoints) {
-    router.add(
-        '/$endpoint/', ['GET'], createStaticHandler('$staticBase$endpoint'),
-        exactMatch: false);
+  if (staticBase.startsWith(new RegExp(r'http[s]?:\/\/'))) {
+    // Redirect to secondary HTTP server.
+    for (final endpoint in staticEndpoints) {
+      router.add('/$endpoint/', ['GET'], (Request request) {
+        return new Response.found('$staticBase${request.requestedUri.path}');
+      }, exactMatch: false);
+    }
+  } else {
+    // Serve from filesystem.
+    for (final endpoint in staticEndpoints) {
+      final handler = createStaticHandler('$staticBase$endpoint');
+      router.add('/$endpoint/', ['GET'], handler, exactMatch: false);
+    }
   }
 
   // Add handlers for all pages.
