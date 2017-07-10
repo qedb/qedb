@@ -10,6 +10,10 @@ class DifferenceRequest {
 
   @ApiProperty(required: true)
   String rightExpression;
+
+  // TODO
+  //List<ProofResource> useForConditions;
+  //List<SubstitutionResource> useForFreeSubstitutions
 }
 
 class DifferenceBranch {
@@ -18,14 +22,26 @@ class DifferenceBranch {
   String rightExpression;
   bool resolved;
   bool different;
-  bool reverseRule;
+
+  bool reverseSides;
   bool reverseEvaluate;
   RuleResource rule;
+
+  // TODO
+  //List<RuleConditionProof> conditionProofs;
+
   List<Rearrangement> rearrangements;
   List<DifferenceBranch> arguments;
 
   Expr get leftExpr => new Expr.fromBase64(leftExpression);
   Expr get rightExpr => new Expr.fromBase64(rightExpression);
+}
+
+class RuleConditionProof {
+  int conditionId;
+  RuleResource followsRule;
+  ProofResource followsProof;
+  bool selfEvident;
 }
 
 /// Resolves difference between leftExpression and rightExpression.
@@ -91,51 +107,23 @@ Future<DifferenceBranch> resolveTreeDiff(
         return outputBranch;
       }
 
-      // Search for a rule.
-      // Rule searching parameters:
-      final exprParams = [
-        ARRAY(left.toArray(), 'integer'),
-        ARRAY(right.toArray(), 'integer')
-      ];
-      final ruleParams = [SQL('left_array_data'), SQL('right_array_data')];
+      // Find matching substitution in the rule set.
+      final results = await _findSubstitutions(s, new Subs(left, right),
+          subset: SUBQUERY(SQL('SELECT substitution_id FROM rule')),
+          returnFirst: true);
 
-      // Add, subtract, multiply, negate.
-      final computableIdsArray = ARRAY(
-          [
-            SpecialFunction.add,
-            SpecialFunction.subtract,
-            SpecialFunction.multiply,
-            SpecialFunction.negate
-          ].map((fn) => s.specialFunctions[fn]),
-          'integer');
+      if (results.isNotEmpty) {
+        final result = results.single;
+        final rule = await s.selectOne(
+            db.rule, WHERE({'substitution_id': IS(result.substitution.id)}));
 
-      // Try to find rule (4 search methods: normal, invert, mirror, revert).
-      for (var i = 0; i < 4; i++) {
-        // TODO: improve SQL builder and separate substitution search
-        final param12 = i < 2 ? exprParams : exprParams.reversed.toList();
-        final param34 = i % 2 == 0 ? ruleParams : ruleParams.reversed.toList();
-        final substitutions = await s.select(
-            db.substitution,
-            WHERE({
-              'id': IN(SUBQUERY(SQL('SELECT substitution_id FROM rule'))),
-              '': FUNCTION('match_subs', param12[0], param12[1], param34[0],
-                  param34[1], computableIdsArray)
-            }),
-            LIMIT(1));
+        outputBranch
+          ..reverseSides = result.reverseSides
+          ..reverseEvaluate = result.reverseEvaluate
+          ..rule = (new RuleResource()..loadRow(rule, s.data))
+          ..resolved = true;
 
-        if (substitutions.isNotEmpty) {
-          final substitution = substitutions.single;
-          final rule = await s.selectOne(
-              db.rule, WHERE({'substitution_id': IS(substitution.id)}));
-
-          outputBranch
-            ..reverseRule = !(i % 2 == 0)
-            ..reverseEvaluate = !(i < 2)
-            ..rule = (new RuleResource()..loadRow(rule, s.data))
-            ..resolved = true;
-
-          return outputBranch;
-        }
+        return outputBranch;
       }
 
       // Fallback to processing individual arguments.

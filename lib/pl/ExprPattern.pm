@@ -348,11 +348,11 @@ sub match_expr {
 # It is possible to put match_pattern inside this function for some very minimal
 # gain (arguments do not have to be copied).
 sub match_subs {
-  my ($expr_left, $expr_right, $rule_left, $rule_right, $computable_ids) = @_;
+  my ($expr_left, $expr_right, $subs_left, $subs_right, $computable_ids) = @_;
   my (%mapping_hash, %mapping_genfn);
   my $ptr_t = 0;
   my $ptr_p = scalar(@$expr_left) + scalar(@$expr_right);
-  my @data = (@$expr_left, @$expr_right, @$rule_left, @$rule_right);
+  my @data = (@$expr_left, @$expr_right, @$subs_left, @$subs_right);
 
   debug("\nMATCH RULE LEFT SIDE\n");
   (my $result_left, $ptr_t, $ptr_p) = match_pattern(1, 0,

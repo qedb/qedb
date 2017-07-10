@@ -54,3 +54,75 @@ Future<Expr> _substitutionAsEqualsExpression(Session s, int id) async {
   return new FunctionExpr(s.specialFunctions[SpecialFunction.equals], false,
       [map[subs.leftExpressionId], map[subs.rightExpressionId]]);
 }
+
+/// Find substitutions that match the given [subs].
+Future<List<SubstitutionResult>> _findSubstitutions(Session s, Subs subs,
+    {Sql subset, bool returnFirst: false}) async {
+  final results = new List<SubstitutionResult>();
+
+  // Prepare scanning arguments.
+  final exprArraySql = [
+    ARRAY(subs.left.toArray(), 'integer'),
+    ARRAY(subs.right.toArray(), 'integer')
+  ];
+  final subsArraySql = [SQL('left_array_data'), SQL('right_array_data')];
+
+  // Get computable function IDs (passed on to the matching algorithm).
+  final computableIds = const [
+    SpecialFunction.add,
+    SpecialFunction.subtract,
+    SpecialFunction.multiply,
+    SpecialFunction.negate
+  ].map((fn) => s.specialFunctions[fn]);
+  final computableIdsSql = ARRAY(computableIds, 'integer');
+
+  // Four scans through the given subset of substitutions:
+  // 1. try normal substitution on given expression
+  // 2. try reversed substitution on given expression
+  // 3. try normal substitution on reversed expression
+  // 4. try reversed substitution on reversed expression
+  for (var i = 0; i < 4; i++) {
+    final rSides = i % 2 != 0;
+    final rEval = i >= 2;
+
+    final exprArgs = rEval ? exprArraySql : exprArraySql.reversed.toList();
+    final subsArgs = rSides ? subsArraySql : subsArraySql.reversed.toList();
+
+    final substitutions = await s.select(
+        db.substitution,
+        WHERE({
+          'id': IN(subset)
+        }, and: [
+          _matchSubs(exprArgs[0], exprArgs[1], subsArgs[0], subsArgs[1],
+              computableIdsSql)
+        ]),
+        returnFirst ? LIMIT(1) : SQL('LIMIT ALL'));
+
+    if (substitutions.isNotEmpty) {
+      for (final substitution in substitutions) {
+        results.add(new SubstitutionResult(substitution, rSides, rEval));
+      }
+      if (returnFirst) {
+        break;
+      }
+    }
+  }
+
+  return results;
+}
+
+/// Substitution search result.
+class SubstitutionResult {
+  final db.SubstitutionRow substitution;
+  final bool reverseSides;
+  final bool reverseEvaluate;
+
+  SubstitutionResult(
+      this.substitution, this.reverseSides, this.reverseEvaluate);
+}
+
+/// Call match_subs SQL function.
+Sql _matchSubs(Sql exprLeft, Sql exprRight, Sql subsLeft, Sql subsRight,
+        Sql computableIdsArray) =>
+    FUNCTION('match_subs', exprLeft, exprRight, subsLeft, subsRight,
+        computableIdsArray);

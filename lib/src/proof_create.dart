@@ -236,7 +236,7 @@ List<_StepData> _flattenDifferenceBranch(DifferenceBranch branch) {
       final step = new _StepData()
         ..type = StepType.substituteRule
         ..position = branch.position
-        ..reverseSides = branch.reverseRule
+        ..reverseSides = branch.reverseSides
         ..reverseEvaluate = branch.reverseEvaluate
         ..ruleId = branch.rule.id
         ..subExprRight = branch.rightExpr;

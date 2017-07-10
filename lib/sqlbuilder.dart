@@ -251,8 +251,16 @@ Sql _flatten(String prefix, Map<String, dynamic> map, String keyValueSeparator,
 }
 
 // ignore: non_constant_identifier_names
-Sql WHERE(Map<String, Sql> conditions) {
-  return _flatten('WHERE', conditions, ' ', ' AND ');
+Sql WHERE(Map<String, Sql> conditions, {List<Sql> and: const []}) {
+  assert(conditions.isNotEmpty);
+  final sql = _flatten('WHERE', conditions, ' ', ' AND ');
+  final buffer = new StringBuffer();
+  buffer.write(sql.statement);
+  for (final sql in and) {
+    buffer.write(' AND ');
+    buffer.write(sql.statement);
+  }
+  return SQL(buffer.toString());
 }
 
 // ignore: non_constant_identifier_names

@@ -271,6 +271,10 @@ class StepResource extends ResourceBase<db.StepRow> {
   ProofResource proof;
   RuleResource rule;
   SubstitutionResource substitution;
+
+  // TODO
+  //List<ConditionProofResource> conditionProofs
+
   List<int> rearrangeFormat;
 
   Map<int, db.StepRow> _getTableMap(data) => data.stepTable;
