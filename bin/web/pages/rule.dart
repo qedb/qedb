@@ -63,8 +63,10 @@ final createRulePage = new Page(template: (s) {
 
     return {
       'isDefinition': true,
-      'leftExpression': {'data': data['left']},
-      'rightExpression': {'data': data['right']},
+      'substitution': {
+        'leftExpression': {'data': data['left']},
+        'rightExpression': {'data': data['right']}
+      },
       'conditions': new List.generate(conditionCount, (i) {
         return {
           'leftExpression': {'data': data['condition$i-left']},
@@ -95,9 +97,9 @@ final createRulePage = new Page(template: (s) {
 final readRulePage = new Page(template: (s) {
   final data = s.response;
   final ruleLatex = //
-      '${data.leftExpression.latex}'
+      '${data.substitution.leftExpression.latex}'
       r'\leftrightharpoons '
-      '${data.rightExpression.latex}';
+      '${data.substitution.rightExpression.latex}';
 
   return pageTemplate(s, 'Rule #${data.id}', containerTags: [
     br(),
@@ -136,9 +138,9 @@ final listRulesPage = new Page(template: (s) {
   ], row: (rule) {
     return [
       td(a(rule.id.toString(), href: '/rule/${rule.id}/read')),
-      td(span('.latex', rule.leftExpression.latex)),
+      td(span('.latex', rule.substitution.leftExpression.latex)),
       td(span('.rule-arrow')),
-      td(span('.latex', rule.rightExpression.latex)),
+      td(span('.latex', rule.substitution.rightExpression.latex)),
       td(unsafe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
           rule.containsKey('step') ? span('step') : span('.none.text-muted'))),
       td(div('.btn-group.btn-group-sm', role: 'group', c: [

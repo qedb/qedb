@@ -16,7 +16,7 @@ enum StepType {
   copyProof,
   rearrange,
   substituteRule,
-  substituteCondition
+  substituteFree
 }
 
 /// Intermediary data for building a step.
@@ -36,9 +36,10 @@ class _StepData {
   bool reverseSides = false;
   bool reverseEvaluate = false;
 
-  /// Rule ID and full rule data (retrieved seperately)
   int ruleId;
-  Rule rule;
+
+  /// Substitution data (used for rules and raw substitutions)
+  Subs subs;
 
   List<int> rearrangeFormat;
 
@@ -48,7 +49,7 @@ class _StepData {
     StepType.copyProof: 'copy_proof',
     StepType.rearrange: 'rearrange',
     StepType.substituteRule: 'substitute_rule',
-    StepType.substituteCondition: 'substitute_condition'
+    StepType.substituteFree: 'substitute_free'
   };
 }
 
@@ -90,7 +91,8 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   // Retrieve all rules.
   for (final step in steps) {
     if (step.ruleId != null) {
-      step.rule = await _getRule(s, step.ruleId);
+      final rule = await s.selectById(db.rule, step.ruleId);
+      step.subs = await getSubs(s, rule.substitutionId);
     }
   }
 
@@ -193,18 +195,19 @@ Future<Expr> _computeProofStep(Session s, Expr previous, _StepData step,
           step.rearrangeFormat, step.position, rearrangeableIds);
 
     case StepType.substituteRule:
-      final rule = step.reverseSides ? step.rule.inverted : step.rule;
+    case StepType.substituteFree:
+      final subs = step.reverseSides ? step.subs.inverted : step.subs;
       if (!step.reverseEvaluate) {
-        return previous.substituteAt(rule, step.position);
+        return previous.substituteAt(subs, step.position);
       } else {
         // Reversed evaluation means that the right sub-expression at this
         // position is used to construct the original expression. When evaluated
         // this must match the expression in [previous] at the step position.
         // From this a new rule can be constructed to substitute the
         // sub-expression into [previous].
-        final original = step.subExprRight.substituteAt(rule, 0);
+        final original = step.subExprRight.substituteAt(subs, 0);
         return previous.substituteAt(
-            new Rule(original.evaluate(compute), step.subExprRight),
+            new Subs(original.evaluate(compute), step.subExprRight),
             step.position);
       }
       break;
@@ -257,18 +260,14 @@ Future<_StepData> _getStepData(Session s, int id) async {
   final step = new _StepData();
   step.row = await s.selectById(db.step, id);
   final exprRow = await s.selectById(db.expression, step.row.expressionId);
-  step.expression = exprRow.expr;
+  step.expression = exprRow.asExpr;
   return step;
 }
 
 /// Expand rule with [id] into an equation expression.
 Future<Expr> _getRuleAsExpression(Session s, int id) async {
   final rule = await s.selectById(db.rule, id);
-  final map = await getExpressionMap(
-      s, [rule.leftExpressionId, rule.rightExpressionId]);
-
-  return new FunctionExpr(s.specialFunctions[SpecialFunction.equals], false,
-      [map[rule.leftExpressionId], map[rule.rightExpressionId]]);
+  return _substitutionAsEqualsExpression(s, rule.substitutionId);
 }
 
 /// Get proof record for given first and last step ID. This function does not

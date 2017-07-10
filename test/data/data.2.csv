@@ -22,3 +22,7 @@ ID,Subject,Name,Keyword,"Keyword type",ArgC,"LaTeX template",Generic,Arr.,Specia
 21,Calculus,Delta,d,symbol,1,\Delta${:0(+).},FALSE,FALSE,,,,,,
 22,Calculus,Limit,lim,latex,3,\lim_{${0}\to${1}}${:2(+).},FALSE,FALSE,,,,,,
 23,Calculus,Derivative,diff,abbreviation,2,\frac{\partial}{\partial${:0(+)}}${:1(+).},FALSE,FALSE,derivative,,,,,
+24,"Basic Algebra","Absolute Value",abs,abbreviation,1,\left\|${0}\right\|,FALSE,FALSE,,,,,,
+25,"Boolean Algebra",True,true,word,0,\text{True},FALSE,FALSE,,,,,,
+26,"Boolean Algebra",False,false,word,0,\text{False},FALSE,FALSE,,,,,,
+27,Logic,"Less or Equal",leq,abbreviation,2,${.0}\leq${1.},FALSE,FALSE,,,,,,

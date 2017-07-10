@@ -5,6 +5,7 @@
 library qedb.resources;
 
 import 'package:rpc/rpc.dart';
+import 'package:eqlib/eqlib.dart';
 import 'package:qedb/sqlbuilder.dart';
 
 import 'package:qedb/schema.dart' as db;
@@ -194,11 +195,30 @@ class ExpressionResource extends ResourceBase<db.ExpressionRow> {
     latex = row.latex;
     functions = row.functions;
   }
+
+  Expr get asExpr => new Expr.fromBase64(data);
 }
 
 //------------------------------------------------------------------------------
 // Rule
 //------------------------------------------------------------------------------
+
+/// Substitution
+class SubstitutionResource extends ResourceBase<db.SubstitutionRow> {
+  int id;
+  ExpressionResource leftExpression;
+  ExpressionResource rightExpression;
+
+  Map<int, db.SubstitutionRow> _getTableMap(data) => data.substitutionTable;
+
+  void loadFields(row, data) {
+    leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
+    rightExpression = new ExpressionResource()
+      ..load(row.rightExpressionId, data);
+  }
+
+  Subs get asSubs => new Subs(leftExpression.asExpr, rightExpression.asExpr);
+}
 
 /// Rule
 class RuleResource extends ResourceBase<db.RuleRow> {
@@ -206,9 +226,8 @@ class RuleResource extends ResourceBase<db.RuleRow> {
   StepResource step;
   ProofResource proof;
   bool isDefinition;
-  ExpressionResource leftExpression;
-  ExpressionResource rightExpression;
-  List<ConditionResource> conditions;
+  SubstitutionResource substitution;
+  List<SubstitutionResource> conditions;
 
   Map<int, db.RuleRow> _getTableMap(data) => data.ruleTable;
 
@@ -216,33 +235,16 @@ class RuleResource extends ResourceBase<db.RuleRow> {
     step = getResource(row.stepId, data, new StepResource());
     proof = getResource(row.proofId, data, new ProofResource());
     isDefinition = row.isDefinition;
-
-    leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
-    rightExpression = new ExpressionResource()
-      ..load(row.rightExpressionId, data);
+    substitution = new SubstitutionResource()..load(row.substitutionId, data);
 
     if (data.ruleConditions.containsKey(id)) {
       conditions = data.ruleConditions[id]
-          .map((id) => new ConditionResource()..load(id, data))
+          .map((substitutionId) =>
+              new SubstitutionResource()..load(substitutionId, data))
           .toList();
     } else {
       conditions = [];
     }
-  }
-}
-
-/// Condition
-class ConditionResource extends ResourceBase<db.ConditionRow> {
-  int id;
-  ExpressionResource leftExpression;
-  ExpressionResource rightExpression;
-
-  Map<int, db.ConditionRow> _getTableMap(data) => data.conditionTable;
-
-  void loadFields(row, data) {
-    leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
-    rightExpression = new ExpressionResource()
-      ..load(row.rightExpressionId, data);
   }
 }
 
@@ -257,24 +259,29 @@ class StepResource extends ResourceBase<db.StepRow> {
   int position;
 
   @ApiProperty(values: const {
-    'set': 'Set new expression.',
-    'rule_normal': 'substitute a -> b, evaluate b from a',
-    'rule_invert': 'substitute b -> a, evaluate a from b (invert rule sides)',
-    'rule_mirror': 'substitute a -> b, evaluate a from b (mirror evaluation)',
-    'rule_revert': 'substitute b -> a, evaluate b from a (invert and mirror)',
-    'rearrange': 'Rearrange child tree at position.'
+    'set': 'Set expression to arbitrary value.',
+    'copy_proof': 'Copy first and last expression of a proof.',
+    'copy_rule': 'Copy left and right expression of a rule.',
+    'rearrange': 'Rearrange using the given format.',
+    'substitute_rule': 'Apply a rule based substitution.',
+    'substitute_free': 'Apply a free substitution (creates condition).'
   })
   String type;
 
-  RuleResource rule;
   ProofResource proof;
+  RuleResource rule;
+  SubstitutionResource substitution;
   List<int> rearrangeFormat;
 
   Map<int, db.StepRow> _getTableMap(data) => data.stepTable;
 
   void loadFields(row, data) {
     expression = new ExpressionResource()..load(row.expressionId, data);
+    proof = getResource(row.proofId, data, new ProofResource());
     rule = getResource(row.ruleId, data, new RuleResource());
+    substitution =
+        getResource(row.substitutionId, data, new SubstitutionResource());
+
     position = row.position;
     type = row.type;
     rearrangeFormat = row.rearrangeFormat;

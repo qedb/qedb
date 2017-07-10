@@ -8,7 +8,7 @@ environment:
 dependencies:
   rpc:          ^0.5.7
   yaml:         ^2.1.12
-  eqlib:        ^0.14.2+1
+  eqlib:        ^0.15.0
   postgresql:   ^0.3.4+1
   shelf:        ^0.6.7+2
   shelf_rpc:    ^0.0.3+2
@@ -25,7 +25,7 @@ dev_dependencies:
   htgen:        ^0.0.1
   sass:         ^1.0.0-alpha
   browser:      ^0.10.0+2
-  editex:       ^0.2.2+2
+  editex:       ^0.2.2+3
   qedb_client:  ^0.1.1
   shelf_static: ^0.2.4
   transform_sass: ^0.1.0

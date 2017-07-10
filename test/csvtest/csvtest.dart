@@ -143,14 +143,13 @@ CsvTest route(String method, String path,
         httpRequest.body = JSON.encode(requestBody);
       }
 
-      // Retrieve response.
-      final httpResponse = await httpRequest.send();
-      final responseBody =
-          JSON.decode(await httpResponse.stream.bytesToString());
-
-      // Compare response body with expected response.
-      final expectedResponseBody = evaluate(response, row);
+      // Send request and compare response body with expected response.
+      var expectedResponseBody, responseBody;
       try {
+        final httpResponse = await httpRequest.send();
+        responseBody = JSON.decode(await httpResponse.stream.bytesToString());
+
+        expectedResponseBody = evaluate(response, row);
         compare(expectedResponseBody, responseBody);
         return TestState.passed;
       } on Exception catch (e) {
@@ -252,6 +251,16 @@ void compare(src, dst, [String path = '']) {
         throw new Exception('$path has unknown accept type');
       }
     }
+  } else if (src is num) {
+    if (!(dst is num) || src != dst) {
+      throw new Exception('$path value does not match');
+    }
+  } else if (src is bool) {
+    if (!(dst is bool) || src != dst) {
+      throw new Exception('$path value does not match');
+    }
+  } else {
+    throw new Exception('$path has unrecognized type: ${src.runtimeType}');
   }
 }
 

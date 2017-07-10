@@ -145,24 +145,29 @@ Future main() async {
     // Create definition.
     route('POST', 'rule/create', request: {
       'isDefinition': true,
-      'leftExpression': {'data': eqlib.data(col('Expression left'))},
-      'rightExpression': {'data': eqlib.data(col('Expression right'))}
+      'substitution': {
+        'leftExpression': {'data': eqlib.data(col('Expression left'))},
+        'rightExpression': {'data': eqlib.data(col('Expression right'))}
+      }
     }, response: {
       'id': col('ID'),
       'isDefinition': true,
-      'leftExpression': {
-        'id': pkey.get('expression', col('Expression left')),
-        'data': eqlib.data(col('Expression left')),
-        'hash': eqlib.hash(col('Expression left')),
-        'latex': accept(AcceptType.string),
-        'functions': eqlib.functionIds(col('Expression left'))
-      },
-      'rightExpression': {
-        'id': pkey.get('expression', col('Expression right')),
-        'data': eqlib.data(col('Expression right')),
-        'hash': eqlib.hash(col('Expression right')),
-        'latex': accept(AcceptType.string),
-        'functions': eqlib.functionIds(col('Expression right'))
+      'substitution': {
+        'id': pkey.get('substitution', col('ID')),
+        'leftExpression': {
+          'id': eqlib.pkey(col('Expression left')),
+          'data': eqlib.data(col('Expression left')),
+          'hash': eqlib.hash(col('Expression left')),
+          'latex': accept(AcceptType.string),
+          'functions': eqlib.functionIds(col('Expression left'))
+        },
+        'rightExpression': {
+          'id': eqlib.pkey(col('Expression right')),
+          'data': eqlib.data(col('Expression right')),
+          'hash': eqlib.hash(col('Expression right')),
+          'latex': accept(AcceptType.string),
+          'functions': eqlib.functionIds(col('Expression right'))
+        }
       },
       'conditions': []
     })

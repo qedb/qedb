@@ -177,36 +177,9 @@ CREATE INDEX expression_functions_index on expression USING GIN (functions);
 -- Rule
 --------------------------------------------------------------------------------
 
--- Rule (equation of two expression)
--- Optimizations that could be implemented in the future:
--- + Set explicit reversibility (adds ability to force single direction).
--- + Add index for top level function ID.
-CREATE TABLE rule (
+-- Substitution containing a left and right expression
+CREATE TABLE substitution (
   id                   serial     PRIMARY KEY,
-
-  step_id              integer,
-  proof_id             integer,
-  is_definition        boolean    NOT NULL,
-
-  left_expression_id   integer    NOT NULL REFERENCES expression(id),
-  right_expression_id  integer    NOT NULL REFERENCES expression(id),
-  left_array_data      integer[]  NOT NULL,
-  right_array_data     integer[]  NOT NULL,
-
-  UNIQUE (left_expression_id, right_expression_id),
-
-  CONSTRAINT left_is_not_right CHECK
-    (left_expression_id != right_expression_id),
-
-  CONSTRAINT step_or_proof_or_definition CHECK
-    (step_id IS NOT NULL OR proof_id IS NOT NULL OR is_definition)
-);
-
--- Condition that can be substituted.
--- Here we choose to repeat most of the rule table for the sake of simplicity.
-CREATE TABLE condition (
-  id                   serial     PRIMARY KEY,
-
   left_expression_id   integer    NOT NULL REFERENCES expression(id),
   right_expression_id  integer    NOT NULL REFERENCES expression(id),
   left_array_data      integer[]  NOT NULL,
@@ -218,13 +191,28 @@ CREATE TABLE condition (
     (left_expression_id != right_expression_id)
 );
 
--- Connect conditions to rules.
-CREATE TABLE rule_condition (
-  id            serial  PRIMARY KEY,
-  rule_id       integer NOT NULL REFERENCES rule(id),
-  condition_id  integer NOT NULL REFERENCES condition(id),
+-- Rule (equation of two expression)
+-- Optimizations that could be implemented in the future:
+-- + Set explicit reversibility (adds ability to force single direction).
+-- + Add index for top level function ID.
+CREATE TABLE rule (
+  id               serial   PRIMARY KEY,
+  step_id          integer,
+  proof_id         integer,
+  is_definition    boolean  NOT NULL,
+  substitution_id  integer  NOT NULL REFERENCES substitution(id),
 
-  UNIQUE (rule_id, condition_id)
+  CONSTRAINT step_or_proof_or_definition CHECK
+    (step_id IS NOT NULL OR proof_id IS NOT NULL OR is_definition)
+);
+
+-- Rule condition
+CREATE TABLE rule_condition (
+  id               serial   PRIMARY KEY,
+  rule_id          integer  NOT NULL REFERENCES rule(id),
+  substitution_id  integer  NOT NULL REFERENCES substitution(id),
+
+  UNIQUE (rule_id, substitution_id)
 );
 
 --------------------------------------------------------------------------------
@@ -247,8 +235,8 @@ CREATE TYPE step_type AS ENUM (
   'copy_proof',  -- Copy first and last expression of a proof.
   'copy_rule',   -- Copy left and right expression of a rule.
   'rearrange',   -- Rearrange using the given format.
-  'substitute_rule',
-  'substitute_condition'
+  'substitute_rule',  -- Apply a rule based substitution.
+  'substitute_free'   -- Apply a free substitution (creates condition).
 );
 
 -- Expression manipulation step
@@ -265,8 +253,8 @@ CREATE TABLE step (
   reverse_evaluate  boolean    NOT NULL DEFAULT FALSE,
 
   proof_id          integer    REFERENCES proof(id),
-  condition_id      integer    REFERENCES condition(id),
   rule_id           integer    REFERENCES rule(id),
+  substitution_id   integer    REFERENCES substitution(id),
   rearrange_format  smallint[],
 
   -- Enforce various constraints.
@@ -277,7 +265,7 @@ CREATE TABLE step (
       (step_type = 'copy_rule' AND rule_id NOTNULL) OR
       (step_type = 'rearrange' AND rearrange_format NOTNULL) OR
       (step_type = 'substitute_rule' AND rule_id NOTNULL) OR
-      (step_type = 'substitute_condition' AND condition_id NOTNULL))))
+      (step_type = 'substitute_free' AND substitution_id NOTNULL))))
 );
 
 -- Add rule and proof step constraints.
@@ -293,7 +281,7 @@ ALTER TABLE proof ADD FOREIGN KEY (last_step_id)  REFERENCES step(id);
 --
 -- If a rule or proof is provided, it may not have any conditions. To prove
 -- a condition with a proof or rule that has conditions, a new proof must be
--- created.
+-- created that removes these conditions.
 CREATE TABLE condition_proof (
   id                serial   PRIMARY KEY,
   step_id           integer  NOT NULL REFERENCES step(id),

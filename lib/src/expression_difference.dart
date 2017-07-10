@@ -111,20 +111,27 @@ Future<DifferenceBranch> resolveTreeDiff(
 
       // Try to find rule (4 search methods: normal, invert, mirror, revert).
       for (var i = 0; i < 4; i++) {
+        // TODO: improve SQL builder and separate substitution search
         final param12 = i < 2 ? exprParams : exprParams.reversed.toList();
         final param34 = i % 2 == 0 ? ruleParams : ruleParams.reversed.toList();
-        final rules = await s.select(
-            db.rule,
-            SQL('WHERE'),
-            FUNCTION('expr_match_rule', param12[0], param12[1], param34[0],
-                param34[1], computableIdsArray),
+        final substitutions = await s.select(
+            db.substitution,
+            WHERE({
+              'id': IN(SUBQUERY(SQL('SELECT substitution_id FROM rule'))),
+              '': FUNCTION('expr_match_rule', param12[0], param12[1],
+                  param34[0], param34[1], computableIdsArray)
+            }),
             LIMIT(1));
 
-        if (rules.isNotEmpty) {
+        if (substitutions.isNotEmpty) {
+          final substitution = substitutions.single;
+          final rule = await s.selectOne(
+              db.rule, WHERE({'substitution_id': IS(substitution.id)}));
+
           outputBranch
             ..reverseRule = !(i % 2 == 0)
             ..reverseEvaluate = !(i < 2)
-            ..rule = (new RuleResource()..loadRow(rules.single, s.data))
+            ..rule = (new RuleResource()..loadRow(rule, s.data))
             ..resolved = true;
 
           return outputBranch;

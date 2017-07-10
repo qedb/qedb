@@ -122,12 +122,22 @@ class ExpressionRow extends Record {
   factory ExpressionRow.from(Row r) => new ExpressionRow(r[0], fixBase64(r[1]),
       fixBase64(r[2]), r[3], pgIntArray(r[4]), r[5], r[6], pgIntArray(r[7]));
 
-  Expr get expr => new Expr.fromBase64(data);
+  Expr get asExpr => new Expr.fromBase64(data);
 }
 
 //------------------------------------------------------------------------------
 // Rule
 //------------------------------------------------------------------------------
+
+/// Substitution
+class SubstitutionRow extends Record {
+  final int id;
+  final int leftExpressionId;
+  final int rightExpressionId;
+
+  SubstitutionRow(this.id, this.leftExpressionId, this.rightExpressionId);
+  factory SubstitutionRow.from(Row r) => new SubstitutionRow(r[0], r[1], r[2]);
+}
 
 /// Rule
 class RuleRow extends Record {
@@ -135,32 +145,20 @@ class RuleRow extends Record {
   final int stepId;
   final int proofId;
   final bool isDefinition;
-  final int leftExpressionId;
-  final int rightExpressionId;
+  final int substitutionId;
 
   RuleRow(this.id, this.stepId, this.proofId, this.isDefinition,
-      this.leftExpressionId, this.rightExpressionId);
-  factory RuleRow.from(Row r) =>
-      new RuleRow(r[0], r[1], r[2], r[3], r[4], r[5]);
-}
-
-/// Condition
-class ConditionRow extends Record {
-  final int id;
-  final int leftExpressionId;
-  final int rightExpressionId;
-
-  ConditionRow(this.id, this.leftExpressionId, this.rightExpressionId);
-  factory ConditionRow.from(Row r) => new ConditionRow(r[0], r[1], r[2]);
+      this.substitutionId);
+  factory RuleRow.from(Row r) => new RuleRow(r[0], r[1], r[2], r[3], r[4]);
 }
 
 /// Rule condition
 class RuleConditionRow extends Record {
   final int id;
   final int ruleId;
-  final int conditionId;
+  final int substitutionId;
 
-  RuleConditionRow(this.id, this.ruleId, this.conditionId);
+  RuleConditionRow(this.id, this.ruleId, this.substitutionId);
   factory RuleConditionRow.from(Row r) =>
       new RuleConditionRow(r[0], r[1], r[2]);
 }
@@ -192,8 +190,8 @@ class StepRow extends Record {
   final bool reverseEvaluate;
 
   final int proofId;
-  final int conditionId;
   final int ruleId;
+  final int substitutionId;
   final List<int> rearrangeFormat;
 
   StepRow(
@@ -205,8 +203,8 @@ class StepRow extends Record {
       this.reverseSides,
       this.reverseEvaluate,
       this.proofId,
-      this.conditionId,
       this.ruleId,
+      this.substitutionId,
       this.rearrangeFormat);
   factory StepRow.from(Row r) => new StepRow(r[0], r[1], r[2], r[3], r[4], r[5],
       r[6], r[7], r[8], r[9], pgIntArray(r[10]));

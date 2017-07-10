@@ -34,6 +34,8 @@ Future main() async {
     conditionCountInput.value = conditionCount.toString();
   }
 
+  setConditionCount(0);
+
   querySelector('#add-condition').onClick.listen((_) {
     final left = ht.div('.editex.editex-align-left.form-control');
     final right = ht.div('.editex.editex-align-left.form-control');

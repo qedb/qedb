@@ -94,7 +94,8 @@ class PrimaryKeyEmulator {
 
 /// In-memory function database and expression parser.
 class EqlibHelper {
-  final map = new Map<String, int>();
+  final keywordMap = new Map<String, int>();
+  final expressionTable = new List<Expr>();
   final operators = new OperatorConfig(0);
 
   Future<Null> loadKeywords(String csvPath,
@@ -112,7 +113,7 @@ class EqlibHelper {
     for (var i = 1; i < table.length; i++) {
       final row = new Row(columns, table[i]);
       final idValue = row.getColumn(id);
-      map[row.getColumn(keyword)] = idValue;
+      keywordMap[row.getColumn(keyword)] = idValue;
 
       if (row.hasColumn(precedenceLevel)) {
         final typeValue = row.getColumn(type);
@@ -141,14 +142,31 @@ class EqlibHelper {
     final str = input(row);
     final expr =
         parseExpression(str, operators, (String keyword, bool generic) {
-      if (map.containsKey(keyword)) {
-        return map[keyword];
+      if (keywordMap.containsKey(keyword)) {
+        return keywordMap[keyword];
       } else {
         throw new Exception('expression contains unknown keyword: $keyword');
       }
     });
     return expr;
   }
+
+  int getExprId(Expr expr) {
+    if (expr is FunctionExpr) {
+      expr.arguments.forEach(getExprId);
+    }
+    final idx = expressionTable.indexOf(expr);
+    if (idx == -1) {
+      expressionTable.add(expr);
+      return expressionTable.length;
+    } else {
+      return idx + 1;
+    }
+  }
+
+  /// Get primary key for given expression as it would be used in the database.
+  ValueResolver<int> pkey(ValueResolver<String> expression) =>
+      (row) => getExprId(_parse(expression, row));
 
   ValueResolver<String> data(ValueResolver<String> expression) =>
       (row) => BASE64.encode(_parse(expression, row).toBinary().asUint8List());
@@ -158,8 +176,9 @@ class EqlibHelper {
           .convert(_parse(expression, row).toBinary().asUint8List())
           .bytes);
 
+  /// Note: this emulates the procedure used in the API layer.
   ValueResolver functionIds(ValueResolver<String> expression) =>
-      (row) => _parse(expression, row).functionIds;
+      (row) => exprCodecEncode(_parse(expression, row)).functionIds;
 
   ValueResolver arrayData(ValueResolver<String> expression) =>
       (row) => _parse(expression, row).toArray();

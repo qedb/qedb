@@ -94,7 +94,7 @@ Future<List<db.ExpressionRow>> listExpressions(
     final exprRow = expressions[i];
     if (exprRow.latex == null) {
       ops ??= await _loadOperatorConfig(s);
-      final latex = await _renderExpressionLaTeX(s, exprRow.expr, ops);
+      final latex = await _renderExpressionLaTeX(s, exprRow.asExpr, ops);
       queue.add(s
           .update(db.expression, SET({'latex': latex}),
               WHERE({'id': IS(exprRow.id)}))
@@ -108,11 +108,11 @@ Future<List<db.ExpressionRow>> listExpressions(
   return expressions;
 }
 
-/// Run [listExpressions] and return as ID->row map.
-Future<Map<int, Expr>> getExpressionMap(Session s, Iterable<int> ids) async {
+/// Run [listExpressions] and return as ID: Expr map.
+Future<Map<int, Expr>> getExprMap(Session s, Iterable<int> ids) async {
   final expressions = await listExpressions(s, ids);
   return new Map<int, Expr>.fromIterable(expressions,
-      key: (row) => row.id, value: (row) => row.expr);
+      key: (row) => row.id, value: (row) => row.asExpr);
 }
 
 Future<OperatorConfig> _loadOperatorConfig(Session s) async {

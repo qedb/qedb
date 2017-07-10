@@ -224,7 +224,7 @@ Sql DELETE(TableInfo table, Sql s1, [Sql s2, Sql s3, Sql s4, Sql s5]) {
       'DELETE FROM ${table.tableName} $statements RETURNING ${table.select}');
 }
 
-/// This code is shared between [WHERE] and [SET].
+/// This code is shared between [WHERE], [WITH] and [SET].
 Sql _flatten(String prefix, Map<String, dynamic> map, String keyValueSeparator,
     String itemSeparator) {
   final converter = new TypeConverter();
@@ -234,7 +234,7 @@ Sql _flatten(String prefix, Map<String, dynamic> map, String keyValueSeparator,
   final fields = map.keys.toList();
   for (var i = 0; i < fields.length; i++) {
     if (i != 0) {
-      buffer.write(' $itemSeparator ');
+      buffer.write(itemSeparator);
     }
     buffer.write(fields[i]);
     buffer.write(keyValueSeparator);
@@ -252,12 +252,12 @@ Sql _flatten(String prefix, Map<String, dynamic> map, String keyValueSeparator,
 
 // ignore: non_constant_identifier_names
 Sql WHERE(Map<String, Sql> conditions) {
-  return _flatten('WHERE', conditions, ' ', 'AND');
+  return _flatten('WHERE', conditions, ' ', ' AND ');
 }
 
 // ignore: non_constant_identifier_names
 Sql SET(Map<String, dynamic> values) {
-  return _flatten('SET', values, '=', ',');
+  return _flatten('SET', values, '=', ', ');
 }
 
 // ignore: non_constant_identifier_names
@@ -350,6 +350,11 @@ Sql ARRAY(Iterable values, String type) {
   final encoded = _encodeValues(values, new TypeConverter());
   final cast = type == null ? '' : '::$type[]';
   return SQL('ARRAY[${encoded.join(',')}]$cast');
+}
+
+// ignore: non_constant_identifier_names
+Sql WITH(Map<String, Sql> variables) {
+  return _flatten('WITH', variables, ' AS ', ', ');
 }
 
 // ignore: non_constant_identifier_names

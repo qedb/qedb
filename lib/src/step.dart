@@ -35,17 +35,23 @@ Future<List<db.StepRow>> _listStepsBetween(Session s, int from, int to) async {
 
 /// Find conditions that have not been satisfied by a proof within the given
 /// range of steps. It is not validated if the given step IDs belong together.
-/// The returned condition IDs are not ordered.
-Future<List<int>> _findUnprovenConditions(
-    Session s, Iterable<int> stepIds) async {
-  final adoptedConditions = await s.select(db.conditionProof,
-      WHERE({'step_id': IN(stepIds), 'adopt_condition': IS(true)}));
-  final subConditions =
-      await s.select(db.step, WHERE({'condition_id': NOTNULL}));
+/// The returned substitution IDs are not ordered.
+Future<List<int>> _findConditions(Session s, Iterable<int> stepIds) async {
+  // Rule conditions that are adopted into the proof.
+  final adoptedConditions = await s.select(
+      db.ruleCondition,
+      WHERE({
+        'id': IN(SUBQUERY(SQL('SELECT condition_id FROM condition_proof'),
+            WHERE({'step_id': IN(stepIds), 'adopt_condition': IS(true)})))
+      }));
 
-  final conditionIds = new List<int>();
-  conditionIds.addAll(adoptedConditions.map((proof) => proof.conditionId));
-  conditionIds.addAll(subConditions.map((step) => step.conditionId));
+  // Free substitutions become conditions for applying the proof.
+  final freeSubstitutions =
+      await s.select(db.step, WHERE({'substitution_id': NOTNULL}));
 
-  return conditionIds;
+  final subsIds = new List<int>();
+  subsIds.addAll(adoptedConditions.map((cond) => cond.substitutionId));
+  subsIds.addAll(freeSubstitutions.map((step) => step.substitutionId));
+
+  return subsIds;
 }

@@ -42,14 +42,14 @@ tables:
     node_value,
     node_arguments
 
+- tableName:  substitution
+  className:  Substitution
+  varName:    substitution
+  select:     'id, left_expression_id, right_expression_id'
+
 - tableName:  rule
   className:  Rule
   varName:    rule
-  select:     '*'
-
-- tableName:  condition
-  className:  Condition
-  varName:    condition
   select:     '*'
 
 - tableName:  rule_condition
