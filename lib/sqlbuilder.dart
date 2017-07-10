@@ -39,6 +39,8 @@ class TableInfo<R, D> {
 class Sql {
   final String statement;
   const Sql(this.statement);
+
+  @override
   String toString() => statement;
 }
 

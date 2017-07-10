@@ -69,8 +69,10 @@ final createRulePage = new Page(template: (s) {
       },
       'conditions': new List.generate(conditionCount, (i) {
         return {
-          'leftExpression': {'data': data['condition$i-left']},
-          'rightExpression': {'data': data['condition$i-right']}
+          'substitution': {
+            'leftExpression': {'data': data['condition$i-left']},
+            'rightExpression': {'data': data['condition$i-right']}
+          }
         };
       })
     };
@@ -111,11 +113,12 @@ final readRulePage = new Page(template: (s) {
         tr([th('#'), th('Left'), th(''), th('Right')])
       ]),
       tbody(data.conditions.map((condition) {
+        final subs = condition.substitution;
         return tr([
           th(condition.id.toString(), scope: 'row'),
-          td(span('.latex', condition.leftExpression.latex)),
+          td(span('.latex', subs.leftExpression.latex)),
           td(span('.rule-arrow')),
-          td(span('.latex', condition.rightExpression.latex))
+          td(span('.latex', subs.rightExpression.latex))
         ]);
       }).toList())
     ]),

@@ -12,6 +12,8 @@ import 'package:postgresql/postgresql.dart';
 part 'src/generated/tables.dart';
 part 'src/generated/session_data.dart';
 
+// ignore_for_file: annotate_overrides
+
 //------------------------------------------------------------------------------
 // Descriptors and translations
 //------------------------------------------------------------------------------

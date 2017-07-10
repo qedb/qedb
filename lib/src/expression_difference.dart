@@ -11,9 +11,11 @@ class DifferenceRequest {
   @ApiProperty(required: true)
   String rightExpression;
 
-  // TODO
-  //List<ProofResource> useForConditions;
-  //List<SubstitutionResource> useForFreeSubstitutions
+  @ApiProperty(required: true)
+  List<ProofResource> searchProofs;
+
+  @ApiProperty(required: true)
+  List<SubstitutionResource> availableFreeSubstitutions;
 }
 
 class DifferenceBranch {
@@ -26,9 +28,6 @@ class DifferenceBranch {
   bool reverseSides;
   bool reverseEvaluate;
   RuleResource rule;
-
-  // TODO
-  //List<RuleConditionProof> conditionProofs;
 
   List<Rearrangement> rearrangements;
   List<DifferenceBranch> arguments;

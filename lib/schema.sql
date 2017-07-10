@@ -236,7 +236,8 @@ CREATE TYPE step_type AS ENUM (
   'copy_rule',   -- Copy left and right expression of a rule.
   'rearrange',   -- Rearrange using the given format.
   'substitute_rule',  -- Apply a rule based substitution.
-  'substitute_free'   -- Apply a free substitution (creates condition).
+  'substitute_free',  -- Apply a free substitution (creates condition).
+  'substitute_proof'  -- Apply a proof based substitution.
 );
 
 -- Expression manipulation step
@@ -287,7 +288,7 @@ CREATE TABLE condition_proof (
   step_id           integer  NOT NULL REFERENCES step(id),
   condition_id      integer  NOT NULL REFERENCES rule_condition(id),
   follows_rule_id   integer  REFERENCES rule(id),
-  follows_proof_id  integer  REFERENCES rule(id),
+  follows_proof_id  integer  REFERENCES proof(id),
   adopt_condition   boolean  NOT NULL DEFAULT FALSE,
   self_evident      boolean  NOT NULL DEFAULT FALSE,
 

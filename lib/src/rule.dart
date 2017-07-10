@@ -18,7 +18,7 @@ part of qedb;
 Future<db.RuleRow> createRule(Session s, RuleResource body) async {
   if (body.isDefinition != null && body.isDefinition) {
     body.conditions ??= [];
-    final conditions = body.conditions.map((c) => c.asSubs);
+    final conditions = body.conditions.map((c) => c.substitution.asSubs);
     return createRuleFromDefinition(
         s, body.substitution.asSubs, conditions.toList());
   } else if (body.proof != null) {
@@ -171,8 +171,6 @@ Future<db.RuleRow> _createRule(Session s, Subs rule, List<int> conditionIds,
 /// Create rule_condition record.
 Future<db.RuleConditionRow> _createRuleCondition(
     Session s, int ruleId, int substitutionId) {
-  s.data.ruleConditions.putIfAbsent(ruleId, () => new List<int>());
-  s.data.ruleConditions[ruleId].add(substitutionId);
   return s.insert(db.ruleCondition,
       VALUES({'rule_id': ruleId, 'substitution_id': substitutionId}));
 }
@@ -189,8 +187,6 @@ Future<List<db.RuleRow>> listRules(Session s, [Iterable<int> ids]) async {
       ? await s.select(db.ruleCondition)
       : await s.select(db.ruleCondition, WHERE({'rule_id': IN(ids)}));
   for (final row in allRuleConditions) {
-    s.data.ruleConditions.putIfAbsent(row.ruleId, () => new List<int>());
-    s.data.ruleConditions[row.ruleId].add(row.substitutionId);
     substitutionIds.add(row.substitutionId);
   }
 

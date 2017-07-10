@@ -92,6 +92,7 @@ class StepEditor extends StepEditorBase {
   }
 
   /// Note that the state is already updated by the base class.
+  @override
   ExpressionData getExpression() {
     final content = editor.getParsable();
     if (content.trim().isEmpty) {
@@ -106,12 +107,16 @@ class StepEditor extends StepEditorBase {
     }
   }
 
+  @override
   void focus() => editor.focus();
 
+  @override
   void load(List data) => editor.loadData(data);
 
+  @override
   void setCursor(int index) => editor.setCursor(index);
 
+  @override
   bool get isEmpty => editor.isEmpty;
 }
 
@@ -159,15 +164,22 @@ class StaticStepEditor extends StepEditorBase {
     ensureNext();
   }
 
+  @override
   ExpressionData getExpression() =>
       new ExpressionData(expression, valid: true, empty: false);
 
+  @override
   Future writeData(data) {
     modifier(data);
     return super.writeData(data);
   }
 
+  @override
   void focus() {}
+
+  @override
   void setCursor(position) {}
+
+  @override
   bool get isEmpty => false;
 }

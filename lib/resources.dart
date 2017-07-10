@@ -10,20 +10,28 @@ import 'package:qedb/sqlbuilder.dart';
 
 import 'package:qedb/schema.dart' as db;
 
+// ignore_for_file: always_declare_return_types, annotate_overrides
+
 /// Boilerplate for resource classes.
 abstract class ResourceBase<T extends Record> {
   int get id;
   set id(int v);
 
-  /// Get database row from the session [data] by [id].
-  Map<int, T> _getTableMap(db.SessionData data);
+  /// Get table info object.
+  TableInfo<T, db.SessionData> info();
 
   /// Load resource data from session [data] using the specified [targetId].
-  void load(int targetId, db.SessionData data) {
-    id = targetId;
-    final row = _getTableMap(data)[targetId];
-    if (row != null) {
-      loadFields(row, data);
+  ResourceBase load(int targetId, db.SessionData data) {
+    if (targetId != null) {
+      id = targetId;
+      final row = info().getCache(data)[targetId];
+      if (row != null) {
+        loadFields(row, data);
+      }
+
+      return this;
+    } else {
+      return null;
     }
   }
 
@@ -37,15 +45,6 @@ abstract class ResourceBase<T extends Record> {
   }
 }
 
-/// Helper for loading [ResourceBase] instance when [id] could be null.
-ResourceBase getResource(int id, db.SessionData data, ResourceBase target) {
-  if (id == null) {
-    return null;
-  } else {
-    return target..load(id, data);
-  }
-}
-
 //------------------------------------------------------------------------------
 // Descriptors and translations
 //------------------------------------------------------------------------------
@@ -55,7 +54,7 @@ class LanguageResource extends ResourceBase<db.LanguageRow> {
   int id;
   String code;
 
-  Map<int, db.LanguageRow> _getTableMap(data) => data.languageTable;
+  info() => db.language;
 
   void loadFields(row, data) {
     code = row.code;
@@ -67,16 +66,20 @@ class DescriptorResource extends ResourceBase<db.DescriptorRow> {
   int id;
   List<TranslationResource> translations;
 
-  Map<int, db.DescriptorRow> _getTableMap(data) => data.descriptorTable;
+  info() => db.descriptor;
 
-  void load(targetId, data) {
-    id = targetId;
-    translations = data.translationTable.values
-        .where((r) => r.descriptorId == targetId)
-        .map((r) => new TranslationResource()..loadRow(r, data))
-        .toList();
-    if (translations.isEmpty) {
-      translations = null;
+  /// Implements [load] directly because often the descriptor table is not
+  /// actually retrieved.
+  DescriptorResource load(targetId, data) {
+    if (targetId != null) {
+      id = targetId;
+      translations = data.translationTable.values
+          .where((r) => r.descriptorId == targetId)
+          .map((r) => new TranslationResource()..loadRow(r, data))
+          .toList();
+      return this;
+    } else {
+      return null;
     }
   }
 }
@@ -87,10 +90,10 @@ class TranslationResource extends ResourceBase<db.TranslationRow> {
   LanguageResource language;
   String content;
 
-  Map<int, db.TranslationRow> _getTableMap(data) => data.translationTable;
+  info() => db.translation;
 
   void loadFields(row, data) {
-    language = new LanguageResource()..load(row.languageId, data);
+    language = new LanguageResource().load(row.languageId, data);
     content = row.content;
   }
 }
@@ -100,10 +103,10 @@ class SubjectResource extends ResourceBase<db.SubjectRow> {
   int id;
   DescriptorResource descriptor;
 
-  Map<int, db.SubjectRow> _getTableMap(data) => data.subjectTable;
+  info() => db.subject;
 
   void loadFields(row, data) {
-    descriptor = new DescriptorResource()..load(row.descriptorId, data);
+    descriptor = new DescriptorResource().load(row.descriptorId, data);
   }
 }
 
@@ -133,11 +136,11 @@ class FunctionResource extends ResourceBase<db.FunctionRow> {
   String latexTemplate;
   String specialType;
 
-  Map<int, db.FunctionRow> _getTableMap(data) => data.functionTable;
+  info() => db.function;
 
   void loadFields(row, data) {
-    subject = getResource(row.subjectId, data, new SubjectResource());
-    descriptor = getResource(row.descriptorId, data, new DescriptorResource());
+    subject = new SubjectResource().load(row.subjectId, data);
+    descriptor = new DescriptorResource().load(row.descriptorId, data);
     generic = row.generic;
     rearrangeable = row.rearrangeable;
     argumentCount = row.argumentCount;
@@ -167,7 +170,7 @@ class OperatorResource extends ResourceBase<db.OperatorRow> {
   String editorTemplate;
   FunctionResource function;
 
-  Map<int, db.OperatorRow> _getTableMap(data) => data.operatorTable;
+  info() => db.operator;
 
   void loadFields(row, data) {
     precedenceLevel = row.precedenceLevel;
@@ -175,7 +178,7 @@ class OperatorResource extends ResourceBase<db.OperatorRow> {
     operatorType = row.operatorType;
     character = row.character;
     editorTemplate = row.editorTemplate;
-    function = new FunctionResource()..load(row.functionId, data);
+    function = new FunctionResource().load(row.functionId, data);
   }
 }
 
@@ -187,7 +190,7 @@ class ExpressionResource extends ResourceBase<db.ExpressionRow> {
   String latex;
   List<int> functions;
 
-  Map<int, db.ExpressionRow> _getTableMap(data) => data.expressionTable;
+  info() => db.expression;
 
   void loadFields(row, sdata) {
     data = row.data;
@@ -209,12 +212,12 @@ class SubstitutionResource extends ResourceBase<db.SubstitutionRow> {
   ExpressionResource leftExpression;
   ExpressionResource rightExpression;
 
-  Map<int, db.SubstitutionRow> _getTableMap(data) => data.substitutionTable;
+  info() => db.substitution;
 
   void loadFields(row, data) {
-    leftExpression = new ExpressionResource()..load(row.leftExpressionId, data);
-    rightExpression = new ExpressionResource()
-      ..load(row.rightExpressionId, data);
+    leftExpression = new ExpressionResource().load(row.leftExpressionId, data);
+    rightExpression =
+        new ExpressionResource().load(row.rightExpressionId, data);
   }
 
   Subs get asSubs => new Subs(leftExpression.asExpr, rightExpression.asExpr);
@@ -227,24 +230,58 @@ class RuleResource extends ResourceBase<db.RuleRow> {
   ProofResource proof;
   bool isDefinition;
   SubstitutionResource substitution;
-  List<SubstitutionResource> conditions;
+  List<RuleCondition> conditions;
 
-  Map<int, db.RuleRow> _getTableMap(data) => data.ruleTable;
+  info() => db.rule;
+
+  /// Wrapper to link a [RuleCondition.proof] in the context of a step.
+  RuleResource loadWithProofs(int ruleId, int stepId, db.SessionData data) {
+    final self = load(ruleId, data);
+    if (self == null) {
+      return null;
+    }
+
+    // Assign proofs to conditions.
+    if (conditions != null) {
+      for (final condition in conditions) {
+        // Check if a condition proof exists for the given [stepId].
+        final proofs = data.conditionProofTable.values.where(
+            (row) => row.stepId == stepId && row.conditionId == condition.id);
+
+        // If a proof exists, add it to the condition.
+        if (proofs.isNotEmpty) {
+          condition.proof = new ConditionProofResource()
+            ..loadRow(proofs.single, data);
+        }
+      }
+    }
+
+    return this;
+  }
 
   void loadFields(row, data) {
-    step = getResource(row.stepId, data, new StepResource());
-    proof = getResource(row.proofId, data, new ProofResource());
+    step = new StepResource().load(row.stepId, data);
+    proof = new ProofResource().load(row.proofId, data);
     isDefinition = row.isDefinition;
-    substitution = new SubstitutionResource()..load(row.substitutionId, data);
+    substitution = new SubstitutionResource().load(row.substitutionId, data);
+    conditions = data.ruleConditionTable.values
+        .where((row) => row.ruleId == id)
+        .map((row) => new RuleCondition()..loadRow(row, data))
+        .toList();
+  }
+}
 
-    if (data.ruleConditions.containsKey(id)) {
-      conditions = data.ruleConditions[id]
-          .map((substitutionId) =>
-              new SubstitutionResource()..load(substitutionId, data))
-          .toList();
-    } else {
-      conditions = [];
-    }
+/// Rule condition
+class RuleCondition extends ResourceBase<db.RuleConditionRow> {
+  int id;
+  SubstitutionResource substitution;
+  ConditionProofResource proof;
+
+  info() => db.ruleCondition;
+
+  void loadFields(row, data) {
+    substitution = new SubstitutionResource().load(row.substitutionId, data);
+    // The proof may be added later by [RuleResource.loadWithProofs].
   }
 }
 
@@ -271,24 +308,37 @@ class StepResource extends ResourceBase<db.StepRow> {
   ProofResource proof;
   RuleResource rule;
   SubstitutionResource substitution;
-
-  // TODO
-  //List<ConditionProofResource> conditionProofs
-
   List<int> rearrangeFormat;
 
-  Map<int, db.StepRow> _getTableMap(data) => data.stepTable;
+  info() => db.step;
 
   void loadFields(row, data) {
-    expression = new ExpressionResource()..load(row.expressionId, data);
-    proof = getResource(row.proofId, data, new ProofResource());
-    rule = getResource(row.ruleId, data, new RuleResource());
-    substitution =
-        getResource(row.substitutionId, data, new SubstitutionResource());
+    expression = new ExpressionResource().load(row.expressionId, data);
+    proof = new ProofResource().load(row.proofId, data);
+    rule = new RuleResource().loadWithProofs(row.ruleId, id, data);
+    substitution = new SubstitutionResource().load(row.substitutionId, data);
 
     position = row.position;
     type = row.type;
     rearrangeFormat = row.rearrangeFormat;
+  }
+}
+
+/// Condition proof
+class ConditionProofResource extends ResourceBase<db.ConditionProofRow> {
+  int id;
+  RuleResource followsRule;
+  ProofResource followsProof;
+  bool adoptCondition;
+  bool selfEvident;
+
+  info() => db.conditionProof;
+
+  void loadFields(row, data) {
+    followsRule = new RuleResource().load(row.followsRuleId, data);
+    followsProof = new ProofResource().load(row.followsProofId, data);
+    adoptCondition = row.adoptCondition;
+    selfEvident = row.selfEvident;
   }
 }
 
@@ -298,10 +348,10 @@ class ProofResource extends ResourceBase<db.ProofRow> {
   StepResource firstStep;
   StepResource lastStep;
 
-  Map<int, db.ProofRow> _getTableMap(data) => data.proofTable;
+  info() => db.proof;
 
   void loadFields(row, data) {
-    firstStep = getResource(row.firstStepId, data, new StepResource());
-    lastStep = getResource(row.lastStepId, data, new StepResource());
+    firstStep = new StepResource().load(row.firstStepId, data);
+    lastStep = new StepResource().load(row.lastStepId, data);
   }
 }

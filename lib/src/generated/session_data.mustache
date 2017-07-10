@@ -10,8 +10,4 @@ class SessionData {
   {{# tables}}
   final {{ varName }}Table = new Map<int, {{ className }}Row>();
   {{/ tables}}
-
-  {{# relations}}
-  final {{.}} = new Map<int, List<int>>();
-  {{/ relations}}
 }

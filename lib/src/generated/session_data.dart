@@ -20,6 +20,4 @@ class SessionData {
   final stepTable = new Map<int, StepRow>();
   final conditionProofTable = new Map<int, ConditionProofRow>();
   final proofTable = new Map<int, ProofRow>();
-
-  final ruleConditions = new Map<int, List<int>>();
 }

@@ -71,6 +71,3 @@ tables:
   className:  Proof
   varName:    proof
   select:     '*'
-
-relations:
-- ruleConditions
