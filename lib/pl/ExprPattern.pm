@@ -6,7 +6,7 @@
 package ExprPattern;
 require Exporter;
 @ISA        = qw(Exporter);
-@EXPORT_OK  = qw(expr_match_pattern expr_match_rule);
+@EXPORT_OK  = qw(match_expr match_subs);
 
 use strict;
 use warnings;
@@ -330,7 +330,7 @@ sub match_pattern {
 }
 
 # Initialization for match_pattern.
-sub expr_match_pattern {
+sub match_expr {
   my ($expression, $pattern) = @_;
   my (%mapping_hash, %mapping_genfn);
   my $ptr_t = 0;
@@ -347,7 +347,7 @@ sub expr_match_pattern {
 # Rule matching
 # It is possible to put match_pattern inside this function for some very minimal
 # gain (arguments do not have to be copied).
-sub expr_match_rule {
+sub match_subs {
   my ($expr_left, $expr_right, $rule_left, $rule_right, $computable_ids) = @_;
   my (%mapping_hash, %mapping_genfn);
   my $ptr_t = 0;

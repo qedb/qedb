@@ -331,7 +331,7 @@ $match_pattern = sub {
 # Rule matching
 # It is possible to put match_pattern inside this function for some very minimal
 # gain (arguments do not have to be copied).
-my $expr_match_rule = sub {
+my $match_subs = sub {
   my ($expr_left, $expr_right, $rule_left, $rule_right, $computable_ids) = @_;
   my (%mapping_hash, %mapping_genfn);
   my $ptr_t = 0;
@@ -373,7 +373,7 @@ my $expr_match_rule = sub {
   return $result_right;
 };
 
-return $expr_match_rule->(@_);
+return $match_subs->(@_);
 }
 
 # Mini test.

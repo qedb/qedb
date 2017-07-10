@@ -6,12 +6,12 @@ CREATE EXTENSION plperl;
 
 -- To test:
 --
--- SELECT * FROM rule WHERE expr_match_rule(
+-- SELECT * FROM rule WHERE match_subs(
 --   ARRAY[5, 4, 1, 2, 6, 7, 2, 9, 3, 1, 1],
 --   ARRAY[6, 4, 1, 2, 6, 3, 1, 1, 7, 2, 9],
 --   left_array_data, right_array_data, ARRAY[1, 2, 3]);
 
-CREATE FUNCTION expr_match_rule(
+CREATE FUNCTION match_subs(
   integer[], -- expr left
   integer[], -- expr right
   integer[], -- rule left
@@ -339,7 +339,7 @@ $match_pattern = sub {
 # Rule matching
 # It is possible to put match_pattern inside this function for some very minimal
 # gain (arguments do not have to be copied).
-my $expr_match_rule = sub {
+my $match_subs = sub {
   my ($expr_left, $expr_right, $rule_left, $rule_right, $computable_ids) = @_;
   my (%mapping_hash, %mapping_genfn);
   my $ptr_t = 0;
@@ -381,6 +381,6 @@ my $expr_match_rule = sub {
   return $result_right;
 };
 
-return $expr_match_rule->(@_);
+return $match_subs->(@_);
 $BODY$
   LANGUAGE plperl;

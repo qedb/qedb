@@ -240,7 +240,7 @@ CREATE TYPE step_type AS ENUM (
     'copy_rule',
     'rearrange',
     'substitute_rule',
-    'substitute_condition'
+    'substitute_free'
 );
 
 
@@ -263,10 +263,10 @@ $$;
 ALTER FUNCTION public.clear_expression_latex() OWNER TO postgres;
 
 --
--- Name: expr_match_rule(integer[], integer[], integer[], integer[], integer[]); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: match_subs(integer[], integer[], integer[], integer[], integer[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION expr_match_rule(integer[], integer[], integer[], integer[], integer[]) RETURNS boolean
+CREATE FUNCTION match_subs(integer[], integer[], integer[], integer[], integer[]) RETURNS boolean
     LANGUAGE plperl
     AS $_$
 my $EXPR_INTEGER       = 1;
@@ -590,7 +590,7 @@ $match_pattern = sub {
 # Rule matching
 # It is possible to put match_pattern inside this function for some very minimal
 # gain (arguments do not have to be copied).
-my $expr_match_rule = sub {
+my $match_subs = sub {
   my ($expr_left, $expr_right, $rule_left, $rule_right, $computable_ids) = @_;
   my (%mapping_hash, %mapping_genfn);
   my $ptr_t = 0;
@@ -632,37 +632,39 @@ my $expr_match_rule = sub {
   return $result_right;
 };
 
-return $expr_match_rule->(@_);
+return $match_subs->(@_);
 $_$;
 
 
-ALTER FUNCTION public.expr_match_rule(integer[], integer[], integer[], integer[], integer[]) OWNER TO postgres;
+ALTER FUNCTION public.match_subs(integer[], integer[], integer[], integer[], integer[]) OWNER TO postgres;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: condition; Type: TABLE; Schema: public; Owner: postgres
+-- Name: condition_proof; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE condition (
+CREATE TABLE condition_proof (
     id integer NOT NULL,
-    left_expression_id integer NOT NULL,
-    right_expression_id integer NOT NULL,
-    left_array_data integer[] NOT NULL,
-    right_array_data integer[] NOT NULL,
-    CONSTRAINT left_is_not_right CHECK ((left_expression_id <> right_expression_id))
+    step_id integer NOT NULL,
+    condition_id integer NOT NULL,
+    follows_rule_id integer,
+    follows_proof_id integer,
+    adopt_condition boolean DEFAULT false NOT NULL,
+    self_evident boolean DEFAULT false NOT NULL,
+    CONSTRAINT self_evident_or_rule_or_proof CHECK ((((follows_rule_id IS NOT NULL) OR (follows_proof_id IS NOT NULL)) <> self_evident))
 );
 
 
-ALTER TABLE condition OWNER TO postgres;
+ALTER TABLE condition_proof OWNER TO postgres;
 
 --
--- Name: condition_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: condition_proof_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE condition_id_seq
+CREATE SEQUENCE condition_proof_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -670,13 +672,13 @@ CREATE SEQUENCE condition_id_seq
     CACHE 1;
 
 
-ALTER TABLE condition_id_seq OWNER TO postgres;
+ALTER TABLE condition_proof_id_seq OWNER TO postgres;
 
 --
--- Name: condition_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: condition_proof_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE condition_id_seq OWNED BY condition.id;
+ALTER SEQUENCE condition_proof_id_seq OWNED BY condition_proof.id;
 
 
 --
@@ -915,11 +917,7 @@ CREATE TABLE rule (
     step_id integer,
     proof_id integer,
     is_definition boolean NOT NULL,
-    left_expression_id integer NOT NULL,
-    right_expression_id integer NOT NULL,
-    left_array_data integer[] NOT NULL,
-    right_array_data integer[] NOT NULL,
-    CONSTRAINT left_is_not_right CHECK ((left_expression_id <> right_expression_id)),
+    substitution_id integer NOT NULL,
     CONSTRAINT step_or_proof_or_definition CHECK (((step_id IS NOT NULL) OR (proof_id IS NOT NULL) OR is_definition))
 );
 
@@ -933,7 +931,7 @@ ALTER TABLE rule OWNER TO postgres;
 CREATE TABLE rule_condition (
     id integer NOT NULL,
     rule_id integer NOT NULL,
-    condition_id integer NOT NULL
+    substitution_id integer NOT NULL
 );
 
 
@@ -959,55 +957,6 @@ ALTER TABLE rule_condition_id_seq OWNER TO postgres;
 
 ALTER SEQUENCE rule_condition_id_seq OWNED BY rule_condition.id;
 
-
---
--- Name: rule_condition_proof; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE rule_condition_proof (
-    id integer NOT NULL,
-    condition_id integer NOT NULL,
-    proof_rule_id integer,
-    adopt_condition boolean DEFAULT false NOT NULL,
-    self_evident boolean DEFAULT false NOT NULL,
-    CONSTRAINT self_evident_or_rule CHECK (((proof_rule_id IS NOT NULL) <> self_evident))
-);
-
-
-ALTER TABLE rule_condition_proof OWNER TO postgres;
-
---
--- Name: rule_condition_proof_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE rule_condition_proof_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE rule_condition_proof_id_seq OWNER TO postgres;
-
---
--- Name: rule_condition_proof_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE rule_condition_proof_id_seq OWNED BY rule_condition_proof.id;
-
-
---
--- Name: rule_condition_proof_proof; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE rule_condition_proof_proof (
-    parent_id integer NOT NULL,
-    child_id integer NOT NULL
-);
-
-
-ALTER TABLE rule_condition_proof_proof OWNER TO postgres;
 
 --
 -- Name: rule_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1043,11 +992,11 @@ CREATE TABLE step (
     reverse_sides boolean DEFAULT false NOT NULL,
     reverse_evaluate boolean DEFAULT false NOT NULL,
     proof_id integer,
-    condition_id integer,
     rule_id integer,
+    substitution_id integer,
     rearrange_format smallint[],
     CONSTRAINT step_position_check CHECK (("position" >= 0)),
-    CONSTRAINT valid_parameterset CHECK ((((previous_id = NULL::integer) AND (step_type = 'set'::step_type)) OR ((previous_id <> NULL::integer) AND (((step_type = 'copy_proof'::step_type) AND (proof_id IS NOT NULL)) OR ((step_type = 'copy_rule'::step_type) AND (rule_id IS NOT NULL)) OR ((step_type = 'rearrange'::step_type) AND (rearrange_format IS NOT NULL)) OR ((step_type = 'substitute_rule'::step_type) AND (rule_id IS NOT NULL)) OR ((step_type = 'substitute_condition'::step_type) AND (condition_id IS NOT NULL))))))
+    CONSTRAINT valid_parameterset CHECK ((((previous_id = NULL::integer) AND (step_type = 'set'::step_type)) OR ((previous_id <> NULL::integer) AND (((step_type = 'copy_proof'::step_type) AND (proof_id IS NOT NULL)) OR ((step_type = 'copy_rule'::step_type) AND (rule_id IS NOT NULL)) OR ((step_type = 'rearrange'::step_type) AND (rearrange_format IS NOT NULL)) OR ((step_type = 'substitute_rule'::step_type) AND (rule_id IS NOT NULL)) OR ((step_type = 'substitute_free'::step_type) AND (substitution_id IS NOT NULL))))))
 );
 
 
@@ -1073,18 +1022,6 @@ ALTER TABLE step_id_seq OWNER TO postgres;
 
 ALTER SEQUENCE step_id_seq OWNED BY step.id;
 
-
---
--- Name: step_rule_condition_proof; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE step_rule_condition_proof (
-    step_id integer NOT NULL,
-    proof_id integer NOT NULL
-);
-
-
-ALTER TABLE step_rule_condition_proof OWNER TO postgres;
 
 --
 -- Name: subject; Type: TABLE; Schema: public; Owner: postgres
@@ -1117,6 +1054,43 @@ ALTER TABLE subject_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE subject_id_seq OWNED BY subject.id;
+
+
+--
+-- Name: substitution; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE substitution (
+    id integer NOT NULL,
+    left_expression_id integer NOT NULL,
+    right_expression_id integer NOT NULL,
+    left_array_data integer[] NOT NULL,
+    right_array_data integer[] NOT NULL,
+    CONSTRAINT left_is_not_right CHECK ((left_expression_id <> right_expression_id))
+);
+
+
+ALTER TABLE substitution OWNER TO postgres;
+
+--
+-- Name: substitution_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE substitution_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE substitution_id_seq OWNER TO postgres;
+
+--
+-- Name: substitution_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE substitution_id_seq OWNED BY substitution.id;
 
 
 --
@@ -1156,10 +1130,10 @@ ALTER SEQUENCE translation_id_seq OWNED BY translation.id;
 
 
 --
--- Name: condition id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: condition_proof id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY condition ALTER COLUMN id SET DEFAULT nextval('condition_id_seq'::regclass);
+ALTER TABLE ONLY condition_proof ALTER COLUMN id SET DEFAULT nextval('condition_proof_id_seq'::regclass);
 
 
 --
@@ -1219,13 +1193,6 @@ ALTER TABLE ONLY rule_condition ALTER COLUMN id SET DEFAULT nextval('rule_condit
 
 
 --
--- Name: rule_condition_proof id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule_condition_proof ALTER COLUMN id SET DEFAULT nextval('rule_condition_proof_id_seq'::regclass);
-
-
---
 -- Name: step id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -1240,6 +1207,13 @@ ALTER TABLE ONLY subject ALTER COLUMN id SET DEFAULT nextval('subject_id_seq'::r
 
 
 --
+-- Name: substitution id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY substitution ALTER COLUMN id SET DEFAULT nextval('substitution_id_seq'::regclass);
+
+
+--
 -- Name: translation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -1247,20 +1221,18 @@ ALTER TABLE ONLY translation ALTER COLUMN id SET DEFAULT nextval('translation_id
 
 
 --
--- Data for Name: condition; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: condition_proof; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY condition (id, left_expression_id, right_expression_id, left_array_data, right_array_data) FROM stdin;
-1	63	64	{668792982,4,27,2,6,358130610,3,10,198119638,3,9}	{99944244,2,28}
-2	65	64	{806519012,4,27,2,6,198119638,3,9,358130610,3,10}	{99944244,2,28}
+COPY condition_proof (id, step_id, condition_id, follows_rule_id, follows_proof_id, adopt_condition, self_evident) FROM stdin;
 \.
 
 
 --
--- Name: condition_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: condition_proof_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('condition_id_seq', 2, true);
+SELECT pg_catalog.setval('condition_proof_id_seq', 1, false);
 
 
 --
@@ -1291,6 +1263,8 @@ COPY descriptor (id) FROM stdin;
 21
 22
 23
+24
+25
 \.
 
 
@@ -1298,7 +1272,7 @@ COPY descriptor (id) FROM stdin;
 -- Name: descriptor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('descriptor_id_seq', 23, true);
+SELECT pg_catalog.setval('descriptor_id_seq', 25, true);
 
 
 --
@@ -1334,35 +1308,29 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 26	\\x00000000050002001400000012000000030000000200000015000000010000000200020001000200030104010001	\\x8442fdf7f36365f6326700b510143796bfed4591ba65fe8a62564b09f642a1a3	{}_\\text{?}\\text{f}{\\left({}_\\text{?}x+\\Delta{}_\\text{?}x\\right)}-{}_\\text{?}\\text{f}{\\left({}_\\text{?}x\\right)}	{20,18,3,2,21}	function	3	{25,20}
 27	\\x00000000060002001400000012000000050000000300000002000000150000000100000002000200020001000203000401050100010501	\\x38997f635cb1abde5e22cdb51329cd370d2c21a94282b7b562b64c49f544444a	\\frac{\\,{}_\\text{?}\\text{f}{\\left({}_\\text{?}x+\\Delta{}_\\text{?}x\\right)}-{}_\\text{?}\\text{f}{\\left({}_\\text{?}x\\right)}\\,}{\\,\\Delta{}_\\text{?}x\\,}	{20,18,5,3,2,21}	function	5	{26,22}
 28	\\x000001000700020000000000120000001400000016000000150000000500000003000000020000000000010003000100020002000200020300070405010600030001000300	\\x651eb823a52dc229134d48c1a94f3a2fd54a59c2432ffcbdf865441a7760c9bf	\\lim_{\\Delta{}_\\text{?}x\\to0}\\frac{\\,{}_\\text{?}\\text{f}{\\left({}_\\text{?}x+\\Delta{}_\\text{?}x\\right)}-{}_\\text{?}\\text{f}{\\left({}_\\text{?}x\\right)}\\,}{\\,\\Delta{}_\\text{?}x\\,}	{18,20,22,21,5,3,2}	function	22	{22,23,27}
-29	\\x0000000003000200090000000a00000018000000000000000200020001	\\x1e928fe64281824cd9ac4596aa45b02f433ada720bf442be4a422eb5b6c16661	\\left(\\begin{matrix}{}_\\text{?}a\\\\{}_\\text{?}b\\end{matrix}\\right)	{9,10,24}	function	24	{1,2}
-30	\\x00000000010000000d000000000000	\\xe3ad3e8c134a597c9a8bc2d01896e698815194eeccdac37c9f3983eb2a368a21	\\hat{e_1}	{13}	function	13	{}
-31	\\x000000000300010009000000040000000d000000000002000000010002	\\x19751da471698239217fecc64922a9d552dc19e683c1caa6e595e4677ba70ff6	{}_\\text{?}a\\hat{e_1}	{9,4,13}	function	4	{1,30}
-32	\\x00000000010000000e000000000000	\\xdb3966066a05fab9fa9f317f9a84d1daf73c5e1fc130ab860d6022ad47947378	\\hat{e_2}	{14}	function	14	{}
-33	\\x00000000030001000a000000040000000e000000000002000000010002	\\x42ec8b03c8af9c3cb6dd47ae22e58c3affd6a54c8af30060d97ca89bff7c2eb5	{}_\\text{?}b\\hat{e_2}	{10,4,14}	function	4	{2,32}
-34	\\x0000000006000200090000000a00000002000000040000000d0000000e00000000000000020002000000000002030004030105	\\x1928457711ef3003e9f929c2f88de8c57ff8aa78322287f3367823c8d93bf754	{}_\\text{?}a\\hat{e_1}+{}_\\text{?}b\\hat{e_2}	{9,10,2,4,13,14}	function	2	{31,33}
-35	\\x0000000005000300090000000a0000000b00000018000000040000000000000000000200020003040001040002	\\xf3fe23dfe6c3c413e85eea9f09002b6543955109379084d29e5e18983bc76259	\\left(\\begin{matrix}{}_\\text{?}a{}_\\text{?}b\\\\{}_\\text{?}a{}_\\text{?}c\\end{matrix}\\right)	{9,10,11,24,4}	function	24	{6,8}
-36	\\x0000000004000200090000000a000000040000000d00000000000000020000000202000103	\\x8ed875991d441d684417f8c6cc9c20a443031f29ac7a9ab31db5583dac340e36	{}_\\text{?}a{}_\\text{?}b\\hat{e_1}	{9,10,4,13}	function	4	{6,30}
-37	\\x0000000004000200090000000b000000040000000e00000000000000020000000202000103	\\x24f499b37694a0c357a2c6a728cbab571e894a1c142fe3410a4a9d3254a2fc2a	{}_\\text{?}a{}_\\text{?}c\\hat{e_2}	{9,11,4,14}	function	4	{8,32}
-38	\\x0000000007000300090000000a0000000b00000002000000040000000d0000000e00000000000000000002000200000000000304040001050404000206	\\x05228e414264114cf16d538d581cea9d826c89ff1bdc096a6460e135cb4815c4	{}_\\text{?}a{}_\\text{?}b\\hat{e_1}+{}_\\text{?}a{}_\\text{?}c\\hat{e_2}	{9,10,11,2,4,13,14}	function	2	{36,37}
-39	\\x00000000030001000b000000040000000e000000000002000000010002	\\x1697193b18280e9c70a949cea53955e67e2a69cf81b605e3e03c120650555724	{}_\\text{?}c\\hat{e_2}	{11,4,14}	function	4	{7,32}
-40	\\x0000000004000200090000000b000000040000000e00000000000000020000000200020103	\\x915675aeb06b009ffb789b01888ff6ae04c286e9731f8ea119d5e36f9e5caa32	{}_\\text{?}a\\left({}_\\text{?}c\\hat{e_2}\\right)	{9,11,4,14}	function	4	{1,39}
-41	\\x0000000007000300090000000a0000000b00000002000000040000000d0000000e00000000000000000002000200000000000304040001050400040206	\\xc5ee133a99511504f27b936b3dc5ab5af49bfa70dfcabdbec5ec321932920df9	{}_\\text{?}a{}_\\text{?}b\\hat{e_1}+{}_\\text{?}a\\left({}_\\text{?}c\\hat{e_2}\\right)	{9,10,11,2,4,13,14}	function	2	{36,40}
-42	\\x00000000030001000a000000040000000d000000000002000000010002	\\x9173bff7f1f319b137ff4d06e76b185d7c85f90577d03545659d63f153eb7fca	{}_\\text{?}b\\hat{e_1}	{10,4,13}	function	4	{2,30}
-43	\\x0000000004000200090000000a000000040000000d00000000000000020000000200020103	\\x464474048ba61398451d021ab677821b109f36b42bcb3cc94c926f83c116d0ae	{}_\\text{?}a\\left({}_\\text{?}b\\hat{e_1}\\right)	{9,10,4,13}	function	4	{1,42}
-44	\\x0000000007000300090000000a0000000b00000002000000040000000d0000000e00000000000000000002000200000000000304000401050400040206	\\xa1000008781bcc20f2debe57279a2e61d4d46e0da6b66d46ed60bf21901ef34d	{}_\\text{?}a\\left({}_\\text{?}b\\hat{e_1}\\right)+{}_\\text{?}a\\left({}_\\text{?}c\\hat{e_2}\\right)	{9,10,11,2,4,13,14}	function	2	{43,40}
-45	\\x00000000060002000a0000000b00000002000000040000000d0000000e00000000000000020002000000000002030004030105	\\xc3198650145c5aa0773524388b4613da5203e15008a8f3266a1ecca1712a278a	{}_\\text{?}b\\hat{e_1}+{}_\\text{?}c\\hat{e_2}	{10,11,2,4,13,14}	function	2	{42,39}
-46	\\x0000000007000300090000000a0000000b00000004000000020000000d0000000e0000000000000000000200020000000000030004030105030206	\\xf36878477e942efa4226507a7c6ffbdc1fe53e64426ad592145c3671670b4bb8	{}_\\text{?}a\\left({}_\\text{?}b\\hat{e_1}+{}_\\text{?}c\\hat{e_2}\\right)	{9,10,11,4,2,13,14}	function	4	{1,45}
-47	\\x00000000030002000a0000000b00000018000000000000000200020001	\\xb2bdca09a45d08202067a504ffb70a1484c0f2dad3caee268ce9f7e7ec600b9d	\\left(\\begin{matrix}{}_\\text{?}b\\\\{}_\\text{?}c\\end{matrix}\\right)	{10,11,24}	function	24	{2,7}
-48	\\x0000000005000300090000000a0000000b0000000400000018000000000000000000020002000300040102	\\x92e3b4d53618ca2363ee53719b60d746864bbab4340f6bed209abc243cf65ae7	{}_\\text{?}a\\left(\\begin{matrix}{}_\\text{?}b\\\\{}_\\text{?}c\\end{matrix}\\right)	{9,10,11,4,24}	function	4	{1,47}
-50	\\x00000100000000000200000000	\\xe62115b1b0a0940392fe419abadbc906d524d2f5e005ce2c982949ac518fc3d2	2	{}	integer	2	{}
-51	\\x000001000200010002000000090000000600000000000200010002	\\x4d211308d49e14146f22cea3417f83f8fca62aa4a86d2aeb420427cfb73a1a76	{}_\\text{?}a^{2}	{9,6}	function	6	{1,50}
-52	\\x0000010002000100020000000a0000000600000000000200010002	\\x7e4376c3449ddfadfd4229cd1954411a1b59a1a8d74e30c993b857bf1c8cc6a8	{}_\\text{?}b^{2}	{10,6}	function	6	{2,50}
-53	\\x000001000400020002000000090000000a0000000200000006000000000000000200020002030004030104	\\x9d1ac72f5d137f09403a7c39451831873d26ff9cb6f5248b18947bbc8f2272a8	{}_\\text{?}a^{2}+{}_\\text{?}b^{2}	{9,10,2,6}	function	2	{51,52}
-54	\\x000001000500020002000000090000000a0000001a0000000200000006000000000000000100020002000203040005040105	\\x0811a758552f582c28ffc56143e17b4e9cf4be00276258497ab4524a89c5da64	\\sqrt{{}_\\text{?}a^{2}+{}_\\text{?}b^{2}~}	{9,10,26,2,6}	function	26	{53}
-49	\\x0000000004000200090000000a0000001900000018000000000000000100020002030001	\\x887cc2e366b25726821cd36bb976490fe90a60162d021b0b59dee24c41b944fc	\\left\\|\\left(\\begin{matrix}{}_\\text{?}a\\\\{}_\\text{?}b\\end{matrix}\\right)\\right\\|	{9,10,25,24}	function	25	{29}
-64	\\x00000000010000001c000000000000	\\xe55958fbb20942b5b2da84b4e60020f9daca56cb5a7832ea9425405a02c5711d	\\text{True}	{28}	function	28	{}
-63	\\x00000000030002000a000000090000001b000000000000000200020001	\\x5813a36715ab8f06bb594d7a3f53ef8338d1e4bf8dab520e79297c1180a0dfdc	{}_\\text{?}b\\leq{}_\\text{?}a	{10,9,27}	function	27	{2,1}
-65	\\x0000000003000200090000000a0000001b000000000000000200020001	\\x5401ec9a4f5b907348a9e9951e0510da6565c3bbf30e64d1196fb9362d97e8b1	{}_\\text{?}a\\leq{}_\\text{?}b	{9,10,27}	function	27	{1,2}
+29	\\x0000000003000200090000000a0000001b000000000000000200020001	\\x5401ec9a4f5b907348a9e9951e0510da6565c3bbf30e64d1196fb9362d97e8b1	{}_\\text{?}a\\leq{}_\\text{?}b	{9,10,27}	function	27	{1,2}
+30	\\x000000000100000019000000000000	\\xf7cf19eca520fdfa3f72c1ba4289e07cfaba675f818442ccba216268fbe3970a	\\text{True}	{25}	function	25	{}
+31	\\x00000000030002000a000000090000001b000000000000000200020001	\\x5813a36715ab8f06bb594d7a3f53ef8338d1e4bf8dab520e79297c1180a0dfdc	{}_\\text{?}b\\leq{}_\\text{?}a	{10,9,27}	function	27	{2,1}
+32	\\x0000000003000200090000000a0000001c000000000000000200020001	\\x2d2529dc714196ce5c18046837791686edd0bf1632a20cc797771a01682c48da	\\left(\\begin{matrix}{}_\\text{?}a\\\\{}_\\text{?}b\\end{matrix}\\right)	{9,10,28}	function	28	{1,2}
+33	\\x00000000010000000d000000000000	\\xe3ad3e8c134a597c9a8bc2d01896e698815194eeccdac37c9f3983eb2a368a21	\\hat{e_1}	{13}	function	13	{}
+34	\\x000000000300010009000000040000000d000000000002000000010002	\\x19751da471698239217fecc64922a9d552dc19e683c1caa6e595e4677ba70ff6	{}_\\text{?}a\\hat{e_1}	{9,4,13}	function	4	{1,33}
+35	\\x00000000010000000e000000000000	\\xdb3966066a05fab9fa9f317f9a84d1daf73c5e1fc130ab860d6022ad47947378	\\hat{e_2}	{14}	function	14	{}
+36	\\x00000000030001000a000000040000000e000000000002000000010002	\\x42ec8b03c8af9c3cb6dd47ae22e58c3affd6a54c8af30060d97ca89bff7c2eb5	{}_\\text{?}b\\hat{e_2}	{10,4,14}	function	4	{2,35}
+37	\\x0000000006000200090000000a00000002000000040000000d0000000e00000000000000020002000000000002030004030105	\\x1928457711ef3003e9f929c2f88de8c57ff8aa78322287f3367823c8d93bf754	{}_\\text{?}a\\hat{e_1}+{}_\\text{?}b\\hat{e_2}	{9,10,2,4,13,14}	function	2	{34,36}
+38	\\x0000000005000300090000000a0000000b0000001c000000040000000000000000000200020003040001040002	\\xc45e01c3faea7750f3f6f802293bcc490370c73179780cd83fbade11655a404e	\\left(\\begin{matrix}{}_\\text{?}a{}_\\text{?}b\\\\{}_\\text{?}a{}_\\text{?}c\\end{matrix}\\right)	{9,10,11,28,4}	function	28	{6,8}
+39	\\x0000000004000200090000000a000000040000000d00000000000000020000000202000103	\\x8ed875991d441d684417f8c6cc9c20a443031f29ac7a9ab31db5583dac340e36	{}_\\text{?}a{}_\\text{?}b\\hat{e_1}	{9,10,4,13}	function	4	{6,33}
+40	\\x0000000004000200090000000b000000040000000e00000000000000020000000202000103	\\x24f499b37694a0c357a2c6a728cbab571e894a1c142fe3410a4a9d3254a2fc2a	{}_\\text{?}a{}_\\text{?}c\\hat{e_2}	{9,11,4,14}	function	4	{8,35}
+41	\\x0000000007000300090000000a0000000b00000002000000040000000d0000000e00000000000000000002000200000000000304040001050404000206	\\x05228e414264114cf16d538d581cea9d826c89ff1bdc096a6460e135cb4815c4	{}_\\text{?}a{}_\\text{?}b\\hat{e_1}+{}_\\text{?}a{}_\\text{?}c\\hat{e_2}	{9,10,11,2,4,13,14}	function	2	{39,40}
+42	\\x00000000030001000b000000040000000e000000000002000000010002	\\x1697193b18280e9c70a949cea53955e67e2a69cf81b605e3e03c120650555724	{}_\\text{?}c\\hat{e_2}	{11,4,14}	function	4	{7,35}
+43	\\x0000000004000200090000000b000000040000000e00000000000000020000000200020103	\\x915675aeb06b009ffb789b01888ff6ae04c286e9731f8ea119d5e36f9e5caa32	{}_\\text{?}a\\left({}_\\text{?}c\\hat{e_2}\\right)	{9,11,4,14}	function	4	{1,42}
+44	\\x0000000007000300090000000a0000000b00000002000000040000000d0000000e00000000000000000002000200000000000304040001050400040206	\\xc5ee133a99511504f27b936b3dc5ab5af49bfa70dfcabdbec5ec321932920df9	{}_\\text{?}a{}_\\text{?}b\\hat{e_1}+{}_\\text{?}a\\left({}_\\text{?}c\\hat{e_2}\\right)	{9,10,11,2,4,13,14}	function	2	{39,43}
+45	\\x00000000030001000a000000040000000d000000000002000000010002	\\x9173bff7f1f319b137ff4d06e76b185d7c85f90577d03545659d63f153eb7fca	{}_\\text{?}b\\hat{e_1}	{10,4,13}	function	4	{2,33}
+46	\\x0000000004000200090000000a000000040000000d00000000000000020000000200020103	\\x464474048ba61398451d021ab677821b109f36b42bcb3cc94c926f83c116d0ae	{}_\\text{?}a\\left({}_\\text{?}b\\hat{e_1}\\right)	{9,10,4,13}	function	4	{1,45}
+47	\\x0000000007000300090000000a0000000b00000002000000040000000d0000000e00000000000000000002000200000000000304000401050400040206	\\xa1000008781bcc20f2debe57279a2e61d4d46e0da6b66d46ed60bf21901ef34d	{}_\\text{?}a\\left({}_\\text{?}b\\hat{e_1}\\right)+{}_\\text{?}a\\left({}_\\text{?}c\\hat{e_2}\\right)	{9,10,11,2,4,13,14}	function	2	{46,43}
+48	\\x00000000060002000a0000000b00000002000000040000000d0000000e00000000000000020002000000000002030004030105	\\xc3198650145c5aa0773524388b4613da5203e15008a8f3266a1ecca1712a278a	{}_\\text{?}b\\hat{e_1}+{}_\\text{?}c\\hat{e_2}	{10,11,2,4,13,14}	function	2	{45,42}
+49	\\x0000000007000300090000000a0000000b00000004000000020000000d0000000e0000000000000000000200020000000000030004030105030206	\\xf36878477e942efa4226507a7c6ffbdc1fe53e64426ad592145c3671670b4bb8	{}_\\text{?}a\\left({}_\\text{?}b\\hat{e_1}+{}_\\text{?}c\\hat{e_2}\\right)	{9,10,11,4,2,13,14}	function	4	{1,48}
+50	\\x00000000030002000a0000000b0000001c000000000000000200020001	\\xb6ebc726bb9ddeefaeda42bb258c810af48922ebc43cbea4b07b827dd0bbeab6	\\left(\\begin{matrix}{}_\\text{?}b\\\\{}_\\text{?}c\\end{matrix}\\right)	{10,11,28}	function	28	{2,7}
+51	\\x0000000005000300090000000a0000000b000000040000001c000000000000000000020002000300040102	\\xc328e2d948a76d43c68b261b84b35da8667072efe9bf565624d0d6ebe00c183b	{}_\\text{?}a\\left(\\begin{matrix}{}_\\text{?}b\\\\{}_\\text{?}c\\end{matrix}\\right)	{9,10,11,4,28}	function	4	{1,50}
 \.
 
 
@@ -1370,7 +1338,7 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 -- Name: expression_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('expression_id_seq', 65, true);
+SELECT pg_catalog.setval('expression_id_seq', 51, true);
 
 
 --
@@ -1378,14 +1346,14 @@ SELECT pg_catalog.setval('expression_id_seq', 65, true);
 --
 
 COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_count, keyword, keyword_type, latex_template, special_type) FROM stdin;
-1	1	6	f	f	2	\N	\N	${.0}=${1.}	equals
-2	1	7	f	t	2	\N	\N	${.0}+${1(+).}	add
-3	1	8	f	f	2	\N	\N	${.0}-${1(+).}	subtract
-4	1	9	f	t	2	\N	\N	${.0(+):}${:1(*).}	multiply
-5	1	10	f	f	2	frac	latex	\\frac{\\,${0}\\,}{\\,${1}\\,}	divide
-6	1	11	f	f	2	\N	\N	${.0(*)}^{${1}}	power
-7	1	12	f	f	1	\N	\N	$!-${0(^).}	negate
-8	2	13	f	f	1	\N	\N	${.0(~):}!	\N
+1	1	8	f	f	2	\N	\N	${.0}=${1.}	equals
+2	1	9	f	t	2	\N	\N	${.0}+${1(+).}	add
+3	1	10	f	f	2	\N	\N	${.0}-${1(+).}	subtract
+4	1	11	f	t	2	\N	\N	${.0(+):}${:1(*).}	multiply
+5	1	12	f	f	2	frac	latex	\\frac{\\,${0}\\,}{\\,${1}\\,}	divide
+6	1	13	f	f	2	\N	\N	${.0(*)}^{${1}}	power
+7	1	14	f	f	1	\N	\N	$!-${0(^).}	negate
+8	2	15	f	f	1	\N	\N	${.0(~):}!	\N
 9	1	\N	t	f	0	a	symbol	\N	\N
 10	1	\N	t	f	0	b	symbol	\N	\N
 11	1	\N	t	f	0	c	symbol	\N	\N
@@ -1393,19 +1361,19 @@ COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_c
 13	3	\N	f	f	0	e1	symbol	\\hat{e_1}	\N
 14	3	\N	f	f	0	e2	symbol	\\hat{e_2}	\N
 15	3	\N	f	f	0	e3	symbol	\\hat{e_3}	\N
-16	4	14	f	f	1	sin	latex	\\sin${:0(+).}	\N
-17	4	15	f	f	1	cos	latex	\\cos${:0(+).}	\N
+16	4	16	f	f	1	sin	latex	\\sin${:0(+).}	\N
+17	4	17	f	f	1	cos	latex	\\cos${:0(+).}	\N
 18	5	\N	t	f	0	x	symbol	\N	\N
 19	5	\N	t	f	0	y	symbol	\N	\N
 20	5	\N	t	f	1	f	abbreviation	\N	\N
-21	5	16	f	f	1	d	symbol	\\Delta${:0(+).}	\N
-22	5	17	f	f	3	lim	latex	\\lim_{${0}\\to${1}}${:2(+).}	\N
-23	5	18	f	f	2	diff	abbreviation	\\frac{\\partial}{\\partial${:0(+)}}${:1(+).}	derivative
-24	1	19	f	f	2	vec2	word	\\left(\\begin{matrix}${0}\\\\${1}\\end{matrix}\\right)	\N
-26	1	21	f	f	1	sqrt	latex	\\sqrt{${0}~}	\N
-25	1	20	f	f	1	abs	abbreviation	\\left\\|${0}\\right\\|	\N
-28	1	23	f	f	0	true	word	\\text{True}	\N
-27	1	22	f	f	2	leq	abbreviation	${.0}\\leq${1.}	\N
+21	5	18	f	f	1	d	symbol	\\Delta${:0(+).}	\N
+22	5	19	f	f	3	lim	latex	\\lim_{${0}\\to${1}}${:2(+).}	\N
+23	5	20	f	f	2	diff	abbreviation	\\frac{\\partial}{\\partial${:0(+)}}${:1(+).}	derivative
+24	1	21	f	f	1	abs	abbreviation	\\left\\|${0}\\right\\|	\N
+25	6	22	f	f	0	true	word	\\text{True}	\N
+26	6	23	f	f	0	false	word	\\text{False}	\N
+27	7	24	f	f	2	leq	abbreviation	${.0}\\leq${1.}	\N
+28	1	25	f	f	2	vec2	abbreviation	\\left(\\begin{matrix}${0}\\\\${1}\\end{matrix}\\right)	\N
 \.
 
 
@@ -1476,17 +1444,16 @@ SELECT pg_catalog.setval('proof_id_seq', 1, true);
 -- Data for Name: rule; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY rule (id, step_id, proof_id, is_definition, left_expression_id, right_expression_id, left_array_data, right_array_data) FROM stdin;
-1	\N	\N	t	4	5	{576332304,4,2,2,11,198119638,3,9,251955836,4,7,1,3,358130610,3,10}	{725194104,4,3,2,6,198119638,3,9,358130610,3,10}
-2	\N	\N	t	9	11	{755105816,4,2,2,22,507440212,4,4,2,6,198119638,3,9,358130610,3,10,792166020,4,4,2,6,198119638,3,9,971369676,3,11}	{528846700,4,4,2,14,198119638,3,9,416255908,4,2,2,6,358130610,3,10,971369676,3,11}
-3	\N	\N	t	1	13	{198119638,3,9}	{955462542,4,4,2,6,5,1,1,198119638,3,9}
-4	\N	\N	t	1	14	{198119638,3,9}	{510478350,4,6,2,6,198119638,3,9,5,1,1}
-5	\N	\N	t	17	18	{71005026,4,4,2,22,695795496,4,6,2,6,198119638,3,9,358130610,3,10,622151856,4,6,2,6,198119638,3,9,971369676,3,11}	{491848602,4,6,2,14,198119638,3,9,416255908,4,2,2,6,358130610,3,10,971369676,3,11}
-6	\N	\N	t	21	28	{909282448,4,23,2,11,910648714,3,18,129606980,5,20,1,3,910648714,3,18}	{298586446,4,22,3,58,662684094,4,21,1,3,910648714,3,18,1,1,0,976197574,4,5,2,42,396128080,4,3,2,29,76780122,5,20,1,16,1022394746,4,2,2,11,910648714,3,18,662684094,4,21,1,3,910648714,3,18,129606980,5,20,1,3,910648714,3,18,662684094,4,21,1,3,910648714,3,18}
-7	\N	\N	t	29	34	{853990810,4,24,2,6,198119638,3,9,358130610,3,10}	{88350546,4,2,2,22,352139162,4,4,2,6,198119638,3,9,665602766,2,13,1030378374,4,4,2,6,358130610,3,10,168365960,2,14}
-8	\N	1	f	35	48	{815027242,4,24,2,22,507440212,4,4,2,6,198119638,3,9,358130610,3,10,792166020,4,4,2,6,198119638,3,9,971369676,3,11}	{321065132,4,4,2,14,198119638,3,9,71476026,4,24,2,6,358130610,3,10,971369676,3,11}
-9	\N	\N	t	49	54	{1057070576,4,25,1,11,853990810,4,24,2,6,198119638,3,9,358130610,3,10}	{413406680,4,26,1,27,688443628,4,2,2,22,1068305054,4,6,2,6,198119638,3,9,9,1,2,1061973566,4,6,2,6,358130610,3,10,9,1,2}
-10	\N	\N	t	1	2	{198119638,3,9}	{358130610,3,10}
+COPY rule (id, step_id, proof_id, is_definition, substitution_id) FROM stdin;
+1	\N	\N	t	1
+2	\N	\N	t	2
+3	\N	\N	t	3
+4	\N	\N	t	4
+5	\N	\N	t	5
+6	\N	\N	t	6
+7	\N	\N	t	9
+8	\N	\N	t	10
+9	\N	1	f	11
 \.
 
 
@@ -1494,9 +1461,9 @@ COPY rule (id, step_id, proof_id, is_definition, left_expression_id, right_expre
 -- Data for Name: rule_condition; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY rule_condition (id, rule_id, condition_id) FROM stdin;
-1	10	1
-2	10	2
+COPY rule_condition (id, rule_id, substitution_id) FROM stdin;
+1	7	7
+2	7	8
 \.
 
 
@@ -1508,46 +1475,23 @@ SELECT pg_catalog.setval('rule_condition_id_seq', 2, true);
 
 
 --
--- Data for Name: rule_condition_proof; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY rule_condition_proof (id, condition_id, proof_rule_id, adopt_condition, self_evident) FROM stdin;
-\.
-
-
---
--- Name: rule_condition_proof_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('rule_condition_proof_id_seq', 1, false);
-
-
---
--- Data for Name: rule_condition_proof_proof; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY rule_condition_proof_proof (parent_id, child_id) FROM stdin;
-\.
-
-
---
 -- Name: rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('rule_id_seq', 10, true);
+SELECT pg_catalog.setval('rule_id_seq', 9, true);
 
 
 --
 -- Data for Name: step; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY step (id, previous_id, expression_id, step_type, "position", reverse_sides, reverse_evaluate, proof_id, condition_id, rule_id, rearrange_format) FROM stdin;
-1	\N	35	set	0	f	f	\N	\N	\N	\N
-2	1	38	substitute_rule	0	f	f	\N	\N	7	\N
-3	2	41	rearrange	6	f	f	\N	\N	\N	{0,1,2,-1}
-4	3	44	rearrange	1	f	f	\N	\N	\N	{0,1,2,-1}
-5	4	46	substitute_rule	0	f	f	\N	\N	2	\N
-6	5	48	substitute_rule	2	t	f	\N	\N	7	\N
+COPY step (id, previous_id, expression_id, step_type, "position", reverse_sides, reverse_evaluate, proof_id, rule_id, substitution_id, rearrange_format) FROM stdin;
+1	\N	38	set	0	f	f	\N	\N	\N	\N
+2	1	41	substitute_rule	0	f	f	\N	8	\N	\N
+3	2	44	rearrange	6	f	f	\N	\N	\N	{0,1,2,-1}
+4	3	47	rearrange	1	f	f	\N	\N	\N	{0,1,2,-1}
+5	4	49	substitute_rule	0	f	f	\N	2	\N	\N
+6	5	51	substitute_rule	2	t	f	\N	8	\N	\N
 \.
 
 
@@ -1556,14 +1500,6 @@ COPY step (id, previous_id, expression_id, step_type, "position", reverse_sides,
 --
 
 SELECT pg_catalog.setval('step_id_seq', 6, true);
-
-
---
--- Data for Name: step_rule_condition_proof; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY step_rule_condition_proof (step_id, proof_id) FROM stdin;
-\.
 
 
 --
@@ -1576,6 +1512,8 @@ COPY subject (id, descriptor_id) FROM stdin;
 3	3
 4	4
 5	5
+6	6
+7	7
 \.
 
 
@@ -1583,7 +1521,33 @@ COPY subject (id, descriptor_id) FROM stdin;
 -- Name: subject_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('subject_id_seq', 5, true);
+SELECT pg_catalog.setval('subject_id_seq', 7, true);
+
+
+--
+-- Data for Name: substitution; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY substitution (id, left_expression_id, right_expression_id, left_array_data, right_array_data) FROM stdin;
+1	4	5	{576332304,4,2,2,11,198119638,3,9,251955836,4,7,1,3,358130610,3,10}	{725194104,4,3,2,6,198119638,3,9,358130610,3,10}
+2	9	11	{755105816,4,2,2,22,507440212,4,4,2,6,198119638,3,9,358130610,3,10,792166020,4,4,2,6,198119638,3,9,971369676,3,11}	{528846700,4,4,2,14,198119638,3,9,416255908,4,2,2,6,358130610,3,10,971369676,3,11}
+3	1	13	{198119638,3,9}	{955462542,4,4,2,6,5,1,1,198119638,3,9}
+4	1	14	{198119638,3,9}	{510478350,4,6,2,6,198119638,3,9,5,1,1}
+5	17	18	{71005026,4,4,2,22,695795496,4,6,2,6,198119638,3,9,358130610,3,10,622151856,4,6,2,6,198119638,3,9,971369676,3,11}	{491848602,4,6,2,14,198119638,3,9,416255908,4,2,2,6,358130610,3,10,971369676,3,11}
+6	21	28	{909282448,4,23,2,11,910648714,3,18,129606980,5,20,1,3,910648714,3,18}	{298586446,4,22,3,58,662684094,4,21,1,3,910648714,3,18,1,1,0,976197574,4,5,2,42,396128080,4,3,2,29,76780122,5,20,1,16,1022394746,4,2,2,11,910648714,3,18,662684094,4,21,1,3,910648714,3,18,129606980,5,20,1,3,910648714,3,18,662684094,4,21,1,3,910648714,3,18}
+7	29	30	{806519012,4,27,2,6,198119638,3,9,358130610,3,10}	{369960842,2,25}
+8	31	30	{668792982,4,27,2,6,358130610,3,10,198119638,3,9}	{369960842,2,25}
+9	1	2	{198119638,3,9}	{358130610,3,10}
+10	32	37	{772497386,4,28,2,6,198119638,3,9,358130610,3,10}	{88350546,4,2,2,22,352139162,4,4,2,6,198119638,3,9,665602766,2,13,1030378374,4,4,2,6,358130610,3,10,168365960,2,14}
+11	38	51	{834342920,4,28,2,22,507440212,4,4,2,6,198119638,3,9,358130610,3,10,792166020,4,4,2,6,198119638,3,9,971369676,3,11}	{976989156,4,4,2,14,198119638,3,9,76271144,4,28,2,6,358130610,3,10,971369676,3,11}
+\.
+
+
+--
+-- Name: substitution_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('substitution_id_seq', 11, true);
 
 
 --
@@ -1596,42 +1560,44 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 3	3	1	Vector Algebra
 4	4	1	Trigonometry
 5	5	1	Calculus
-6	6	1	Equality
-7	7	1	Add
-8	8	1	Subtract
-9	9	1	Multiply
-10	10	1	Divide
-11	11	1	Power
-12	12	1	Negate
-13	13	1	Factorial
-14	14	1	Sine
-15	15	1	Cosine
-16	16	1	Delta
-17	17	1	Limit
-18	18	1	Derivative
-19	1	2	Basis algebra
-20	2	2	Combinatoriek
-21	3	2	Vectoralgebra
-22	4	2	Trigonometrie
-23	5	2	Calculus
-24	6	2	Gelijkheid
-25	7	2	Optellen
-26	8	2	Aftrekken
-27	9	2	Vermenigvuldigen
-28	10	2	Delen
-29	11	2	Macht
-30	12	2	Omkeren
-31	13	2	Factorial
-32	14	2	Sinus
-33	15	2	Cosinus
-34	16	2	Delta
-35	17	2	Limiet
-36	18	2	Afgeleide
-37	19	1	2D Vector
-39	21	1	Square root
-38	20	1	Absolute value
-40	22	1	Less or equal
-41	23	1	true
+6	6	1	Boolean Algebra
+7	7	1	Logic
+8	8	1	Equality
+9	9	1	Add
+10	10	1	Subtract
+11	11	1	Multiply
+12	12	1	Divide
+13	13	1	Power
+14	14	1	Negate
+15	15	1	Factorial
+16	16	1	Sine
+17	17	1	Cosine
+18	18	1	Delta
+19	19	1	Limit
+20	20	1	Derivative
+21	21	1	Absolute Value
+22	22	1	True
+23	23	1	False
+24	24	1	Less or Equal
+25	1	2	Basis algebra
+26	2	2	Combinatoriek
+27	3	2	Vectoralgebra
+28	4	2	Trigonometrie
+29	5	2	Calculus
+30	8	2	Gelijkheid
+31	9	2	Optellen
+32	10	2	Aftrekken
+33	11	2	Vermenigvuldigen
+34	12	2	Delen
+35	13	2	Macht
+36	14	2	Omkeren
+37	15	2	Factorial
+38	16	2	Sinus
+39	17	2	Cosinus
+40	18	2	Delta
+41	19	2	Limiet
+42	20	2	Afgeleide
+43	25	1	Vector 2D
 \.
 
 
@@ -1639,23 +1605,15 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 -- Name: translation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('translation_id_seq', 41, true);
+SELECT pg_catalog.setval('translation_id_seq', 43, true);
 
 
 --
--- Name: condition condition_left_expression_id_right_expression_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: condition_proof condition_proof_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY condition
-    ADD CONSTRAINT condition_left_expression_id_right_expression_id_key UNIQUE (left_expression_id, right_expression_id);
-
-
---
--- Name: condition condition_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY condition
-    ADD CONSTRAINT condition_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY condition_proof
+    ADD CONSTRAINT condition_proof_pkey PRIMARY KEY (id);
 
 
 --
@@ -1795,35 +1753,11 @@ ALTER TABLE ONLY rule_condition
 
 
 --
--- Name: rule_condition_proof rule_condition_proof_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule_condition_proof
-    ADD CONSTRAINT rule_condition_proof_pkey PRIMARY KEY (id);
-
-
---
--- Name: rule_condition_proof_proof rule_condition_proof_proof_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule_condition_proof_proof
-    ADD CONSTRAINT rule_condition_proof_proof_pkey PRIMARY KEY (parent_id, child_id);
-
-
---
--- Name: rule_condition rule_condition_rule_id_condition_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: rule_condition rule_condition_rule_id_substitution_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY rule_condition
-    ADD CONSTRAINT rule_condition_rule_id_condition_id_key UNIQUE (rule_id, condition_id);
-
-
---
--- Name: rule rule_left_expression_id_right_expression_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule
-    ADD CONSTRAINT rule_left_expression_id_right_expression_id_key UNIQUE (left_expression_id, right_expression_id);
+    ADD CONSTRAINT rule_condition_rule_id_substitution_id_key UNIQUE (rule_id, substitution_id);
 
 
 --
@@ -1843,14 +1777,6 @@ ALTER TABLE ONLY step
 
 
 --
--- Name: step_rule_condition_proof step_rule_condition_proof_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY step_rule_condition_proof
-    ADD CONSTRAINT step_rule_condition_proof_pkey PRIMARY KEY (step_id, proof_id);
-
-
---
 -- Name: subject subject_descriptor_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1864,6 +1790,22 @@ ALTER TABLE ONLY subject
 
 ALTER TABLE ONLY subject
     ADD CONSTRAINT subject_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: substitution substitution_left_expression_id_right_expression_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY substitution
+    ADD CONSTRAINT substitution_left_expression_id_right_expression_id_key UNIQUE (left_expression_id, right_expression_id);
+
+
+--
+-- Name: substitution substitution_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY substitution
+    ADD CONSTRAINT substitution_pkey PRIMARY KEY (id);
 
 
 --
@@ -1911,19 +1853,35 @@ CREATE TRIGGER function_latex_update AFTER UPDATE ON function FOR EACH ROW EXECU
 
 
 --
--- Name: condition condition_left_expression_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: condition_proof condition_proof_condition_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY condition
-    ADD CONSTRAINT condition_left_expression_id_fkey FOREIGN KEY (left_expression_id) REFERENCES expression(id);
+ALTER TABLE ONLY condition_proof
+    ADD CONSTRAINT condition_proof_condition_id_fkey FOREIGN KEY (condition_id) REFERENCES rule_condition(id);
 
 
 --
--- Name: condition condition_right_expression_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: condition_proof condition_proof_follows_proof_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY condition
-    ADD CONSTRAINT condition_right_expression_id_fkey FOREIGN KEY (right_expression_id) REFERENCES expression(id);
+ALTER TABLE ONLY condition_proof
+    ADD CONSTRAINT condition_proof_follows_proof_id_fkey FOREIGN KEY (follows_proof_id) REFERENCES rule(id);
+
+
+--
+-- Name: condition_proof condition_proof_follows_rule_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY condition_proof
+    ADD CONSTRAINT condition_proof_follows_rule_id_fkey FOREIGN KEY (follows_rule_id) REFERENCES rule(id);
+
+
+--
+-- Name: condition_proof condition_proof_step_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY condition_proof
+    ADD CONSTRAINT condition_proof_step_id_fkey FOREIGN KEY (step_id) REFERENCES step(id);
 
 
 --
@@ -1967,46 +1925,6 @@ ALTER TABLE ONLY proof
 
 
 --
--- Name: rule_condition rule_condition_condition_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule_condition
-    ADD CONSTRAINT rule_condition_condition_id_fkey FOREIGN KEY (condition_id) REFERENCES condition(id);
-
-
---
--- Name: rule_condition_proof rule_condition_proof_condition_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule_condition_proof
-    ADD CONSTRAINT rule_condition_proof_condition_id_fkey FOREIGN KEY (condition_id) REFERENCES rule_condition(id);
-
-
---
--- Name: rule_condition_proof_proof rule_condition_proof_proof_child_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule_condition_proof_proof
-    ADD CONSTRAINT rule_condition_proof_proof_child_id_fkey FOREIGN KEY (child_id) REFERENCES rule_condition_proof(id);
-
-
---
--- Name: rule_condition_proof_proof rule_condition_proof_proof_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule_condition_proof_proof
-    ADD CONSTRAINT rule_condition_proof_proof_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES rule_condition_proof(id);
-
-
---
--- Name: rule_condition_proof rule_condition_proof_proof_rule_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule_condition_proof
-    ADD CONSTRAINT rule_condition_proof_proof_rule_id_fkey FOREIGN KEY (proof_rule_id) REFERENCES rule(id);
-
-
---
 -- Name: rule_condition rule_condition_rule_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2015,11 +1933,11 @@ ALTER TABLE ONLY rule_condition
 
 
 --
--- Name: rule rule_left_expression_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: rule_condition rule_condition_substitution_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY rule
-    ADD CONSTRAINT rule_left_expression_id_fkey FOREIGN KEY (left_expression_id) REFERENCES expression(id);
+ALTER TABLE ONLY rule_condition
+    ADD CONSTRAINT rule_condition_substitution_id_fkey FOREIGN KEY (substitution_id) REFERENCES substitution(id);
 
 
 --
@@ -2031,14 +1949,6 @@ ALTER TABLE ONLY rule
 
 
 --
--- Name: rule rule_right_expression_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY rule
-    ADD CONSTRAINT rule_right_expression_id_fkey FOREIGN KEY (right_expression_id) REFERENCES expression(id);
-
-
---
 -- Name: rule rule_step_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2047,11 +1957,11 @@ ALTER TABLE ONLY rule
 
 
 --
--- Name: step step_condition_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: rule rule_substitution_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY step
-    ADD CONSTRAINT step_condition_id_fkey FOREIGN KEY (condition_id) REFERENCES condition(id);
+ALTER TABLE ONLY rule
+    ADD CONSTRAINT rule_substitution_id_fkey FOREIGN KEY (substitution_id) REFERENCES substitution(id);
 
 
 --
@@ -2079,22 +1989,6 @@ ALTER TABLE ONLY step
 
 
 --
--- Name: step_rule_condition_proof step_rule_condition_proof_proof_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY step_rule_condition_proof
-    ADD CONSTRAINT step_rule_condition_proof_proof_id_fkey FOREIGN KEY (proof_id) REFERENCES rule_condition_proof(id);
-
-
---
--- Name: step_rule_condition_proof step_rule_condition_proof_step_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY step_rule_condition_proof
-    ADD CONSTRAINT step_rule_condition_proof_step_id_fkey FOREIGN KEY (step_id) REFERENCES step(id);
-
-
---
 -- Name: step step_rule_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2103,11 +1997,35 @@ ALTER TABLE ONLY step
 
 
 --
+-- Name: step step_substitution_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY step
+    ADD CONSTRAINT step_substitution_id_fkey FOREIGN KEY (substitution_id) REFERENCES substitution(id);
+
+
+--
 -- Name: subject subject_descriptor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY subject
     ADD CONSTRAINT subject_descriptor_id_fkey FOREIGN KEY (descriptor_id) REFERENCES descriptor(id);
+
+
+--
+-- Name: substitution substitution_left_expression_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY substitution
+    ADD CONSTRAINT substitution_left_expression_id_fkey FOREIGN KEY (left_expression_id) REFERENCES expression(id);
+
+
+--
+-- Name: substitution substitution_right_expression_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY substitution
+    ADD CONSTRAINT substitution_right_expression_id_fkey FOREIGN KEY (right_expression_id) REFERENCES expression(id);
 
 
 --
@@ -2134,17 +2052,17 @@ GRANT ALL ON LANGUAGE plperl TO qedb;
 
 
 --
--- Name: condition; Type: ACL; Schema: public; Owner: postgres
+-- Name: condition_proof; Type: ACL; Schema: public; Owner: postgres
 --
 
-GRANT SELECT,INSERT ON TABLE condition TO qedb;
+GRANT SELECT,INSERT ON TABLE condition_proof TO qedb;
 
 
 --
--- Name: condition_id_seq; Type: ACL; Schema: public; Owner: postgres
+-- Name: condition_proof_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
-GRANT SELECT,USAGE ON SEQUENCE condition_id_seq TO qedb;
+GRANT SELECT,USAGE ON SEQUENCE condition_proof_id_seq TO qedb;
 
 
 --
@@ -2288,27 +2206,6 @@ GRANT SELECT,USAGE ON SEQUENCE rule_condition_id_seq TO qedb;
 
 
 --
--- Name: rule_condition_proof; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,INSERT ON TABLE rule_condition_proof TO qedb;
-
-
---
--- Name: rule_condition_proof_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE rule_condition_proof_id_seq TO qedb;
-
-
---
--- Name: rule_condition_proof_proof; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,INSERT ON TABLE rule_condition_proof_proof TO qedb;
-
-
---
 -- Name: rule_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2330,13 +2227,6 @@ GRANT SELECT,USAGE ON SEQUENCE step_id_seq TO qedb;
 
 
 --
--- Name: step_rule_condition_proof; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,INSERT ON TABLE step_rule_condition_proof TO qedb;
-
-
---
 -- Name: subject; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2348,6 +2238,20 @@ GRANT SELECT,INSERT ON TABLE subject TO qedb;
 --
 
 GRANT SELECT,USAGE ON SEQUENCE subject_id_seq TO qedb;
+
+
+--
+-- Name: substitution; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,INSERT ON TABLE substitution TO qedb;
+
+
+--
+-- Name: substitution_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,USAGE ON SEQUENCE substitution_id_seq TO qedb;
 
 
 --

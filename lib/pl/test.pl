@@ -10,7 +10,7 @@ use Term::ANSIColor;
 use Time::HiRes  qw(time);
 use ExprUtils    qw(expr_hash_str set_debug debug);
 use ExprBuilder  qw(expr_number expr_symbols expr_function expr_generic_function format_expression);
-use ExprPattern  qw(expr_match_pattern expr_match_rule);
+use ExprPattern  qw(match_expr match_subs);
 
 if ($ARGV[0] eq 'debug') {
   set_debug(1);
@@ -91,7 +91,7 @@ foreach my $test_data (@pattern_tests) {
   # Alternate debug color.
   print(color($test_index % 2 == 0 ? 'white' : 'cyan'));
 
-  my $result = expr_match_pattern($test_data->[1], $test_data->[2]);
+  my $result = match_expr($test_data->[1], $test_data->[2]);
   print_test_result('pattern match', $result == $test_data->[0]);
 }
 
@@ -123,7 +123,7 @@ foreach my $test_data (@rule_tests) {
     # Alternate debug color.
     print(color($i % 2 == 0 ? 'white' : 'cyan'));
 
-    my $result = expr_match_rule(
+    my $result = match_subs(
       \@expr_left, \@expr_right,
       \@rule_left, \@rule_right,
       \@computable_ids);
@@ -149,7 +149,7 @@ sub run_rule_benchmark_cycles {
         my $rule_data = $rules{$i};
         my @rule_left = @{$rule_data->[0]};
         my @rule_right = @{$rule_data->[1]};
-        my $result = expr_match_rule(
+        my $result = match_subs(
           \@expr_left, \@expr_right,
           \@rule_left, \@rule_right,
           \@computable_ids);

@@ -118,8 +118,8 @@ Future<DifferenceBranch> resolveTreeDiff(
             db.substitution,
             WHERE({
               'id': IN(SUBQUERY(SQL('SELECT substitution_id FROM rule'))),
-              '': FUNCTION('expr_match_rule', param12[0], param12[1],
-                  param34[0], param34[1], computableIdsArray)
+              '': FUNCTION('match_subs', param12[0], param12[1], param34[0],
+                  param34[1], computableIdsArray)
             }),
             LIMIT(1));
 
