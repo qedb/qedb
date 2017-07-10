@@ -13,7 +13,7 @@ enum SpecialFunction {
   divide,
   power,
   negate,
-  derrivative
+  derivative
 }
 
 /// Map special function type string to enum value.
@@ -25,7 +25,7 @@ const _specialTypeStr2Enum = const {
   'divide': SpecialFunction.divide,
   'power': SpecialFunction.power,
   'negate': SpecialFunction.negate,
-  'derrivative': SpecialFunction.derrivative
+  'derivative': SpecialFunction.derivative
 };
 
 /// Retrieve all special function IDs (executed each session).

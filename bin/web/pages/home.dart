@@ -71,5 +71,5 @@ final homePage = new Page(template: (s) {
 });
 
 String errorPageTemplate(PageSessionData s) {
-  return pageTemplate(s, 'An error occured', containerTags: [errorAlert(s)]);
+  return pageTemplate(s, 'An error occurred', containerTags: [errorAlert(s)]);
 }

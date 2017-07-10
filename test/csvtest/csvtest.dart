@@ -73,7 +73,7 @@ Future csvtest(String baseUrl, String csvPath, List<CsvTest> tests) async {
         ].join(', '));
       }
 
-      // If the state is failed, exit the program immedeatly.
+      // If the state is failed, exit the program immediately.
       if (state == TestState.failed) {
         exit(1);
       }
