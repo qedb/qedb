@@ -312,4 +312,5 @@ GRANT USAGE ON LANGUAGE plperl TO qedb;
 -- Column specific update access.
 GRANT UPDATE (subject_id, keyword, keyword_type, latex_template) ON "function" TO qedb;
 GRANT UPDATE (latex) ON "expression" TO qedb;
+GRANT DELETE ON "rule_condition" TO qedb;
 GRANT DELETE ON "rule" TO qedb;

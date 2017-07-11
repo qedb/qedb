@@ -2195,7 +2195,7 @@ GRANT SELECT,INSERT,DELETE ON TABLE rule TO qedb;
 -- Name: rule_condition; Type: ACL; Schema: public; Owner: postgres
 --
 
-GRANT SELECT,INSERT ON TABLE rule_condition TO qedb;
+GRANT SELECT,INSERT,DELETE ON TABLE rule_condition TO qedb;
 
 
 --

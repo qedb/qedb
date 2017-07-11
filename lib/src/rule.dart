@@ -206,7 +206,8 @@ Future<List<db.RuleRow>> listRules(Session s, [Iterable<int> ids]) async {
   return rules;
 }
 
-Future<db.RuleRow> deleteRule(Session s, int id) {
+Future<db.RuleRow> deleteRule(Session s, int id) async {
+  await s.delete(db.ruleCondition, WHERE({'rule_id': IS(id)}));
   // Foreign key constraints should make this safe.
   return s.deleteOne(db.rule, WHERE({'id': IS(id)}));
 }
