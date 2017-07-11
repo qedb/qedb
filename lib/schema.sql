@@ -236,8 +236,8 @@ CREATE TYPE step_type AS ENUM (
   'copy_rule',   -- Copy left and right expression of a rule.
   'rearrange',   -- Rearrange using the given format.
   'substitute_rule',  -- Apply a rule based substitution.
-  'substitute_free',  -- Apply a free substitution (creates condition).
-  'substitute_proof'  -- Apply a proof based substitution.
+  'substitute_proof', -- Apply a proof based substitution.
+  'substitute_free'   -- Apply a free substitution (creates condition).
 );
 
 -- Expression manipulation step

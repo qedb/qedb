@@ -16,7 +16,29 @@ enum StepType {
   copyProof,
   rearrange,
   substituteRule,
+  substituteProof,
   substituteFree
+}
+
+String _getStepTypeString(StepType type) {
+  switch (type) {
+    case StepType.setExpression:
+      return 'set';
+    case StepType.copyRule:
+      return 'copy_rule';
+    case StepType.copyProof:
+      return 'copy_proof';
+    case StepType.rearrange:
+      return 'rearrange';
+    case StepType.substituteRule:
+      return 'substitute_rule';
+    case StepType.substituteProof:
+      return 'substitute_proof';
+    case StepType.substituteFree:
+      return 'substitute_free';
+    default:
+      throw new UnimplementedError('unimplemented step type: $type');
+  }
 }
 
 /// Intermediary data for building a step.
@@ -42,15 +64,6 @@ class _StepData {
   Subs subs;
 
   List<int> rearrangeFormat;
-
-  static const stepTypeValues = const {
-    StepType.setExpression: 'set',
-    StepType.copyRule: 'copy_rule',
-    StepType.copyProof: 'copy_proof',
-    StepType.rearrange: 'rearrange',
-    StepType.substituteRule: 'substitute_rule',
-    StepType.substituteFree: 'substitute_free'
-  };
 }
 
 Future<db.ProofRow> createProof(Session s, ProofData body) async {
@@ -154,7 +167,7 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     // Create map with insert values.
     final values = {
       'expression_id': expressionRow.id,
-      'step_type': _StepData.stepTypeValues[step.type],
+      'step_type': _getStepTypeString(step.type),
       'position': step.position,
       'reverse_sides': step.reverseSides,
       'reverse_evaluate': step.reverseEvaluate
