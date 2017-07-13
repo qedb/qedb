@@ -205,7 +205,9 @@ abstract class StepEditorBase {
       final current = difference == null ? null : await difference;
       final request = new DifferenceRequest()
         ..leftExpression = prevExpr.expression.toBase64()
-        ..rightExpression = thisExpr.expression.toBase64();
+        ..rightExpression = thisExpr.expression.toBase64()
+        ..proofIds = new List<int>()
+        ..freeSubstitutions = new List<FreeSubstituion>();
 
       if (current == null ||
           request.leftExpression != current.leftExpression ||

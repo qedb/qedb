@@ -6,15 +6,10 @@
 # Modified version of algorithm source that can be used with PL/Perl.
 #
 # Modifications:
-# - Use anonymous subroutines (use /[a-z_]+\(/ to find subroutine calls).
+# - Use anonymous subroutines (preserve: exists, defined, scalar, pop, push)
 # - Remove debug calls.
 #
-sub pgsql_function {
-my $EXPR_INTEGER       = 1;
-my $EXPR_SYMBOL        = 2;
-my $EXPR_SYMBOL_GEN    = 3;
-my $EXPR_FUNCTION      = 4;
-my $EXPR_FUNCTION_GEN  = 5;
+sub plperl_function {
 
 my $expr_hash_mix = sub {
   my ($hash, $value) = @_;
@@ -30,6 +25,12 @@ my $expr_hash_postprocess = sub {
   $hash = $hash ^ ($hash >> 11);
   return 0x1fffffff & ($hash + ((0x00003fff & $hash) << 15));
 };
+
+my $EXPR_INTEGER       = 1;
+my $EXPR_SYMBOL        = 2;
+my $EXPR_SYMBOL_GEN    = 3;
+my $EXPR_FUNCTION      = 4;
+my $EXPR_FUNCTION_GEN  = 5;
 
 # Compute hash for the given part of the expression data array. Replacing all
 # hashes that are in the mapping with the mapped hashes.
@@ -83,7 +84,7 @@ my $evaluate = sub {
       my $argument = $value; # Valid for $type == $EXPR_INTEGER.
 
       if ($type == $EXPR_SYMBOL_GEN) {
-        if (exists($$mapping_hash{$hash})) {
+        if (exists $$mapping_hash{$hash}) {
           my $target = $$mapping_hash{$hash};
 
           # Reconstruct integer value.
@@ -109,10 +110,10 @@ my $evaluate = sub {
       if ($stack[-1] == 1) {
         # Collapse stack.
         do {
-          pop(@stack);                    # Remove first argument flag [1].
-          my $other = pop(@stack);        # Get other integer.
-          pop(@stack);                    # Remove computation flag [0].
-          my $computation = pop(@stack);  # Get computation ID.
+          pop @stack;                    # Remove first argument flag [1].
+          my $other = pop @stack;        # Get other integer.
+          pop @stack;                    # Remove computation flag [0].
+          my $computation = pop @stack;  # Get computation ID.
 
           # Do computation.
           if ($computation == $id_add)    { $argument = $other + $argument; }
@@ -126,17 +127,17 @@ my $evaluate = sub {
         if (!@stack) {
           return ($argument, $ptr);
         } else {
-          push(@stack, $argument, 1);
+          push @stack, $argument, 1;
         }
       } else {
         # This is the first argument of the lowest computation in the stack.
-        push(@stack, $argument, 1);
+        push @stack, $argument, 1;
       }
     } elsif ($type == $EXPR_FUNCTION) {
       if ($value == $id_add || $value == $id_sub ||
           $value == $id_mul || $value == $id_neg) {
         # Push function ID to stack.
-        push(@stack, $value, 0);
+        push @stack, $value, 0;
 
         # Skip argument count and content-length (we know the argument length of
         # all computable functions ahead of time).
@@ -146,7 +147,7 @@ my $evaluate = sub {
         # imposter. This way the negation function can be integrated in the same
         # code as the binary operators.
         if ($value == $id_neg) {
-          push(@stack, 0, 1);
+          push @stack, 0, 1;
         }
       } else {
         return (undef, $ptr);
@@ -159,10 +160,41 @@ my $evaluate = sub {
   # This point will not be reached.
 };
 
+my $get_genfn_params = sub {
+  my ($ptrs, $mapping_hash, $data) = @_;
+
+  if ((scalar $ptrs) == 3) {
+    return $ptrs;
+  }
+
+  my $mptr_t = $$ptrs[0];
+  my $mptr_p = $$ptrs[1];
+
+  # Get hash of first argument of pattern function.
+  # This first argument should be generic.
+  my $pattern_arg_hash = $$data[$mptr_p + 5];
+  push @$ptrs, $pattern_arg_hash;
+
+  # If no target hash exists and the expression function has 1 argument, the
+  # generic is mapped to that argument.
+  if (!exists $$mapping_hash{$pattern_arg_hash}) {
+    if ($$data[$mptr_t + 3] == 1) {
+      # Map pattern argument to hash of first expression argument.
+      my $hash = $$data[$mptr_t + 5];
+      $$mapping_hash{$pattern_arg_hash} = $hash;
+    } else {
+      # Argument count not 1, and no target hash exists. So terminate.
+      return 0;
+    }
+  }
+
+  return $ptrs;
+};
+
 # Recursive expression pattern matching.
 my $match_pattern;
 $match_pattern = sub {
-  my ($write_mapping, $internal_remap, $mapping_hash, $mapping_genfn,
+  my ($internal_remap, $mapping_hash, $mapping_genfn,
       $ptr_t, $ptr_p, $computable_ids, @data) = @_;
 
   my $argc = 1; # arguments left to be processed.
@@ -181,7 +213,10 @@ $match_pattern = sub {
     my $value_p = $data[$ptr_p++];
 
     if ($type_p == $EXPR_SYMBOL_GEN) {
-      if (!$write_mapping || exists($$mapping_hash{$hash_p})) {
+      # If the symbol is already mapped to an expression hash, check if the
+      # target hash matches this hash in the current position. Else store the
+      # target hash.
+      if (exists $$mapping_hash{$hash_p}) {
         if ($$mapping_hash{$hash_p} != $hash_t) {
           return 0;
         }
@@ -192,9 +227,9 @@ $match_pattern = sub {
       # Jump over function body.
       if ($type_t == $EXPR_FUNCTION || $type_t == $EXPR_FUNCTION_GEN) {
         $ptr_t += 2 + $data[$ptr_t + 1];
-      }      
+      }
     } elsif ($type_p == $EXPR_FUNCTION_GEN) {
-      if (!$write_mapping) {
+      if (exists $$mapping_genfn{$value_p}) {
         # Internal remapping.
         if ($internal_remap) {
           # Disallow generic functions in internal remapping.
@@ -202,7 +237,12 @@ $match_pattern = sub {
         }
 
         # Retrieve pointers.
-        my $ptrs = $$mapping_genfn{$value_p};
+        my $ptrs = $get_genfn_params->(
+          $$mapping_genfn{$value_p}, $mapping_hash, \@data);
+        if ($ptrs == 0) {
+          return 0;
+        }
+
         my $mptr_t = $$ptrs[0];
         my $pattern_arg_hash = $$ptrs[2];
         my $pattern_arg_target_hash = $$mapping_hash{$pattern_arg_hash};
@@ -219,7 +259,7 @@ $match_pattern = sub {
           $$mapping_hash{$pattern_arg_target_hash} = $computed_hash;
 
           # Old expression is used as pattern, current expression as target.
-          if (!$match_pattern->(0, 1, $mapping_hash, $mapping_genfn,
+          if (!$match_pattern->(1, $mapping_hash, $mapping_genfn,
               $ptr_t - 3, $mptr_t, $computable_ids, @data)) {
             return 0;
           }
@@ -233,28 +273,22 @@ $match_pattern = sub {
           }
         }
       } else {
-        # Validate against existing mapping hash.
-        if (exists $$mapping_hash{$hash_p}) {
-          if ($$mapping_hash{$hash_p} != $hash_t) {
-            return 0;
-          }
-        } else {
-          $$mapping_hash{$hash_p} = $hash_t;
+        $$mapping_hash{$hash_p} = $hash_t;
 
-          # Add expression pointer to mapping for later use.
-          # Both pointers point at the start of the expression.
-          $$mapping_genfn{$value_p} = [$ptr_t - 3, $ptr_p - 3];
-        }
+        # Add expression pointer to mapping for later use.
+        # Both pointers point at the start of the expression.
+        $$mapping_genfn{$value_p} = [$ptr_t - 3, $ptr_p - 3];
       }
 
-      # Jump over function body.
-      # Generic functions operating on generic functions are actually bullshit.
+      # Jump over function body. Generic functions operating on generic
+      # functions are actually bullshit, but we handle them anyway.
       if ($type_t == $EXPR_FUNCTION || $type_t == $EXPR_FUNCTION_GEN) {
         $ptr_t += 2 + $data[$ptr_t + 1];
       }
       $ptr_p += 2 + $data[$ptr_p + 1];
     } elsif ($type_p == $EXPR_SYMBOL) {
-      # Check interal remapping caused by generic functions.
+      # During internal remapping a symbol may be mapped to a customly computed
+      # hash.
       if ($internal_remap && exists $$mapping_hash{$hash_p}) {
         if ($$mapping_hash{$hash_p} != $hash_t) {
           return 0;
@@ -293,7 +327,7 @@ $match_pattern = sub {
           # Function IDs do not match.
           return 0;
         }
-      } elsif (!$write_mapping && !$internal_remap && $type_t == $EXPR_INTEGER) {
+      } elsif (!$internal_remap && $type_t == $EXPR_INTEGER) {
         # Note: we do not run this during internal remapping to avoid
         # complicated cases with difficult behavior.
 
@@ -302,7 +336,7 @@ $match_pattern = sub {
         my ($evaluated_value, $ptr_t) = $evaluate->($ptr_p - 3, $mapping_hash,
             $computable_ids, \@data);
 
-        if (!defined($evaluated_value) || $value_t != $evaluated_value) {
+        if ((!defined $evaluated_value) || $value_t != $evaluated_value) {
           return 0;
         } else {
           # Jump over function body.
@@ -328,47 +362,23 @@ $match_pattern = sub {
   return (1, $ptr_t, $ptr_p);
 };
 
-# Rule matching
+# Substitution matching
 # It is possible to put match_pattern inside this function for some very minimal
 # gain (arguments do not have to be copied).
 my $match_subs = sub {
   my ($expr_left, $expr_right, $subs_left, $subs_right, $computable_ids) = @_;
   my (%mapping_hash, %mapping_genfn);
   my $ptr_t = 0;
-  my $ptr_p = scalar(@$expr_left) + scalar(@$expr_right);
+  my $ptr_p = (scalar @$expr_left) + (scalar @$expr_right);
   my @data = (@$expr_left, @$expr_right, @$subs_left, @$subs_right);
 
-  (my $result_left, $ptr_t, $ptr_p) = $match_pattern->(1, 0,
+  (my $result_left, $ptr_t, $ptr_p) = $match_pattern->(0,
       \%mapping_hash, \%mapping_genfn, $ptr_t, $ptr_p, $computable_ids, @data);
   if (!$result_left) {
     return 0;
   }
 
-  # Process generic function mapping.
-  foreach my $ptrs (values %mapping_genfn) {
-    my $mptr_t = $$ptrs[0];
-    my $mptr_p = $$ptrs[1];
-
-    # Get hash of first argument of pattern function.
-    # This first argument should be generic.
-    my $pattern_arg_hash = $data[$mptr_p + 5];
-    push @$ptrs, $pattern_arg_hash;
-
-    # If no target hash exists and the expression function has 1 argument, the
-    # generic is mapped to that argument.
-    if (!exists $mapping_hash{$pattern_arg_hash}) {
-      if ($data[$mptr_t + 3] == 1) {
-        # Map pattern argument to hash of first expression argument.
-        my $hash = $data[$mptr_t + 5];
-        $mapping_hash{$pattern_arg_hash} = $hash;
-      } else {
-        # Argument count not 1, and no target hash exists. So terminate.
-        return 0;
-      }
-    }
-  }
-
-  my ($result_right) = $match_pattern->(0, 0, \%mapping_hash, \%mapping_genfn,
+  my ($result_right) = $match_pattern->(0, \%mapping_hash, \%mapping_genfn,
       $ptr_t, $ptr_p, $computable_ids, @data);
   return $result_right;
 };
@@ -377,10 +387,10 @@ return $match_subs->(@_);
 }
 
 # Mini test.
-print(pgsql_function(
+print(plperl_function(
   [5, 4, 1, 2, 6, 7, 2, 9, 3, 1, 1], # expr left
   [6, 4, 1, 2, 6, 3, 1, 1, 7, 2, 9], # expr right
-  [1, 4, 1, 2, 6, 3, 3, 8, 4, 3, 9], # rule left
-  [2, 4, 1, 2, 6, 4, 3, 9, 3, 3, 8], # rule right
+  [1, 4, 1, 2, 6, 3, 3, 8, 4, 3, 9], # subs left
+  [2, 4, 1, 2, 6, 4, 3, 9, 3, 3, 8], # subs right
   undef) # computable ids
   ? 'PASS!!!' : 'FAIL :(', "\n");

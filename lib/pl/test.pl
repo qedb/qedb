@@ -23,6 +23,8 @@ sub d { expr_function('d', @_); }
 sub lim { expr_function('lim', @_); }
 sub diff { expr_function('diff', @_); }
 sub f { expr_generic_function('f', @_); }
+sub g { expr_function('g', @_); }
+sub h { expr_function('h', @_); }
 sub sine { expr_function('sine', @_); }
 
 # Basic pattern matching tests.
@@ -67,8 +69,34 @@ my @rule_tests = (
   [11, ($x^expr_number(-1) * $x^4) >> ($x^3)],
   [12, ($y*$x + $z*$x) >> (($y+$z)*$x)],
   [12, ($y*$x + $y*$x) >> (($y+$y)*$x)],
-  [12, (expr_number(1)*$x + expr_number(1)*$x) >> (2*$x)]
+  [12, (expr_number(1)*$x + expr_number(1)*$x) >> (2*$x)],
+  [-1, diff(g($x), $x) >> lim(d($x), 0, ($x - g($x)) / d($x))],
+  [8, diff($c*$d, $c) >> lim(d($c), 0, (($c + d($c))*$d - ($c*$d)) / d($c))],
+  [8, diff(g($x)*h($x), $x) >> lim(d($x), 0,
+    ((g($x + d($x))*h($x + d($x))) - (g($x)*h($x))) / d($x))]
 );
+
+# Exceptional case that was found in the usage of this function where in
+# diff(f(x), x) => lim(d(x), 0, (f(x + d(x)) - f(x)) / d(x))
+# `f(x + d(x))` can be any expression for the algorithm to report a match.
+# (in the test data its `x`)
+my @bug1_expr_left = (
+  733172344,4,22,3,40,662684094,4,21,1,3,910648714,3,18,1,1,0,756435250,4,5,2,
+  24,603155738,4,3,2,11,910648714,3,18,129606980,5,20,1,3,910648714,3,18,
+  662684094,4,21,1,3,910648714,3,18);
+my @bug1_expr_right = (
+  909282448,4,23,2,11,910648714,3,18,129606980,5,20,1,3,910648714,3,18);
+my @bug1_subs_left = (
+  298586446,4,22,3,58,662684094,4,21,1,3,910648714,3,18,1,1,0,976197574,4,5,2,
+  42,396128080,4,3,2,29,76780122,5,20,1,16,1022394746,4,2,2,11,910648714,3,18,
+  662684094,4,21,1,3,910648714,3,18,129606980,5,20,1,3,910648714,3,18,662684094,
+  4,21,1,3,910648714,3,18);
+my @bug1_subs_right = (
+  909282448,4,23,2,11,910648714,3,18,129606980,5,20,1,3,910648714,3,18);
+my @bug1_computable = (2,3,4,7);
+
+print('Bug 1 result: ', match_subs(\@bug1_expr_left, \@bug1_expr_right,
+  \@bug1_subs_left, \@bug1_subs_right, \@bug1_computable), "\n");
 
 # Computable function IDs.
 my @computable_ids = map { expr_hash_str($_) } ('+', '-', '*', '~');
@@ -133,7 +161,9 @@ foreach my $test_data (@rule_tests) {
   }
 
   my $expect = $test_data->[0];
-  my $did_pass = scalar(@matching_rules) == 1 && $expect == $matching_rules[0];
+  my $nmatching = scalar(@matching_rules);
+  my $did_pass = $expect == -1 ? $nmatching == 0 :
+    ($nmatching == 1 && $expect == $matching_rules[0]);
   print_test_result('rule match', $did_pass);
 }
 

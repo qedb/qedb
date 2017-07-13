@@ -53,12 +53,13 @@ Future main() async {
       final equals =
           interface.functions.singleWhere((fn) => fn.specialType == 'equals');
 
+      final subs = r.substitution;
       final expr = new FunctionExpr(equals.id, false, [
-        new Expr.fromBase64(r.leftExpression.data),
-        new Expr.fromBase64(r.rightExpression.data)
+        new Expr.fromBase64(subs.leftExpression.data),
+        new Expr.fromBase64(subs.rightExpression.data)
       ]);
 
-      final latex = '${r.leftExpression.latex}=${r.rightExpression.latex}'
+      final latex = '${subs.leftExpression.latex}=${subs.rightExpression.latex}'
           '\\quad\\left(\\mathtt{rule~\\#${r.id}}\\right)';
 
       firstStep = new StaticStepEditor(interface, db, root, null, expr, latex,

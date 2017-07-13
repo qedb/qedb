@@ -86,7 +86,13 @@ List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
     } else if (difference.rearrangements.isNotEmpty) {
       state = ht.td(['.difftable-rearrange', katexSpan(rearrangeHtml)]);
     } else if (difference.rule != null) {
-      state = ht.td(['.difftable-rule', '#${difference.rule.id}']);
+      state = ht.td([
+        '.difftable-rule',
+        ht.a('#${difference.rule.id}', attrs: {
+          'href': '/rule/${difference.rule.id}/read',
+          'target': '_blank'
+        })
+      ]);
     } else {
       state = ht.td('?');
     }

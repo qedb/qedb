@@ -12,10 +12,18 @@ class DifferenceRequest {
   String rightExpression;
 
   @ApiProperty(required: true)
-  List<ProofResource> searchProofs;
+  List<int> proofIds;
 
   @ApiProperty(required: true)
-  List<SubstitutionResource> availableFreeSubstitutions;
+  List<FreeSubstituion> freeSubstitutions;
+}
+
+class FreeSubstituion {
+  @ApiProperty(required: true)
+  String leftExpression;
+
+  @ApiProperty(required: true)
+  String rightExpression;
 }
 
 class DifferenceBranch {

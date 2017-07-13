@@ -13,6 +13,12 @@ import 'package:htgen/dynamic.dart' as ht;
 import 'editex_interface.dart';
 
 Future main() async {
+  // Check if this is the GET request by checking if there are any .editex
+  // elements.
+  if (document.querySelectorAll('.editex').isEmpty) {
+    return;
+  }
+
   // Retrieve operators and functions.
   final db = new QedbApi(new BrowserClient());
   final interface = await createQEDbEdiTeXInterface(db);

@@ -85,8 +85,8 @@ Future<List<SubstitutionResult>> _findSubstitutions(Session s, Subs subs,
     final rSides = i % 2 != 0;
     final rEval = i >= 2;
 
-    final exprArgs = rEval ? exprArraySql : exprArraySql.reversed.toList();
-    final subsArgs = rSides ? subsArraySql : subsArraySql.reversed.toList();
+    final exprArgs = rEval ? exprArraySql.reversed.toList() : exprArraySql;
+    final subsArgs = rSides ? subsArraySql.reversed.toList() : subsArraySql;
 
     final substitutions = await s.select(
         db.substitution,

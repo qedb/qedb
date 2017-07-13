@@ -24,6 +24,8 @@ sub set_debug {
   $debug_print = $_[0] == 1;
 }
 
+# BEGIN
+
 sub expr_hash_mix {
   my ($hash, $value) = @_;
   $hash = 0x1fffffff & ($hash + $value);
@@ -38,6 +40,8 @@ sub expr_hash_postprocess {
   $hash = $hash ^ ($hash >> 11);
   return 0x1fffffff & ($hash + ((0x00003fff & $hash) << 15));
 }
+
+# END
 
 sub expr_hash {
   my $hash = 0;
