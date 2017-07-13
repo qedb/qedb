@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright (c) 2017, Herman Bergwerf. All rights reserved.
+# Use of this source code is governed by an AGPL-3.0-style license
+# that can be found in the LICENSE file.
+
 PLCODE1="$(awk '/# BEGIN/{flag=1;next}/# END/{flag=0}flag' lib/pl/ExprUtils.pm)"
 PLCODE2="$(awk '/# BEGIN/{flag=1;next}/# END/{flag=0}flag' lib/pl/ExprPattern.pm)"
 PLCODE="${PLCODE1}"$'\n'"${PLCODE2}"
