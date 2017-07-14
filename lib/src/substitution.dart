@@ -37,12 +37,20 @@ Future<List<db.SubstitutionRow>> _listSubstitutions(
   return s.selectByIds(db.substitution, ids);
 }
 
-/// Get parsed substitution object.
-Future<Subs> getSubs(Session s, int id) async {
-  final subs = await s.selectById(db.substitution, id);
-  final sides = [subs.leftExpressionId, subs.rightExpressionId];
-  final map = await getExprMap(s, sides);
-  return new Subs(map[sides[0]], map[sides[1]]);
+/// Retrieve and parse given substitutions.
+Future<Map<int, Subs>> getSubsMap(Session s, Iterable<int> ids) async {
+  final subss = await s.selectByIds(db.substitution, ids);
+  final expressionIds = new List<int>();
+  for (final subs in subss) {
+    expressionIds.add(subs.leftExpressionId);
+    expressionIds.add(subs.rightExpressionId);
+  }
+
+  final map = await getExprMap(s, expressionIds);
+  return new Map.fromIterable(subss,
+      key: (db.SubstitutionRow subs) => subs.id,
+      value: (db.SubstitutionRow subs) =>
+          new Subs(map[subs.leftExpressionId], map[subs.rightExpressionId]));
 }
 
 /// Generate equals expression from substitution with the given [id].
@@ -56,6 +64,9 @@ Future<Expr> _substitutionAsEqualsExpression(Session s, int id) async {
 }
 
 /// Find substitutions that match the given [subs].
+/// This function directly searches the database using the match_subs function
+/// written in Perl. In some cases, and depending on the size of the rule table,
+/// this function might be more suitable than loading a [SubstitutionTable].
 Future<List<SubstitutionResult>> _findSubstitutions(Session s, Subs subs,
     {Sql subset, bool returnFirst: false}) async {
   final results = new List<SubstitutionResult>();

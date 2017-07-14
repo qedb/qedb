@@ -102,10 +102,13 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   }
 
   // Retrieve all rules.
+  final ruleIds = steps.map((step) => step.ruleId);
+  final rules = await s.selectByIds(db.rule, ruleIds.where((id) => id != null));
+  final subss = await getSubsMap(s, rules.map((r) => r.substitutionId));
   for (final step in steps) {
     if (step.ruleId != null) {
       final rule = await s.selectById(db.rule, step.ruleId);
-      step.subs = await getSubs(s, rule.substitutionId);
+      step.subs = subss[rule.substitutionId];
     }
   }
 

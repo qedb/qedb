@@ -27,6 +27,7 @@ part 'src/function.dart';
 part 'src/operator.dart';
 part 'src/expression.dart';
 part 'src/substitution.dart';
+part 'src/substitution_table.dart';
 part 'src/rule.dart';
 part 'src/expression_difference.dart';
 part 'src/expression_compute.dart';
