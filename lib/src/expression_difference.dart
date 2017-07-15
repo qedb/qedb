@@ -54,6 +54,7 @@ class RuleConditionProof {
 /// Resolves difference between leftExpression and rightExpression.
 Future<DifferenceBranch> resolveExpressionDifference(
     Session s, DifferenceRequest body) async {
+  await s.substitutionTable.loadRules(s);
   final left = new Expr.fromBase64(body.leftExpression);
   final right = new Expr.fromBase64(body.rightExpression);
   return _resolveExpressionDifference(s, left, right);
@@ -114,8 +115,8 @@ Future<DifferenceBranch> resolveTreeDiff(
         return outputBranch;
       }
 
-      // Find matching substitution in the rule set.
-      final results = await _findSubstitutions(s, new Subs(left, right),
+      // Find matching substitution in the rule set with _findSubstitutions.
+      /*final results = await findSubstitutions(s, new Subs(left, right),
           subset: SUBQUERY(SQL('SELECT substitution_id FROM rule')),
           returnFirst: true);
 
@@ -131,6 +132,18 @@ Future<DifferenceBranch> resolveTreeDiff(
           ..resolved = true;
 
         return outputBranch;
+      }*/
+
+      // Find matching substitution using the substitution table.
+      final result =
+          s.substitutionTable.searchSubstitution(s, new Subs(left, right));
+
+      if (result != null) {
+        outputBranch
+          ..reverseSides = result.reverseSides
+          ..reverseEvaluate = result.reverseEvaluate
+          ..rule = new RuleResource().load(result.entry.referenceId, s.data)
+          ..resolved = true;
       }
 
       // Fallback to processing individual arguments.

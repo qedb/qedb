@@ -38,11 +38,14 @@ part 'src/proof_read.dart';
 final log = new Logger('qedb');
 
 class Session extends SessionState<db.SessionData> {
-  // Targeted languages in the session.
+  /// Targeted languages in the session.
   final List<int> languages;
 
-  // All special function IDs.
+  /// All special function IDs.
   final specialFunctions = new Map<SpecialFunction, int>();
+
+  /// Uninitialized substitution table.
+  final substitutionTable = new SubstitutionTable();
 
   Session(Connection conn, db.SessionData data, this.languages)
       : super(conn, data);

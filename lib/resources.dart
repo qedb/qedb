@@ -330,6 +330,8 @@ class ConditionProofResource extends ResourceBase<db.ConditionProofRow> {
   int id;
   RuleResource followsRule;
   ProofResource followsProof;
+  bool reverseSides;
+  bool reverseEvaluate;
   bool adoptCondition;
   bool selfEvident;
 
@@ -338,6 +340,8 @@ class ConditionProofResource extends ResourceBase<db.ConditionProofRow> {
   void loadFields(row, data) {
     followsRule = new RuleResource().load(row.followsRuleId, data);
     followsProof = new ProofResource().load(row.followsProofId, data);
+    reverseSides = row.reverseSides;
+    reverseEvaluate = row.reverseEvaluate;
     adoptCondition = row.adoptCondition;
     selfEvident = row.selfEvident;
   }

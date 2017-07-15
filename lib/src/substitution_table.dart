@@ -5,7 +5,7 @@
 part of qedb;
 
 class SubstitutionTable {
-  final entries = new List<SubstitutionEntry>();
+  final entries = new List<ConditionalSubstitutionEntry>();
 
   /// Load rules from database.
   Future loadRules(Session s) async {
@@ -18,34 +18,86 @@ class SubstitutionTable {
     final subss = await getSubsMap(s, substitutionIds);
 
     // Collect conditions into map.
-    final ruleConditions = new Map<int, List<Subs>>();
+    final ruleConditions = new Map<int, List<SubstitutionEntry>>();
     for (final condition in conditions) {
-      ruleConditions.putIfAbsent(condition.ruleId, () => new List<Subs>());
-      ruleConditions[condition.ruleId].add(subss[condition.substitutionId]);
+      ruleConditions.putIfAbsent(
+          condition.ruleId, () => new List<SubstitutionEntry>());
+      ruleConditions[condition.ruleId].add(new SubstitutionEntry(
+          subss[condition.substitutionId],
+          SubstitutionType.condition,
+          condition.id));
     }
 
     // Add entry for each rule.
     for (final rule in rules) {
-      entries.add(new SubstitutionEntry(subss[rule.substitutionId],
-          ruleConditions[rule.id], SubstitutionType.rule, rule.id));
+      entries.add(new ConditionalSubstitutionEntry(subss[rule.substitutionId],
+          SubstitutionType.rule, rule.id, ruleConditions[rule.id] ?? []));
     }
   }
 
   /// Search for first entry that matches the given [substitution]. Returns null
   /// if nothing is found.
-  SubstitutionSearchResult searchSubstitution(Subs substitution) {}
+  SubstitutionSearchResult searchSubstitution(Session s, Subs substitution) {
+    // Simply loop through all [entries] and match in 4 ways.
+    for (final entry in entries) {
+      reverseSearch:
+      for (var i = 0; i < 4; i++) {
+        final rSides = i % 2 != 0;
+        final rEval = i >= 2;
+
+        final subsA = rEval ? substitution.inverted : substitution;
+        final subsB = rSides ? entry.substitution.inverted : entry.substitution;
+
+        // TODO: implement better substitution matching algorithm
+        // (copy Perl algorithm and use Uint32List?)
+
+        // Compare left side.
+        final mapping = new ExprMapping();
+        if (subsA.left.compare(subsB.left, mapping)) {
+          // Compare right side.
+          if (subsA.right.compare(subsB.right, mapping)) {
+            // A match was found!
+            // Recursively call this function for all conditions.
+            final conditionProofs = new List<SubstitutionSearchResult>();
+            for (final condition in entry.conditions) {
+              final result = searchSubstitution(s, condition.substitution);
+              if (result == null) {
+                // Condition cannot be resolved: continue outer loop.
+                continue reverseSearch;
+              } else {
+                conditionProofs.add(result);
+              }
+            }
+
+            // Return result.
+            return new SubstitutionSearchResult(
+                entry, conditionProofs, rSides, rEval);
+          }
+        }
+      }
+    }
+
+    // Nothing was found.
+    return null;
+  }
 }
 
-enum SubstitutionType { rule, proof, free }
+enum SubstitutionType { rule, condition, proof, free }
 
 class SubstitutionEntry {
   final Subs substitution;
-  final List<Subs> conditions;
   final SubstitutionType type;
   final int referenceId;
 
-  SubstitutionEntry(
-      this.substitution, this.conditions, this.type, this.referenceId);
+  SubstitutionEntry(this.substitution, this.type, this.referenceId);
+}
+
+class ConditionalSubstitutionEntry extends SubstitutionEntry {
+  final List<SubstitutionEntry> conditions;
+
+  ConditionalSubstitutionEntry(Subs substitution, SubstitutionType type,
+      int referenceId, this.conditions)
+      : super(substitution, type, referenceId);
 }
 
 class SubstitutionSearchResult {

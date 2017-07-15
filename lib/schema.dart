@@ -219,11 +219,21 @@ class ConditionProofRow extends Record {
   final int conditionId;
   final int followsRuleId;
   final int followsProofId;
+  final bool reverseSides;
+  final bool reverseEvaluate;
   final bool adoptCondition;
   final bool selfEvident;
 
-  ConditionProofRow(this.id, this.stepId, this.conditionId, this.followsRuleId,
-      this.followsProofId, this.adoptCondition, this.selfEvident);
-  factory ConditionProofRow.from(Row r) =>
-      new ConditionProofRow(r[0], r[1], r[2], r[3], r[4], r[5], r[6]);
+  ConditionProofRow(
+      this.id,
+      this.stepId,
+      this.conditionId,
+      this.followsRuleId,
+      this.followsProofId,
+      this.reverseSides,
+      this.reverseEvaluate,
+      this.adoptCondition,
+      this.selfEvident);
+  factory ConditionProofRow.from(Row r) => new ConditionProofRow(
+      r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
 }

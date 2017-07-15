@@ -289,6 +289,8 @@ CREATE TABLE condition_proof (
   condition_id      integer  NOT NULL REFERENCES rule_condition(id),
   follows_rule_id   integer  REFERENCES rule(id),
   follows_proof_id  integer  REFERENCES proof(id),
+  reverse_sides     boolean  NOT NULL DEFAULT FALSE,
+  reverse_evaluate  boolean  NOT NULL DEFAULT FALSE,
   adopt_condition   boolean  NOT NULL DEFAULT FALSE,
   self_evident      boolean  NOT NULL DEFAULT FALSE,
 

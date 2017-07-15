@@ -67,7 +67,7 @@ Future<Expr> _substitutionAsEqualsExpression(Session s, int id) async {
 /// This function directly searches the database using the match_subs function
 /// written in Perl. In some cases, and depending on the size of the rule table,
 /// this function might be more suitable than loading a [SubstitutionTable].
-Future<List<SubstitutionResult>> _findSubstitutions(Session s, Subs subs,
+Future<List<SubstitutionResult>> findSubstitutions(Session s, Subs subs,
     {Sql subset, bool returnFirst: false}) async {
   final results = new List<SubstitutionResult>();
 
