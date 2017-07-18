@@ -24,6 +24,7 @@ part 'step_editor_base.dart';
 part 'step_editor.dart';
 part 'difference_table.dart';
 
+// TODO: store proof backup in localStorage.
 Future main() async {
   // Retrieve operators and functions.
   final db = new QedbApi(new BrowserClient());

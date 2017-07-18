@@ -1321,6 +1321,12 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 26	\\x00000000050002001400000012000000030000000200000015000000010000000200020001000200030104010001	\\x8442fdf7f36365f6326700b510143796bfed4591ba65fe8a62564b09f642a1a3	{}_\\text{?}\\text{f}{\\left({}_\\text{?}x+\\Delta{}_\\text{?}x\\right)}-{}_\\text{?}\\text{f}{\\left({}_\\text{?}x\\right)}	{20,18,3,2,21}	function	3	{25,20}
 27	\\x00000000060002001400000012000000050000000300000002000000150000000100000002000200020001000203000401050100010501	\\x38997f635cb1abde5e22cdb51329cd370d2c21a94282b7b562b64c49f544444a	\\frac{\\,{}_\\text{?}\\text{f}{\\left({}_\\text{?}x+\\Delta{}_\\text{?}x\\right)}-{}_\\text{?}\\text{f}{\\left({}_\\text{?}x\\right)}\\,}{\\,\\Delta{}_\\text{?}x\\,}	{20,18,5,3,2,21}	function	5	{26,22}
 28	\\x000001000700020000000000120000001400000016000000150000000500000003000000020000000000010003000100020002000200020300070405010600030001000300	\\x651eb823a52dc229134d48c1a94f3a2fd54a59c2432ffcbdf865441a7760c9bf	\\lim_{\\Delta{}_\\text{?}x\\to0}\\frac{\\,{}_\\text{?}\\text{f}{\\left({}_\\text{?}x+\\Delta{}_\\text{?}x\\right)}-{}_\\text{?}\\text{f}{\\left({}_\\text{?}x\\right)}\\,}{\\,\\Delta{}_\\text{?}x\\,}	{18,20,22,21,5,3,2}	function	22	{22,23,27}
+29	\\x0000000003000200090000000a0000001d000000000000000200020001	\\x56819f3822f0e5e8d340ecfd5097d044509000e9d374a16c88ebcb8c68fb4d48	\\left(\\begin{matrix}{}_\\text{?}a\\\\{}_\\text{?}b\\end{matrix}\\right)	{9,10,29}	function	29	{1,2}
+30	\\x00000000010000000d000000000000	\\xe3ad3e8c134a597c9a8bc2d01896e698815194eeccdac37c9f3983eb2a368a21	\\hat{e_1}	{13}	function	13	{}
+31	\\x000000000300010009000000040000000d000000000002000000010002	\\x19751da471698239217fecc64922a9d552dc19e683c1caa6e595e4677ba70ff6	{}_\\text{?}a\\hat{e_1}	{9,4,13}	function	4	{1,30}
+32	\\x00000000010000000e000000000000	\\xdb3966066a05fab9fa9f317f9a84d1daf73c5e1fc130ab860d6022ad47947378	\\hat{e_2}	{14}	function	14	{}
+33	\\x00000000030001000a000000040000000e000000000002000000010002	\\x42ec8b03c8af9c3cb6dd47ae22e58c3affd6a54c8af30060d97ca89bff7c2eb5	{}_\\text{?}b\\hat{e_2}	{10,4,14}	function	4	{2,32}
+34	\\x0000000006000200090000000a00000002000000040000000d0000000e00000000000000020002000000000002030004030105	\\x1928457711ef3003e9f929c2f88de8c57ff8aa78322287f3367823c8d93bf754	{}_\\text{?}a\\hat{e_1}+{}_\\text{?}b\\hat{e_2}	{9,10,2,4,13,14}	function	2	{31,33}
 \.
 
 
@@ -1328,7 +1334,7 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 -- Name: expression_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('expression_id_seq', 28, true);
+SELECT pg_catalog.setval('expression_id_seq', 34, true);
 
 
 --
@@ -1363,7 +1369,7 @@ COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_c
 25	6	22	f	f	0	true	word	\\text{True}	\N
 26	6	23	f	f	0	false	word	\\text{False}	\N
 27	7	24	f	f	2	leq	abbreviation	${.0}\\leq${1.}	\N
-29	1	26	f	f	2	vec2	abbreviation	\\left(\\begin{matrix}${0}\\\\${1}\\end{matrix}\\right)	\N
+29	3	26	f	f	2	vec2	abbreviation	\\left(\\begin{matrix}${0}\\\\${1}\\end{matrix}\\right)	\N
 \.
 
 
@@ -1440,6 +1446,7 @@ COPY rule (id, step_id, proof_id, is_definition, substitution_id) FROM stdin;
 4	\N	\N	t	4
 5	\N	\N	t	5
 6	\N	\N	t	6
+7	\N	\N	t	7
 \.
 
 
@@ -1462,7 +1469,7 @@ SELECT pg_catalog.setval('rule_condition_id_seq', 1, false);
 -- Name: rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('rule_id_seq', 6, true);
+SELECT pg_catalog.setval('rule_id_seq', 7, true);
 
 
 --
@@ -1513,6 +1520,7 @@ COPY substitution (id, left_expression_id, right_expression_id, left_array_data,
 4	1	14	{198119638,3,9}	{510478350,4,6,2,6,198119638,3,9,5,1,1}
 5	17	18	{71005026,4,4,2,22,695795496,4,6,2,6,198119638,3,9,358130610,3,10,622151856,4,6,2,6,198119638,3,9,971369676,3,11}	{491848602,4,6,2,14,198119638,3,9,416255908,4,2,2,6,358130610,3,10,971369676,3,11}
 6	21	28	{909282448,4,23,2,11,910648714,3,18,129606980,5,20,1,3,910648714,3,18}	{298586446,4,22,3,58,662684094,4,21,1,3,910648714,3,18,1,1,0,976197574,4,5,2,42,396128080,4,3,2,29,76780122,5,20,1,16,1022394746,4,2,2,11,910648714,3,18,662684094,4,21,1,3,910648714,3,18,129606980,5,20,1,3,910648714,3,18,662684094,4,21,1,3,910648714,3,18}
+7	29	34	{522968074,4,29,2,6,198119638,3,9,358130610,3,10}	{88350546,4,2,2,22,352139162,4,4,2,6,198119638,3,9,665602766,2,13,1030378374,4,4,2,6,358130610,3,10,168365960,2,14}
 \.
 
 
@@ -1520,7 +1528,7 @@ COPY substitution (id, left_expression_id, right_expression_id, left_array_data,
 -- Name: substitution_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('substitution_id_seq', 6, true);
+SELECT pg_catalog.setval('substitution_id_seq', 7, true);
 
 
 --

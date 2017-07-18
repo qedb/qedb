@@ -116,7 +116,7 @@ Future<DifferenceBranch> resolveTreeDiff(
       }
 
       // Find matching substitution in the rule set with _findSubstitutions.
-      /*final results = await findSubstitutions(s, new Subs(left, right),
+      final results = await findSubstitutions(s, new Subs(left, right),
           subset: SUBQUERY(SQL('SELECT substitution_id FROM rule')),
           returnFirst: true);
 
@@ -132,10 +132,10 @@ Future<DifferenceBranch> resolveTreeDiff(
           ..resolved = true;
 
         return outputBranch;
-      }*/
+      }
 
       // Find matching substitution using the substitution table.
-      final result =
+      /*final result =
           s.substitutionTable.searchSubstitution(s, new Subs(left, right));
 
       if (result != null) {
@@ -144,7 +144,7 @@ Future<DifferenceBranch> resolveTreeDiff(
           ..reverseEvaluate = result.reverseEvaluate
           ..rule = new RuleResource().load(result.entry.referenceId, s.data)
           ..resolved = true;
-      }
+      }*/
 
       // Fallback to processing individual arguments.
       if (branch.argumentDifference.isNotEmpty) {

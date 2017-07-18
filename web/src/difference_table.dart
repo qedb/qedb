@@ -131,8 +131,10 @@ List<List<TableCellElement>> _difftableCombine(
   // A permutation of the integers: a(n) = (-1)^n * floor((n+1)/2).
   for (var n = 0; n < small.length; n++) {
     final int idx = pow(-1, n) * ((n + 1) / 2).floor();
-    large[idx < 0 ? large.length + idx : idx]
-        .addAll(small[idx < 0 ? small.length + idx : idx]);
+    final rowIdx = idx < 0 ? large.length + idx : idx;
+    final insertAt = a.length < b.length ? 0 : large[rowIdx].length;
+    large[rowIdx]
+        .insertAll(insertAt, small[idx < 0 ? small.length + idx : idx]);
   }
 
   return large;
