@@ -38,6 +38,9 @@ class SubstitutionTable {
   /// Search for first entry that matches the given [substitution]. Returns null
   /// if nothing is found.
   SubstitutionSearchResult searchSubstitution(Session s, Subs substitution) {
+    // Computing closure.
+    num compute(int id, List<num> args) => _exprCompute(s, id, args);
+
     // Simply loop through all [entries] and match in 4 ways.
     for (final entry in entries) {
       reverseSearch:
@@ -45,34 +48,27 @@ class SubstitutionTable {
         final rSides = i % 2 != 0;
         final rEval = i >= 2;
 
-        final subsA = rEval ? substitution.inverted : substitution;
-        final subsB = rSides ? entry.substitution.inverted : entry.substitution;
+        final sub = rEval ? substitution.inverted : substitution;
+        final pat = rSides ? entry.substitution.inverted : entry.substitution;
 
-        // TODO: implement better substitution matching algorithm
-        // (copy Perl algorithm and use Uint32List?)
-
-        // Compare left side.
-        final mapping = new ExprMapping();
-        if (subsA.left.compare(subsB.left, mapping)) {
-          // Compare right side.
-          if (subsA.right.compare(subsB.right, mapping)) {
-            // A match was found!
-            // Recursively call this function for all conditions.
-            final conditionProofs = new List<SubstitutionSearchResult>();
-            for (final condition in entry.conditions) {
-              final result = searchSubstitution(s, condition.substitution);
-              if (result == null) {
-                // Condition cannot be resolved: continue outer loop.
-                continue reverseSearch;
-              } else {
-                conditionProofs.add(result);
-              }
+        // Compare substitution with pattern.
+        if (compareSubstitutions(sub, pat, compute)) {
+          // A match was found!
+          // Recursively call this function for all conditions.
+          final conditionProofs = new List<SubstitutionSearchResult>();
+          for (final condition in entry.conditions) {
+            final result = searchSubstitution(s, condition.substitution);
+            if (result == null) {
+              // Condition cannot be resolved: continue outer loop.
+              continue reverseSearch;
+            } else {
+              conditionProofs.add(result);
             }
-
-            // Return result.
-            return new SubstitutionSearchResult(
-                entry, conditionProofs, rSides, rEval);
           }
+
+          // Return result.
+          return new SubstitutionSearchResult(
+              entry, conditionProofs, rSides, rEval);
         }
       }
     }

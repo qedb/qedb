@@ -23,6 +23,6 @@ It is of much larger importance that the computations that are done are correct.
 ## Suggested improvements for next iteration
 
 + Export simple .tex file from proof.
-+ Implement conditions and built-in conditions (integer derivative).
++ Implement built-in conditions (such as integer derivative).
 + Add API call that expands a proof into all possible rules (for fundamentals).
 

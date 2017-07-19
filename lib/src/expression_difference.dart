@@ -84,7 +84,8 @@ Future<DifferenceBranch> _resolveExpressionDifference(
 }
 
 Future<DifferenceBranch> resolveTreeDiff(
-    Session s, ExprDiffBranch branch, ExprCompute compute) async {
+    Session s, ExprDiffBranch branch, ExprCompute compute,
+    [bool useSubstitutionTable = true]) async {
   final outputBranch = new DifferenceBranch()
     ..position = branch.position
     ..leftExpression = branch.left.toBase64()
@@ -115,36 +116,38 @@ Future<DifferenceBranch> resolveTreeDiff(
         return outputBranch;
       }
 
-      // Find matching substitution in the rule set with _findSubstitutions.
-      final results = await findSubstitutions(s, new Subs(left, right),
-          subset: SUBQUERY(SQL('SELECT substitution_id FROM rule')),
-          returnFirst: true);
+      if (useSubstitutionTable) {
+        // Find matching substitution using the substitution table.
+        final result =
+            s.substitutionTable.searchSubstitution(s, new Subs(left, right));
 
-      if (results.isNotEmpty) {
-        final result = results.single;
-        final rule = await s.selectOne(
-            db.rule, WHERE({'substitution_id': IS(result.substitution.id)}));
+        if (result != null) {
+          outputBranch
+            ..reverseSides = result.reverseSides
+            ..reverseEvaluate = result.reverseEvaluate
+            ..rule = new RuleResource().load(result.entry.referenceId, s.data)
+            ..resolved = true;
+        }
+      } else {
+        // Find matching substitution in the rule set with _findSubstitutions.
+        final results = await findSubstitutions(s, new Subs(left, right),
+            subset: SUBQUERY(SQL('SELECT substitution_id FROM rule')),
+            returnFirst: true);
 
-        outputBranch
-          ..reverseSides = result.reverseSides
-          ..reverseEvaluate = result.reverseEvaluate
-          ..rule = (new RuleResource()..loadRow(rule, s.data))
-          ..resolved = true;
+        if (results.isNotEmpty) {
+          final result = results.first;
+          final rule = await s.selectOne(
+              db.rule, WHERE({'substitution_id': IS(result.substitution.id)}));
 
-        return outputBranch;
+          outputBranch
+            ..reverseSides = result.reverseSides
+            ..reverseEvaluate = result.reverseEvaluate
+            ..rule = (new RuleResource()..loadRow(rule, s.data))
+            ..resolved = true;
+
+          return outputBranch;
+        }
       }
-
-      // Find matching substitution using the substitution table.
-      /*final result =
-          s.substitutionTable.searchSubstitution(s, new Subs(left, right));
-
-      if (result != null) {
-        outputBranch
-          ..reverseSides = result.reverseSides
-          ..reverseEvaluate = result.reverseEvaluate
-          ..rule = new RuleResource().load(result.entry.referenceId, s.data)
-          ..resolved = true;
-      }*/
 
       // Fallback to processing individual arguments.
       if (branch.argumentDifference.isNotEmpty) {
