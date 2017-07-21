@@ -5,12 +5,12 @@
 part of qedb.web.proof_editor;
 
 /// Interactive step editor
-class StepEditor extends StepEditorBase {
+class StepEditor extends StepBase {
   /// Editing component
   EdiTeX editor;
 
-  factory StepEditor(EdiTeXInterface interface, QedbApi db, Element root,
-      StepEditorBase prev) {
+  factory StepEditor(
+      EdiTeXInterface interface, QedbApi db, Element root, StepBase prev) {
     final container = ht.div('.proof-row-editor.editex.editex-align-left');
     final status = ht.div('.proof-row-status');
     final row = root.append(ht.div('.proof-row',
@@ -24,7 +24,7 @@ class StepEditor extends StepEditorBase {
   }
 
   StepEditor._(EdiTeXInterface interface, QedbApi db, Element root, Element r,
-      Element c, Element s, this.editor, StepEditorBase prev)
+      Element c, Element s, this.editor, StepBase prev)
       : super(interface, db, root, r, c, s, prev) {
     editor.onIdleKeyDown.listen((e) {
       if (e.keyCode == KeyCode.UP) {
@@ -118,68 +118,4 @@ class StepEditor extends StepEditorBase {
 
   @override
   bool get isEmpty => editor.isEmpty;
-}
-
-typedef void ProofDataModifier(ProofData data);
-
-/// Static step editor
-class StaticStepEditor extends StepEditorBase {
-  final Expr expression;
-  final ProofDataModifier modifier;
-
-  factory StaticStepEditor(
-      EdiTeXInterface interface,
-      QedbApi db,
-      Element root,
-      StepEditorBase prev,
-      Expr expression,
-      String latex,
-      ProofDataModifier modifier) {
-    final container = ht.div('.proof-row-editor.proof-row-static.editex');
-    final status = ht.div('.proof-row-status');
-    final row = root.append(ht.div('.proof-row',
-        c: [ht.div('.proof-row-number'), container, status]));
-
-    // Render latex.
-    final target = ht.div([]);
-    container.append(target);
-    katex.render(latex, target, new katex.RenderingOptions(displayMode: true));
-
-    return new StaticStepEditor._(interface, db, root, row, container, status,
-        prev, expression, modifier);
-  }
-
-  StaticStepEditor._(
-      EdiTeXInterface interface,
-      QedbApi db,
-      Element root,
-      Element r,
-      Element c,
-      Element s,
-      StepEditorBase prev,
-      this.expression,
-      this.modifier)
-      : super(interface, db, root, r, c, s, prev) {
-    setStatus('lock');
-    ensureNext();
-  }
-
-  @override
-  ExpressionData getExpression() =>
-      new ExpressionData(expression, valid: true, empty: false);
-
-  @override
-  Future writeData(data) {
-    modifier(data);
-    return super.writeData(data);
-  }
-
-  @override
-  void focus() {}
-
-  @override
-  void setCursor(position) {}
-
-  @override
-  bool get isEmpty => false;
 }

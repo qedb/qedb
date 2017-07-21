@@ -20,12 +20,25 @@ import 'package:editex/katex.dart' as katex;
 
 import 'editex_interface.dart';
 
-part 'step_editor_base.dart';
+part 'step_base.dart';
 part 'step_editor.dart';
+part 'step_static.dart';
 part 'difference_table.dart';
+part 'json_storage.dart';
 
-// TODO: store proof backup in localStorage.
+const localStorageKey = 'QEDb_PROOF_EDITOR';
+
 Future main() async {
+  // Check if this page is the proof editor by checking if the #proof-editor
+  // exists (else this is the successfully submitted proof page).
+  if (querySelectorAll('#proof-editor').isEmpty) {
+    // Clear the localStorage since a proof was submitted successfully.
+    window.localStorage.remove(localStorageKey);
+
+    // Terminate function.
+    return;
+  }
+
   // Retrieve operators and functions.
   final db = new QedbApi(new BrowserClient());
   final interface = await createQEDbEdiTeXInterface(db);
@@ -36,7 +49,7 @@ Future main() async {
   // If there are query parameters with an initial step or rule, retrieve them.
   // Use try block to catch parsing errors.
   final q = Uri.base.queryParameters;
-  StepEditorBase firstStep;
+  StepBase firstStep;
   try {
     if (q.containsKey('initialstep')) {
       // Retrieve step and add readonly row.
@@ -46,8 +59,8 @@ Future main() async {
       final latex = '${step.expression.latex}'
           '\\quad\\left(\\mathtt{step~\\#$stepid}\\right)';
 
-      firstStep = new StaticStepEditor(interface, db, root, null, expr, latex,
-          (data) => data.initialStepId = step.id);
+      firstStep =
+          new StepStatic(interface, db, root, null, expr, latex, step.id, null);
     } else if (q.containsKey('initialrule')) {
       // Retrieve rule and add readonly row.
       final r = await db.readRule(int.parse(q['initialrule']));
@@ -63,12 +76,21 @@ Future main() async {
       final latex = '${subs.leftExpression.latex}=${subs.rightExpression.latex}'
           '\\quad\\left(\\mathtt{rule~\\#${r.id}}\\right)';
 
-      firstStep = new StaticStepEditor(interface, db, root, null, expr, latex,
-          (data) => data.initialRuleId = r.id);
+      firstStep =
+          new StepStatic(interface, db, root, null, expr, latex, null, r.id);
+    } else if (window.localStorage.containsKey(localStorageKey)) {
+      final json = JSON.decode(window.localStorage[localStorageKey]);
+      firstStep = loadStorageJson(json, interface, db, root, null);
     } else {
       firstStep = new StepEditor(interface, db, root, null);
     }
   } finally {
+    // Listen to window blur for proof localStorage backup.
+    window.onBeforeUnload.listen((_) {
+      window.localStorage[localStorageKey] =
+          JSON.encode(writeStorageJson(firstStep));
+    });
+
     // Build form data on submit.
     final FormElement form = querySelector('form');
     final InputElement dataInput = querySelector('#data');

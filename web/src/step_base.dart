@@ -12,7 +12,7 @@ class ExpressionData {
 }
 
 /// Base API for any step editor
-abstract class StepEditorBase {
+abstract class StepBase {
   final QEDbEdiTeXInterface interface;
   final QedbApi db;
 
@@ -26,7 +26,7 @@ abstract class StepEditorBase {
   final Element container, status;
 
   /// Previous and next step
-  StepEditorBase prev, next;
+  StepBase prev, next;
 
   /// Pending resolve data
   Future<DifferenceBranch> difference;
@@ -47,7 +47,7 @@ abstract class StepEditorBase {
   /// All subscriptions that must be cancelled on remove.
   final subscriptions = new List<StreamSubscription>();
 
-  StepEditorBase(this.interface, this.db, this.root, this.row, this.container,
+  StepBase(this.interface, this.db, this.root, this.row, this.container,
       this.status, this.prev) {
     if (prev != null) {
       subscriptions.add(prev.afterResolve.stream.listen((v) {

@@ -52,14 +52,16 @@ final createFunctionPage = new Page(
       final subjectId = unsafe(() => int.parse(data['subject']), null);
       return {
         'subject': subjectId != null ? {'id': subjectId} : null,
-        'descriptor': {
-          'translations': [
-            {
-              'language': {'code': data['descriptor-language']},
-              'content': data['descriptor']
-            }
-          ]
-        },
+        'descriptor': data['descriptor'].isEmpty
+            ? null
+            : {
+                'translations': [
+                  {
+                    'language': {'code': data['descriptor-language']},
+                    'content': data['descriptor']
+                  }
+                ]
+              },
         'generic': data['generic'] == 'true',
         'rearrangeable': data['rearrangeable'] == 'true',
         'argumentCount': int.parse(data['argument-count'], onError: (_) => 0),
