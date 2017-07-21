@@ -93,11 +93,11 @@ Future<List<SubstitutionResult>> findSubstitutions(Session s, Subs subs,
   // 3. try normal substitution on reversed expression
   // 4. try reversed substitution on reversed expression
   for (var i = 0; i < 4; i++) {
-    final rSides = i % 2 != 0;
-    final rEval = i >= 2;
+    final rItself = i % 2 != 0;
+    final rTarget = i >= 2;
 
-    final exprArgs = rEval ? exprArraySql.reversed.toList() : exprArraySql;
-    final subsArgs = rSides ? subsArraySql.reversed.toList() : subsArraySql;
+    final subsArgs = rItself ? subsArraySql.reversed.toList() : subsArraySql;
+    final exprArgs = rTarget ? exprArraySql.reversed.toList() : exprArraySql;
 
     final substitutions = await s.select(
         db.substitution,
@@ -111,7 +111,7 @@ Future<List<SubstitutionResult>> findSubstitutions(Session s, Subs subs,
 
     if (substitutions.isNotEmpty) {
       for (final substitution in substitutions) {
-        results.add(new SubstitutionResult(substitution, rSides, rEval));
+        results.add(new SubstitutionResult(substitution, rItself, rTarget));
       }
       if (returnFirst) {
         break;
@@ -125,11 +125,10 @@ Future<List<SubstitutionResult>> findSubstitutions(Session s, Subs subs,
 /// Substitution search result.
 class SubstitutionResult {
   final db.SubstitutionRow substitution;
-  final bool reverseSides;
-  final bool reverseEvaluate;
+  final bool reverseItself;
+  final bool reverseTarget;
 
-  SubstitutionResult(
-      this.substitution, this.reverseSides, this.reverseEvaluate);
+  SubstitutionResult(this.substitution, this.reverseItself, this.reverseTarget);
 }
 
 /// Call match_subs SQL function.

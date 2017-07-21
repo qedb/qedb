@@ -52,11 +52,11 @@ class SubstitutionTable {
 
       reverseSearch:
       for (var i = 0; i < 4; i++) {
-        final rSides = i % 2 != 0;
-        final rEval = i >= 2;
+        final rItself = i % 2 != 0;
+        final rTarget = i >= 2;
 
-        final sub = rEval ? substitution.inverted : substitution;
-        final pat = rSides ? entry.substitution.inverted : entry.substitution;
+        final pat = rItself ? entry.substitution.inverted : entry.substitution;
+        final sub = rTarget ? substitution.inverted : substitution;
 
         // Compare substitution with pattern.
         if (compareSubstitutions(sub, pat, compute)) {
@@ -76,7 +76,7 @@ class SubstitutionTable {
 
           // Return result.
           return new SubstitutionSearchResult(
-              entry, conditionProofs, rSides, rEval);
+              entry, conditionProofs, rItself, rTarget);
         }
       }
     }
@@ -107,11 +107,11 @@ class ConditionalSubstitutionEntry extends SubstitutionEntry {
 class SubstitutionSearchResult {
   final SubstitutionEntry entry;
   final List<ConditionSearchResult> conditionProofs;
-  final bool reverseSides;
-  final bool reverseEvaluate;
+  final bool reverseItself;
+  final bool reverseTarget;
 
-  SubstitutionSearchResult(this.entry, this.conditionProofs, this.reverseSides,
-      this.reverseEvaluate);
+  SubstitutionSearchResult(
+      this.entry, this.conditionProofs, this.reverseItself, this.reverseTarget);
 }
 
 class ConditionSearchResult {

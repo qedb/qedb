@@ -188,8 +188,8 @@ class StepRow extends Record {
   final String type;
   final int position;
 
-  final bool reverseSides;
-  final bool reverseEvaluate;
+  final bool reverseItself;
+  final bool reverseTarget;
 
   final int proofId;
   final int ruleId;
@@ -202,8 +202,8 @@ class StepRow extends Record {
       this.expressionId,
       this.type,
       this.position,
-      this.reverseSides,
-      this.reverseEvaluate,
+      this.reverseItself,
+      this.reverseTarget,
       this.proofId,
       this.ruleId,
       this.substitutionId,
@@ -219,8 +219,8 @@ class ConditionProofRow extends Record {
   final int conditionId;
   final int followsRuleId;
   final int followsProofId;
-  final bool reverseSides;
-  final bool reverseEvaluate;
+  final bool reverseItself;
+  final bool reverseTarget;
   final bool adoptCondition;
   final bool selfEvident;
 
@@ -230,8 +230,8 @@ class ConditionProofRow extends Record {
       this.conditionId,
       this.followsRuleId,
       this.followsProofId,
-      this.reverseSides,
-      this.reverseEvaluate,
+      this.reverseItself,
+      this.reverseTarget,
       this.adoptCondition,
       this.selfEvident);
   factory ConditionProofRow.from(Row r) => new ConditionProofRow(

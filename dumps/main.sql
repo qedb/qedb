@@ -663,8 +663,8 @@ CREATE TABLE condition_proof (
     condition_id integer NOT NULL,
     follows_rule_id integer,
     follows_proof_id integer,
-    reverse_sides boolean DEFAULT false NOT NULL,
-    reverse_evaluate boolean DEFAULT false NOT NULL,
+    reverse_itself boolean DEFAULT false NOT NULL,
+    reverse_target boolean DEFAULT false NOT NULL,
     adopt_condition boolean DEFAULT false NOT NULL,
     self_evident boolean DEFAULT false NOT NULL,
     CONSTRAINT self_evident_or_rule_or_proof CHECK ((((follows_rule_id IS NOT NULL) OR (follows_proof_id IS NOT NULL)) <> self_evident))
@@ -1002,8 +1002,8 @@ CREATE TABLE step (
     expression_id integer NOT NULL,
     step_type step_type NOT NULL,
     "position" smallint DEFAULT 0 NOT NULL,
-    reverse_sides boolean DEFAULT false NOT NULL,
-    reverse_evaluate boolean DEFAULT false NOT NULL,
+    reverse_itself boolean DEFAULT false NOT NULL,
+    reverse_target boolean DEFAULT false NOT NULL,
     proof_id integer,
     rule_id integer,
     substitution_id integer,
@@ -1237,7 +1237,7 @@ ALTER TABLE ONLY translation ALTER COLUMN id SET DEFAULT nextval('translation_id
 -- Data for Name: condition_proof; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY condition_proof (id, step_id, condition_id, follows_rule_id, follows_proof_id, reverse_sides, reverse_evaluate, adopt_condition, self_evident) FROM stdin;
+COPY condition_proof (id, step_id, condition_id, follows_rule_id, follows_proof_id, reverse_itself, reverse_target, adopt_condition, self_evident) FROM stdin;
 \.
 
 
@@ -1529,7 +1529,7 @@ SELECT pg_catalog.setval('rule_id_seq', 10, true);
 -- Data for Name: step; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY step (id, previous_id, expression_id, step_type, "position", reverse_sides, reverse_evaluate, proof_id, rule_id, substitution_id, rearrange_format) FROM stdin;
+COPY step (id, previous_id, expression_id, step_type, "position", reverse_itself, reverse_target, proof_id, rule_id, substitution_id, rearrange_format) FROM stdin;
 1	\N	35	set	0	f	f	\N	\N	\N	\N
 2	1	36	substitute_rule	2	f	f	\N	4	\N	\N
 3	2	37	substitute_rule	1	f	f	\N	4	\N	\N

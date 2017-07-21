@@ -49,14 +49,14 @@ class _StepData {
   db.StepRow row;
 
   /// Expression at node [position] in the right expression tree. This is used
-  /// to check rules when [reverseEvaluate] is set.
+  /// to check rules when [reverseTarget] is set.
   Expr subExprRight;
 
   /// Resulting expression.
   Expr expression;
 
-  bool reverseSides = false;
-  bool reverseEvaluate = false;
+  bool reverseItself = false;
+  bool reverseTarget = false;
 
   int ruleId;
 
@@ -172,8 +172,8 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
       'expression_id': expressionRow.id,
       'step_type': _getStepTypeString(step.type),
       'position': step.position,
-      'reverse_sides': step.reverseSides,
-      'reverse_evaluate': step.reverseEvaluate
+      'reverse_itself': step.reverseItself,
+      'reverse_target': step.reverseTarget
     };
     if (rows.isNotEmpty) {
       values['previous_id'] = rows.last.id;
@@ -212,8 +212,8 @@ Future<Expr> _computeProofStep(Session s, Expr previous, _StepData step,
 
     case StepType.substituteRule:
     case StepType.substituteFree:
-      final subs = step.reverseSides ? step.subs.inverted : step.subs;
-      if (!step.reverseEvaluate) {
+      final subs = step.reverseItself ? step.subs.inverted : step.subs;
+      if (!step.reverseTarget) {
         return previous.substituteAt(subs, step.position);
       } else {
         // Reversed evaluation means that the right sub-expression at this
@@ -252,8 +252,8 @@ List<_StepData> _flattenDifferenceBranch(DifferenceBranch branch) {
       final step = new _StepData()
         ..type = StepType.substituteRule
         ..position = branch.position
-        ..reverseSides = branch.reverseSides
-        ..reverseEvaluate = branch.reverseEvaluate
+        ..reverseItself = branch.reverseItself
+        ..reverseTarget = branch.reverseTarget
         ..ruleId = branch.rule.id
         ..subExprRight = branch.rightExpr;
 

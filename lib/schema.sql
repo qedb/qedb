@@ -250,8 +250,8 @@ CREATE TABLE step (
   step_type         step_type  NOT NULL,
   position          smallint   NOT NULL CHECK (position >= 0) DEFAULT 0,
 
-  reverse_sides     boolean    NOT NULL DEFAULT FALSE,
-  reverse_evaluate  boolean    NOT NULL DEFAULT FALSE,
+  reverse_itself    boolean    NOT NULL DEFAULT FALSE,
+  reverse_target    boolean    NOT NULL DEFAULT FALSE,
 
   proof_id          integer    REFERENCES proof(id),
   rule_id           integer    REFERENCES rule(id),
@@ -289,8 +289,8 @@ CREATE TABLE condition_proof (
   condition_id      integer  NOT NULL REFERENCES rule_condition(id),
   follows_rule_id   integer  REFERENCES rule(id),
   follows_proof_id  integer  REFERENCES proof(id),
-  reverse_sides     boolean  NOT NULL DEFAULT FALSE,
-  reverse_evaluate  boolean  NOT NULL DEFAULT FALSE,
+  reverse_itself    boolean  NOT NULL DEFAULT FALSE,
+  reverse_target    boolean  NOT NULL DEFAULT FALSE,
   adopt_condition   boolean  NOT NULL DEFAULT FALSE,
   self_evident      boolean  NOT NULL DEFAULT FALSE,
 

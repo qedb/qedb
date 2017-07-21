@@ -33,10 +33,10 @@ class DifferenceBranch {
   bool resolved;
   bool different;
 
-  bool reverseSides;
-  bool reverseEvaluate;
+  bool reverseItself;
+  bool reverseTarget;
   RuleResource rule;
-  final conditionProofs = new List<ConditionProof>();
+  List<ConditionProof> conditionProofs = [];
 
   List<Rearrangement> rearrangements;
   List<DifferenceBranch> arguments;
@@ -49,8 +49,8 @@ class ConditionProof {
   int conditionId;
   RuleResource followsRule;
   ProofResource followsProof;
-  bool reverseSides;
-  bool reverseEvaluate;
+  bool reverseItself;
+  bool reverseTarget;
   bool selfEvident;
 }
 
@@ -124,8 +124,8 @@ Future<DifferenceBranch> resolveTreeDiff(
 
       if (result != null) {
         outputBranch
-          ..reverseSides = result.reverseSides
-          ..reverseEvaluate = result.reverseEvaluate
+          ..reverseItself = result.reverseItself
+          ..reverseTarget = result.reverseTarget
           ..rule = new RuleResource().load(result.entry.referenceId, s.data)
           ..conditionProofs.addAll(result.conditionProofs.map((r) {
             assert(r.condition.type == SubstitutionType.condition);
@@ -133,8 +133,8 @@ Future<DifferenceBranch> resolveTreeDiff(
 
             return new ConditionProof()
               ..conditionId = r.condition.referenceId
-              ..reverseSides = r.result.reverseSides
-              ..reverseEvaluate = r.result.reverseEvaluate
+              ..reverseItself = r.result.reverseItself
+              ..reverseTarget = r.result.reverseTarget
               ..followsRule =
                   new RuleResource().load(r.result.entry.referenceId, s.data);
           }))
