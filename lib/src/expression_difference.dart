@@ -33,12 +33,23 @@ class DifferenceBranch {
   bool resolved;
   bool different;
 
+  /// Substitution parameters for a rule or proof.
   bool reverseItself;
   bool reverseTarget;
+
+  /// Substituted rule
   RuleResource rule;
+
+  /// Substituted proof
+  ProofResource proof;
+
+  /// Condition proofs for rule or proof.
   List<ConditionProof> conditionProofs = [];
 
+  /// Stack of rearrangements.
   List<Rearrangement> rearrangements;
+
+  /// Branch for each argument
   List<DifferenceBranch> arguments;
 
   Expr get leftExpr => new Expr.fromBase64(leftExpression);
@@ -47,11 +58,15 @@ class DifferenceBranch {
 
 class ConditionProof {
   int conditionId;
-  RuleResource followsRule;
-  ProofResource followsProof;
   bool reverseItself;
   bool reverseTarget;
   bool selfEvident;
+
+  /// Condition is proven by a rule
+  RuleResource followsRule;
+
+  /// Condition is proven by a proof
+  ProofResource followsProof;
 }
 
 /// Resolves difference between leftExpression and rightExpression.
@@ -119,6 +134,7 @@ Future<DifferenceBranch> resolveTreeDiff(
       }
 
       // Find matching substitution using the substitution table.
+      // TODO: Only search for rules since proofs are not implemented at create.
       final result =
           s.substitutionTable.searchSubstitution(s, new Subs(left, right), 1);
 

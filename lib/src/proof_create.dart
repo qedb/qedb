@@ -186,6 +186,8 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     }
 
     rows.add(await s.insert(db.step, VALUES(values)));
+
+    // TODO: Insert condition proofs.
   }
 
   final values = {'first_step_id': rows.first.id, 'last_step_id': rows.last.id};
@@ -257,7 +259,11 @@ List<_StepData> _flattenDifferenceBranch(DifferenceBranch branch) {
         ..ruleId = branch.rule.id
         ..subExprRight = branch.rightExpr;
 
+      // TODO: Validate and add condition proofs.
+
       steps.add(step);
+    } else if (branch.proof != null) {
+      throw new UnimplementedError('DifferenceBranch.proof is not implemented');
     } else {
       // Add steps for each argument.
       for (final argument in branch.arguments) {

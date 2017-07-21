@@ -86,6 +86,8 @@ class SubstitutionTable {
   }
 }
 
+/// Note: condition should only be used for entries in
+/// [ConditionalSubstitutionEntry.conditions].
 enum SubstitutionType { rule, condition, proof, free }
 
 class SubstitutionEntry {
