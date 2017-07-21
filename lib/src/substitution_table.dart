@@ -37,12 +37,19 @@ class SubstitutionTable {
 
   /// Search for first entry that matches the given [substitution]. Returns null
   /// if nothing is found.
-  SubstitutionSearchResult searchSubstitution(Session s, Subs substitution) {
+  SubstitutionSearchResult searchSubstitution(Session s, Subs substitution,
+      [int conditionDepthCutoff = 1]) {
     // Computing closure.
     num compute(int id, List<num> args) => _exprCompute(s, id, args);
 
     // Simply loop through all [entries] and match in 4 ways.
     for (final entry in entries) {
+      // If this entry has conditions but the [conditionDepthCutoff] <= 0, skip
+      // to the next entry.
+      if (entry.conditions.isNotEmpty && conditionDepthCutoff <= 0) {
+        continue;
+      }
+
       reverseSearch:
       for (var i = 0; i < 4; i++) {
         final rSides = i % 2 != 0;
@@ -55,14 +62,15 @@ class SubstitutionTable {
         if (compareSubstitutions(sub, pat, compute)) {
           // A match was found!
           // Recursively call this function for all conditions.
-          final conditionProofs = new List<SubstitutionSearchResult>();
+          final conditionProofs = new List<ConditionSearchResult>();
           for (final condition in entry.conditions) {
-            final result = searchSubstitution(s, condition.substitution);
+            final result = searchSubstitution(
+                s, condition.substitution, conditionDepthCutoff - 1);
             if (result == null) {
               // Condition cannot be resolved: continue outer loop.
               continue reverseSearch;
             } else {
-              conditionProofs.add(result);
+              conditionProofs.add(new ConditionSearchResult(condition, result));
             }
           }
 
@@ -98,10 +106,17 @@ class ConditionalSubstitutionEntry extends SubstitutionEntry {
 
 class SubstitutionSearchResult {
   final SubstitutionEntry entry;
-  final List<SubstitutionSearchResult> conditionProofs;
+  final List<ConditionSearchResult> conditionProofs;
   final bool reverseSides;
   final bool reverseEvaluate;
 
   SubstitutionSearchResult(this.entry, this.conditionProofs, this.reverseSides,
       this.reverseEvaluate);
+}
+
+class ConditionSearchResult {
+  final SubstitutionEntry condition;
+  final SubstitutionSearchResult result;
+
+  ConditionSearchResult(this.condition, this.result);
 }

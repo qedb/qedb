@@ -36,6 +36,7 @@ class DifferenceBranch {
   bool reverseSides;
   bool reverseEvaluate;
   RuleResource rule;
+  final conditionProofs = new List<ConditionProof>();
 
   List<Rearrangement> rearrangements;
   List<DifferenceBranch> arguments;
@@ -44,10 +45,12 @@ class DifferenceBranch {
   Expr get rightExpr => new Expr.fromBase64(rightExpression);
 }
 
-class RuleConditionProof {
+class ConditionProof {
   int conditionId;
   RuleResource followsRule;
   ProofResource followsProof;
+  bool reverseSides;
+  bool reverseEvaluate;
   bool selfEvident;
 }
 
@@ -84,8 +87,7 @@ Future<DifferenceBranch> _resolveExpressionDifference(
 }
 
 Future<DifferenceBranch> resolveTreeDiff(
-    Session s, ExprDiffBranch branch, ExprCompute compute,
-    [bool useSubstitutionTable = true]) async {
+    Session s, ExprDiffBranch branch, ExprCompute compute) async {
   final outputBranch = new DifferenceBranch()
     ..position = branch.position
     ..leftExpression = branch.left.toBase64()
@@ -116,37 +118,27 @@ Future<DifferenceBranch> resolveTreeDiff(
         return outputBranch;
       }
 
-      if (useSubstitutionTable) {
-        // Find matching substitution using the substitution table.
-        final result =
-            s.substitutionTable.searchSubstitution(s, new Subs(left, right));
+      // Find matching substitution using the substitution table.
+      final result =
+          s.substitutionTable.searchSubstitution(s, new Subs(left, right), 1);
 
-        if (result != null) {
-          outputBranch
-            ..reverseSides = result.reverseSides
-            ..reverseEvaluate = result.reverseEvaluate
-            ..rule = new RuleResource().load(result.entry.referenceId, s.data)
-            ..resolved = true;
-        }
-      } else {
-        // Find matching substitution in the rule set with _findSubstitutions.
-        final results = await findSubstitutions(s, new Subs(left, right),
-            subset: SUBQUERY(SQL('SELECT substitution_id FROM rule')),
-            returnFirst: true);
+      if (result != null) {
+        outputBranch
+          ..reverseSides = result.reverseSides
+          ..reverseEvaluate = result.reverseEvaluate
+          ..rule = new RuleResource().load(result.entry.referenceId, s.data)
+          ..conditionProofs.addAll(result.conditionProofs.map((r) {
+            assert(r.condition.type == SubstitutionType.condition);
+            assert(r.result.conditionProofs.isEmpty);
 
-        if (results.isNotEmpty) {
-          final result = results.first;
-          final rule = await s.selectOne(
-              db.rule, WHERE({'substitution_id': IS(result.substitution.id)}));
-
-          outputBranch
-            ..reverseSides = result.reverseSides
-            ..reverseEvaluate = result.reverseEvaluate
-            ..rule = (new RuleResource()..loadRow(rule, s.data))
-            ..resolved = true;
-
-          return outputBranch;
-        }
+            return new ConditionProof()
+              ..conditionId = r.condition.referenceId
+              ..reverseSides = r.result.reverseSides
+              ..reverseEvaluate = r.result.reverseEvaluate
+              ..followsRule =
+                  new RuleResource().load(r.result.entry.referenceId, s.data);
+          }))
+          ..resolved = true;
       }
 
       // Fallback to processing individual arguments.

@@ -230,11 +230,11 @@ class RuleResource extends ResourceBase<db.RuleRow> {
   ProofResource proof;
   bool isDefinition;
   SubstitutionResource substitution;
-  List<RuleCondition> conditions;
+  List<RuleConditionResource> conditions;
 
   info() => db.rule;
 
-  /// Wrapper to link a [RuleCondition.proof] in the context of a step.
+  /// Wrapper to link a [RuleConditionResource.proof] in the context of a step.
   RuleResource loadWithProofs(int ruleId, int stepId, db.SessionData data) {
     final self = load(ruleId, data);
     if (self == null) {
@@ -266,13 +266,13 @@ class RuleResource extends ResourceBase<db.RuleRow> {
     substitution = new SubstitutionResource().load(row.substitutionId, data);
     conditions = data.ruleConditionTable.values
         .where((row) => row.ruleId == id)
-        .map((row) => new RuleCondition()..loadRow(row, data))
+        .map((row) => new RuleConditionResource()..loadRow(row, data))
         .toList();
   }
 }
 
 /// Rule condition
-class RuleCondition extends ResourceBase<db.RuleConditionRow> {
+class RuleConditionResource extends ResourceBase<db.RuleConditionRow> {
   int id;
   SubstitutionResource substitution;
   ConditionProofResource proof;
