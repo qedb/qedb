@@ -3,13 +3,12 @@
 // that can be found in the LICENSE file.
 
 import 'package:htgen/static.dart';
-import 'package:json_object/json_object.dart';
 
 import '../page.dart';
 import 'templates.dart';
 
 /// Helper for other pages.
-String descriptorHyperlink(JsonObject getDescriptor()) {
+String descriptorHyperlink(dynamic getDescriptor()) {
   return unsafe(() {
     final descriptor = getDescriptor();
     return a(descriptor.translations[0].content,

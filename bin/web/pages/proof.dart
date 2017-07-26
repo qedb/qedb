@@ -4,7 +4,6 @@
 
 import 'dart:convert';
 
-import 'package:json_object/json_object.dart';
 import 'package:htgen/static.dart';
 
 import '../page.dart';
@@ -76,7 +75,7 @@ final listProofStepsPage = new Page(template: (s) {
       ]);
 });
 
-String generateStepLaTeX(JsonObject step) {
+String generateStepLaTeX(step) {
   if (step.containsKey('rule')) {
     final subs = step.rule.substitution;
     var sides = [subs.leftExpression.latex, subs.rightExpression.latex];
