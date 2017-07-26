@@ -348,6 +348,8 @@ sub match_pattern {
     } elsif ($type_p == $EXPR_INTEGER) {
       # Integers are not very common in patterns. Therefore this is checked
       # last.
+      # Note: we do not evaluate here because the input expression can be
+      # evaluated more conveniently before the search is executed.
       if ($type_t != $EXPR_INTEGER || $value_t != $value_p) {
         return 0;
       }

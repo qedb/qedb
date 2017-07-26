@@ -58,7 +58,11 @@ class _StepData {
   bool reverseItself = false;
   bool reverseTarget = false;
 
+  /// Rule that is supposedly substituted.
   int ruleId;
+
+  /// Map from condition ID of the substitution to condition proof.
+  Map<int, _ConditionProof> conditionProofs = {};
 
   /// Substitution data (used for rules and raw substitutions)
   Subs subs;
@@ -66,10 +70,23 @@ class _StepData {
   List<int> rearrangeFormat;
 }
 
+class _ConditionProof {
+  final int ruleId;
+  final bool reverseItself;
+  final bool reverseTarget;
+  final bool selfEvident;
+
+  _ConditionProof(
+      this.ruleId, this.reverseItself, this.reverseTarget, this.selfEvident);
+}
+
 Future<db.ProofRow> createProof(Session s, ProofData body) async {
   if (body.steps.isEmpty) {
     throw new UnprocessableEntityError('proof must have at least one step');
   }
+
+  // Computing closure.
+  num compute(int id, List<num> args) => _exprCompute(s, id, args);
 
   /// Create intermediary data list.
   final steps = new List<_StepData>();
@@ -101,10 +118,20 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     }
   }
 
-  // Retrieve all rules.
-  final ruleIds = steps.map((step) => step.ruleId);
+  // Aggregate all rule IDs (both from substitutions and proofs).
+  final ruleIds = new List<int>();
+  ruleIds.addAll(steps.map((step) => step.ruleId));
+  for (final step in steps) {
+    for (final conditionProof in step.conditionProofs.values) {
+      ruleIds.add(conditionProof.ruleId);
+    }
+  }
+
+  // Retrieve rule data.
   final rules = await s.selectByIds(db.rule, ruleIds.where((id) => id != null));
   final subss = await getSubsMap(s, rules.map((r) => r.substitutionId));
+
+  // Store rule substitutions in step data and verify conditions.
   for (final step in steps) {
     if (step.ruleId != null) {
       final rule = await s.selectById(db.rule, step.ruleId);
@@ -116,41 +143,32 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   final rearrangeableIds =
       await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
 
-  // Computing closure.
-  num compute(int id, List<num> args) => _exprCompute(s, id, args);
-
   // Run through all steps.
   Expr expr;
   final processedSteps = new List<_StepData>();
   for (final step in steps) {
-    // If no step type is set (existing step) or this is a copy_rule step. The
-    // expression is already computed.
-    if (step.type == null || step.type == StepType.copyRule) {
-      expr = step.expression.evaluate(compute).clone();
+    // Apply step to [expr].
+    // As a convention we evaluate the expression after each step.
+    final nextExpr =
+        (await _computeProofStep(s, expr, step, rearrangeableIds, compute))
+            .evaluate(compute);
+
+    // If there is no difference with the previous expression, remove this step.
+    if (nextExpr == expr) {
+      continue;
     } else {
-      // Apply step to [expr].
-      // As a convention we evaluate the expression after each step.
-      final nextExpr =
-          (await _computeProofStep(s, expr, step, rearrangeableIds, compute))
-              .evaluate(compute);
-
-      // If there is no difference with the previous expression, remove this step.
-      if (nextExpr == expr) {
-        continue;
-      } else {
-        expr = nextExpr;
-      }
-
-      if (step.expression != null &&
-          step.expression.evaluate(compute) != expr) {
-        // If an expression is already set for this step, it should be the same
-        // after evaluation.
-        throw new UnprocessableEntityError('proof reconstruction failed');
-      }
-
-      // Set/override the expression.
-      step.expression = expr.clone();
+      expr = nextExpr;
     }
+
+    // Compare computed expression with step expression that is already set.
+    if (step.expression != null && step.expression.evaluate(compute) != expr) {
+      // If an expression is already set for this step, it should be the same
+      // after evaluation.
+      throw new UnprocessableEntityError('proof reconstruction failed');
+    }
+
+    // Set/override the expression.
+    step.expression = expr.clone();
 
     // Add to processed steps.
     processedSteps.add(step);
@@ -185,9 +203,21 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
       values['rearrange_format'] = ARRAY(step.rearrangeFormat, 'integer');
     }
 
-    rows.add(await s.insert(db.step, VALUES(values)));
+    final stepRow = await s.insert(db.step, VALUES(values));
+    rows.add(stepRow);
 
-    // TODO: Insert condition proofs.
+    for (final conditionId in step.conditionProofs.keys) {
+      final conditionProof = step.conditionProofs[conditionId];
+      await s.insert(
+          db.conditionProof,
+          VALUES({
+            'step_id': stepRow.id,
+            'condition_id': conditionId,
+            'follows_rule_id': conditionProof.ruleId,
+            'reverse_itself': conditionProof.reverseItself,
+            'reverse_target': conditionProof.reverseTarget
+          }));
+    }
   }
 
   final values = {'first_step_id': rows.first.id, 'last_step_id': rows.last.id};
@@ -200,13 +230,20 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
 /// (fetched from [DifferenceBranch.rightExpression]).
 Future<Expr> _computeProofStep(Session s, Expr previous, _StepData step,
     List<int> rearrangeableIds, ExprCompute compute) async {
-  assert(step.type != null);
+  // If the step type is null, it is an existing step and only the step
+  // expression was retrieved.
+  if (step.type == null) {
+    return step.expression;
+  }
+
   switch (step.type) {
+    // In the case of copyRule the resulting expression is generated earlier.
+    case StepType.copyRule:
     case StepType.setExpression:
       return step.expression;
 
     case StepType.copyProof:
-      throw new UnimplementedError('copy_proof is not implemented');
+      throw new UnimplementedError('copyProof is not implemented');
 
     case StepType.rearrange:
       return previous.rearrangeAt(
@@ -215,24 +252,70 @@ Future<Expr> _computeProofStep(Session s, Expr previous, _StepData step,
     case StepType.substituteRule:
     case StepType.substituteFree:
       final subs = step.reverseItself ? step.subs.inverted : step.subs;
+
+      // First substitute rule to obtain mapping for checking the conditions.
+      final mapping = new ExprMapping();
+      Expr result;
       if (!step.reverseTarget) {
-        return previous.substituteAt(subs, step.position);
+        result = previous.substituteAt(subs, step.position, mapping);
       } else {
         // Reversed evaluation means that the right sub-expression at this
         // position is used to construct the original expression. When evaluated
         // this must match the expression in [previous] at the step position.
         // From this a new rule can be constructed to substitute the
         // sub-expression into [previous].
-        final original = step.subExprRight.substituteAt(subs, 0);
-        return previous.substituteAt(
+        final original = step.subExprRight.substituteAt(subs, 0, mapping);
+        result = previous.substituteAt(
             new Subs(original.evaluate(compute), step.subExprRight),
             step.position);
       }
-      break;
+      assert(result != null);
 
-    default:
-      throw new UnimplementedError('unexpected enum value');
+      // For rules we need to check conditions.
+      if (step.type == StepType.substituteRule) {
+        // Retrieve conditions.
+        final ruleConditions = await s.select(
+            db.ruleCondition, WHERE({'rule_id': IS(step.ruleId)}));
+        final substitutionIds = ruleConditions.map((c) => c.substitutionId);
+        final subss = await getSubsMap(s, substitutionIds);
+
+        // Check each condition.
+        for (final condition in ruleConditions) {
+          if (step.conditionProofs.containsKey(condition.id)) {
+            // Get condition and proof substitution.
+            final conditionSubs = subss[condition.substitutionId];
+
+            final proof = step.conditionProofs[condition.id];
+            final proofRule = await s.selectById(db.rule, proof.ruleId);
+            final proofSubs = await getSubs(s, proofRule.substitutionId);
+
+            // Just to make sure both substitutions are indeed set.
+            assert(conditionSubs != null && proofSubs != null);
+
+            // Reverse substitutions as specified.
+            final pSubs = proofSubs.clone(invert: proof.reverseItself);
+            final cSubs = conditionSubs.clone(invert: proof.reverseItself);
+
+            // Compare condition with proof. The proof should be a superset of
+            // the condition. The mapping generated by applying the related rule
+            // at the given position is applied to the condition first.
+            if (!cSubs.remap(mapping).compare(pSubs, compute)) {
+              throw new UnprocessableEntityError('condition proof mismatch');
+            }
+          } else {
+            throw new UnprocessableEntityError('missing condition proof');
+          }
+        }
+      }
+
+      return result;
+
+    case StepType.substituteProof:
+      throw new UnimplementedError('substituteProof is not implemented');
   }
+
+  // Analyzer keeps complaining about the function not returning in all cases.
+  throw new Error();
 }
 
 /// Flatten [branch] into a list of steps.
@@ -249,21 +332,39 @@ List<_StepData> _flattenDifferenceBranch(DifferenceBranch branch) {
           ..position = rearrangement.position
           ..rearrangeFormat = rearrangement.format);
       }
-    } else if (branch.rule != null) {
-      // Add single step for rule.
-      final step = new _StepData()
-        ..type = StepType.substituteRule
-        ..position = branch.position
-        ..reverseItself = branch.reverseItself
-        ..reverseTarget = branch.reverseTarget
-        ..ruleId = branch.rule.id
-        ..subExprRight = branch.rightExpr;
+    } else if (branch.substitution != null) {
+      // Currently supported: rule with at most one layer of conditions that can
+      // only be proven by another rule.
+      // For other substitutions an exception is raised.
+      final s = branch.substitution;
+      if (s.entry.type == SubsType.rule) {
+        // Collect condition proofs into map.
+        final conditionProofs = new Map<int, _ConditionProof>.fromIterables(
+            s.entry.conditions.map((entry) => entry.id),
+            s.conditionProofs.map((p) {
+          if (p.entry.type == SubsType.rule) {
+            return new _ConditionProof(
+                p.entry.referenceId, p.reverseItself, p.reverseTarget, false);
+          } else {
+            throw new UnprocessableEntityError(
+                'unimplemented substitution type');
+          }
+        }));
 
-      // TODO: Validate and add condition proofs.
+        // Add to step list, validation will be performed later.
+        final step = new _StepData()
+          ..type = StepType.substituteRule
+          ..position = branch.position
+          ..reverseItself = s.reverseItself
+          ..reverseTarget = s.reverseTarget
+          ..ruleId = s.entry.referenceId
+          ..subExprRight = branch.rightExpr
+          ..conditionProofs.addAll(conditionProofs);
 
-      steps.add(step);
-    } else if (branch.proof != null) {
-      throw new UnimplementedError('DifferenceBranch.proof is not implemented');
+        steps.add(step);
+      } else {
+        throw new UnprocessableEntityError('unimplemented substitution type');
+      }
     } else {
       // Add steps for each argument.
       for (final argument in branch.arguments) {

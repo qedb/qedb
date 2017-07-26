@@ -21,9 +21,15 @@ Future<List<db.ProofRow>> listProofs(Session s) async {
 Future<List<db.StepRow>> listProofSteps(Session s, int id) async {
   final proof = await s.selectById(db.proof, id);
   final steps = await _listStepsBetween(s, proof.firstStepId, proof.lastStepId);
+
+  final stepIds = steps.map((step) => step.id);
+  await s.select(db.conditionProof, WHERE({'step_id': IN(stepIds)}));
+
   final expressionIds = steps.map((step) => step.expressionId);
   await listExpressions(s, expressionIds);
+
   final ruleIds = steps.where((st) => st.ruleId != null).map((st) => st.ruleId);
   await listRules(s, ruleIds);
+
   return steps;
 }

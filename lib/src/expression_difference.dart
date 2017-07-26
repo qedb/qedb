@@ -33,20 +33,10 @@ class DifferenceBranch {
   bool resolved;
   bool different;
 
-  /// Substitution parameters for a rule or proof.
-  bool reverseItself;
-  bool reverseTarget;
+  /// Matching substitution.
+  SubsSearchResult substitution;
 
-  /// Substituted rule
-  RuleResource rule;
-
-  /// Substituted proof
-  ProofResource proof;
-
-  /// Condition proofs for rule or proof.
-  List<ConditionProof> conditionProofs = [];
-
-  /// Stack of rearrangements.
+  /// Queue of rearrangements.
   List<Rearrangement> rearrangements;
 
   /// Branch for each argument
@@ -56,23 +46,9 @@ class DifferenceBranch {
   Expr get rightExpr => new Expr.fromBase64(rightExpression);
 }
 
-class ConditionProof {
-  int conditionId;
-  bool reverseItself;
-  bool reverseTarget;
-  bool selfEvident;
-
-  /// Condition is proven by a rule
-  RuleResource followsRule;
-
-  /// Condition is proven by a proof
-  ProofResource followsProof;
-}
-
 /// Resolves difference between leftExpression and rightExpression.
 Future<DifferenceBranch> resolveExpressionDifference(
     Session s, DifferenceRequest body) async {
-  await s.substitutionTable.loadRules(s);
   final left = new Expr.fromBase64(body.leftExpression);
   final right = new Expr.fromBase64(body.rightExpression);
   return _resolveExpressionDifference(s, left, right);
@@ -81,6 +57,10 @@ Future<DifferenceBranch> resolveExpressionDifference(
 /// Resolves difference between [left] and [right].
 Future<DifferenceBranch> _resolveExpressionDifference(
     Session s, Expr left, Expr right) async {
+  if (s.substitutionTable.entries.isEmpty) {
+    await s.substitutionTable.loadRules(s);
+  }
+
   // Get rearrangeable functions.
   final rearrangeableIds =
       await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
@@ -134,26 +114,12 @@ Future<DifferenceBranch> resolveTreeDiff(
       }
 
       // Find matching substitution using the substitution table.
-      // TODO: Only search for rules since proofs are not implemented at create.
-      final result =
-          s.substitutionTable.searchSubstitution(s, new Subs(left, right), 1);
+      final result = s.substitutionTable.searchSubstitution(
+          s, new Subs(left, right), [SubsType.rule], [SubsType.rule], 1);
 
       if (result != null) {
         outputBranch
-          ..reverseItself = result.reverseItself
-          ..reverseTarget = result.reverseTarget
-          ..rule = new RuleResource().load(result.entry.referenceId, s.data)
-          ..conditionProofs.addAll(result.conditionProofs.map((r) {
-            assert(r.condition.type == SubstitutionType.condition);
-            assert(r.result.conditionProofs.isEmpty);
-
-            return new ConditionProof()
-              ..conditionId = r.condition.referenceId
-              ..reverseItself = r.result.reverseItself
-              ..reverseTarget = r.result.reverseTarget
-              ..followsRule =
-                  new RuleResource().load(r.result.entry.referenceId, s.data);
-          }))
+          ..substitution = result
           ..resolved = true;
       }
 

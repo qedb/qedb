@@ -17,6 +17,7 @@ import 'package:qedb_client/browser_client.dart';
 
 import 'package:htgen/dynamic.dart' as ht;
 import 'package:editex/katex.dart' as katex;
+import 'package:qedb/qedb.dart' as qedb show SubsType;
 
 import 'editex_interface.dart';
 

@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:rpc/rpc.dart';
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/latex.dart';
+import 'package:eqlib/exceptions.dart';
 import 'package:logging/logging.dart';
 import 'package:postgresql/postgresql.dart';
 

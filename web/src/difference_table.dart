@@ -85,13 +85,13 @@ List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
       state = ht.td(['.difftable-not-resolved', katexSpan(unresolvedHtml)]);
     } else if (difference.rearrangements.isNotEmpty) {
       state = ht.td(['.difftable-rearrange', katexSpan(rearrangeHtml)]);
-    } else if (difference.rule != null) {
+    } else if (difference.substitution != null &&
+        difference.substitution.entry.type.index == qedb.SubsType.rule.index) {
+      final ruleId = difference.substitution.entry.referenceId;
       state = ht.td([
         '.difftable-rule',
-        ht.a('#${difference.rule.id}', attrs: {
-          'href': '/rule/${difference.rule.id}/read',
-          'target': '_blank'
-        })
+        ht.a('#$ruleId',
+            attrs: {'href': '/rule/$ruleId/read', 'target': '_blank'})
       ]);
     } else {
       state = ht.td('?');

@@ -94,7 +94,7 @@ class SessionState<D> {
     /// Retrieve all records that are already loaded.
     final records = new List<R>();
     final cache = table.getCache(data);
-    final nonCachedIds = new List<int>();
+    final nonCachedIds = new Set<int>();
     for (final id in ids) {
       // Skip null values. This way null values do not have to be filtered out
       // by client code.
@@ -112,6 +112,11 @@ class SessionState<D> {
       final selectedRecords = await _runMappedQuery<R, D>(
           this, true, table, SELECT(table, WHERE({'id': IN(nonCachedIds)})));
       records.addAll(selectedRecords);
+
+      // Validate all IDs are present.
+      if (selectedRecords.length != nonCachedIds.length) {
+        throw new Exception('selectByIds not all IDs can be found');
+      }
     }
 
     return records;

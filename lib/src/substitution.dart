@@ -53,6 +53,11 @@ Future<Map<int, Subs>> getSubsMap(Session s, Iterable<int> ids) async {
           new Subs(map[subs.leftExpressionId], map[subs.rightExpressionId]));
 }
 
+/// Shorthand for retrieving just a single Subs.
+Future<Subs> getSubs(Session s, int id) async {
+  return (await getSubsMap(s, [id]))[id];
+}
+
 /// Generate equals expression from substitution with the given [id].
 Future<Expr> _substitutionAsEqualsExpression(Session s, int id) async {
   final subs = await s.selectById(db.substitution, id);

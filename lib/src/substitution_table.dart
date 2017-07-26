@@ -5,7 +5,7 @@
 part of qedb;
 
 class SubstitutionTable {
-  final entries = new List<ConditionalSubstitutionEntry>();
+  final entries = new List<SubsEntry>();
 
   /// Load rules from database.
   Future loadRules(Session s) async {
@@ -18,35 +18,39 @@ class SubstitutionTable {
     final subss = await getSubsMap(s, substitutionIds);
 
     // Collect conditions into map.
-    final ruleConditions = new Map<int, List<SubstitutionEntry>>();
+    final ruleConditions = new Map<int, List<SubsCondition>>();
     for (final condition in conditions) {
       ruleConditions.putIfAbsent(
-          condition.ruleId, () => new List<SubstitutionEntry>());
-      ruleConditions[condition.ruleId].add(new SubstitutionEntry(
-          subss[condition.substitutionId],
-          SubstitutionType.condition,
-          condition.id));
+          condition.ruleId, () => new List<SubsCondition>());
+      ruleConditions[condition.ruleId].add(new SubsCondition.from(
+          condition.id, subss[condition.substitutionId]));
     }
 
     // Add entry for each rule.
     for (final rule in rules) {
-      entries.add(new ConditionalSubstitutionEntry(subss[rule.substitutionId],
-          SubstitutionType.rule, rule.id, ruleConditions[rule.id] ?? []));
+      entries.add(new SubsEntry.from(rule.id, SubsType.rule,
+          subss[rule.substitutionId], ruleConditions[rule.id] ?? []));
     }
   }
 
   /// Search for first entry that matches the given [substitution]. Returns null
   /// if nothing is found.
-  SubstitutionSearchResult searchSubstitution(Session s, Subs substitution,
-      [int conditionDepthCutoff = 1]) {
+  SubsSearchResult searchSubstitution(Session s, Subs substitution,
+      List<SubsType> use, List<SubsType> useForConditions,
+      [int conditionDepthCutoff = 1, bool isCondition = false]) {
     // Computing closure.
     num compute(int id, List<num> args) => _exprCompute(s, id, args);
 
     // Simply loop through all [entries] and match in 4 ways.
     for (final entry in entries) {
       // If this entry has conditions but the [conditionDepthCutoff] <= 0, skip
-      // to the next entry.
-      if (entry.conditions.isNotEmpty && conditionDepthCutoff <= 0) {
+      // to the next entry. Also skip if ![isCondition] and [use] specifies we
+      // do not want this entry type for normal matching or [isCondition] and
+      // [useForConditions] specifies we do not want this type for condition
+      // proofs.
+      if ((entry.conditions.isNotEmpty && conditionDepthCutoff <= 0) ||
+          (!isCondition && !use.contains(entry.type)) ||
+          (isCondition && !useForConditions.contains(entry.type))) {
         continue;
       }
 
@@ -55,28 +59,36 @@ class SubstitutionTable {
         final rItself = i % 2 != 0;
         final rTarget = i >= 2;
 
-        final pat = rItself ? entry.substitution.inverted : entry.substitution;
+        final pat = rItself ? entry.subs.inverted : entry.subs;
         final sub = rTarget ? substitution.inverted : substitution;
 
         // Compare substitution with pattern.
-        if (compareSubstitutions(sub, pat, compute)) {
-          // A match was found!
-          // Recursively call this function for all conditions.
-          final conditionProofs = new List<ConditionSearchResult>();
-          for (final condition in entry.conditions) {
-            final result = searchSubstitution(
-                s, condition.substitution, conditionDepthCutoff - 1);
-            if (result == null) {
-              // Condition cannot be resolved: continue outer loop.
-              continue reverseSearch;
-            } else {
-              conditionProofs.add(new ConditionSearchResult(condition, result));
+        try {
+          final mapping = new ExprMapping();
+          if (compareSubstitutions(sub, pat, compute, mapping)) {
+            // A match was found!
+            // Recursively call this function for all conditions.
+            final conditionProofs = new List<SubsSearchResult>();
+            for (final condition in entry.conditions) {
+              final remappedSubs = condition.subs.remap(mapping);
+              final result = searchSubstitution(s, remappedSubs, use,
+                  useForConditions, conditionDepthCutoff - 1, true);
+              if (result != null) {
+                conditionProofs.add(result);
+              } else {
+                // Condition cannot be resolved: continue outer loop.
+                continue reverseSearch;
+              }
             }
-          }
 
-          // Return result.
-          return new SubstitutionSearchResult(
-              entry, conditionProofs, rItself, rTarget);
+            // Return result.
+            return new SubsSearchResult.from(
+                entry, conditionProofs, rItself, rTarget);
+          }
+        } on EqLibException {
+          // An exception is thrown if during remapping there is an eqlib strict
+          // mode violation (see eqlib ExprMapping source).
+          continue;
         }
       }
     }
@@ -86,39 +98,64 @@ class SubstitutionTable {
   }
 }
 
-/// Note: condition should only be used for entries in
-/// [ConditionalSubstitutionEntry.conditions].
-enum SubstitutionType { rule, condition, proof, free }
+// Note: in order to reduce the number of classes required, the following
+// classes are compatible with the rpc package so they can directly be used in
+// the expression difference API response.
 
-class SubstitutionEntry {
-  final Subs substitution;
-  final SubstitutionType type;
-  final int referenceId;
+/// Types of substitutions that can be used to resolve a difference. We avoid
+/// using an enum because the rpc package cannot handle enums.
+class SubsType {
+  @ApiProperty(required: true)
+  int index;
 
-  SubstitutionEntry(this.substitution, this.type, this.referenceId);
+  SubsType();
+  SubsType._(this.index);
+
+  static final rule = new SubsType._(0);
+  static final proof = new SubsType._(1);
+  static final free = new SubsType._(2);
+  static final builtin = new SubsType._(3);
+
+  @override
+  bool operator ==(other) => other is SubsType && other.index == index;
+
+  @override
+  int get hashCode => index;
 }
 
-class ConditionalSubstitutionEntry extends SubstitutionEntry {
-  final List<SubstitutionEntry> conditions;
+/// Entry in the list of all known substitutions
+class SubsEntry {
+  int referenceId;
+  SubsType type;
 
-  ConditionalSubstitutionEntry(Subs substitution, SubstitutionType type,
-      int referenceId, this.conditions)
-      : super(substitution, type, referenceId);
+  @ApiProperty(ignore: true)
+  Subs subs;
+
+  List<SubsCondition> conditions;
+
+  SubsEntry();
+  SubsEntry.from(this.referenceId, this.type, this.subs, this.conditions);
 }
 
-class SubstitutionSearchResult {
-  final SubstitutionEntry entry;
-  final List<ConditionSearchResult> conditionProofs;
-  final bool reverseItself;
-  final bool reverseTarget;
+/// Substitution condition for [SubsEntry]
+class SubsCondition {
+  int id;
 
-  SubstitutionSearchResult(
+  @ApiProperty(ignore: true)
+  Subs subs;
+
+  SubsCondition();
+  SubsCondition.from(this.id, this.subs);
+}
+
+/// Result data when searching for a substitution.
+class SubsSearchResult {
+  SubsEntry entry;
+  List<SubsSearchResult> conditionProofs;
+  bool reverseItself;
+  bool reverseTarget;
+
+  SubsSearchResult();
+  SubsSearchResult.from(
       this.entry, this.conditionProofs, this.reverseItself, this.reverseTarget);
-}
-
-class ConditionSearchResult {
-  final SubstitutionEntry condition;
-  final SubstitutionSearchResult result;
-
-  ConditionSearchResult(this.condition, this.result);
 }

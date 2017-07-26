@@ -266,6 +266,7 @@ CREATE TABLE step (
       (step_type = 'copy_rule' AND rule_id NOTNULL) OR
       (step_type = 'rearrange' AND rearrange_format NOTNULL) OR
       (step_type = 'substitute_rule' AND rule_id NOTNULL) OR
+      (step_type = 'substitute_proof' AND proof_id NOTNULL) OR
       (step_type = 'substitute_free' AND substitution_id NOTNULL))))
 );
 
