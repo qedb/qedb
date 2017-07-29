@@ -288,7 +288,7 @@ packages:
       name: qedb_client
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.0"
+    version: "0.2.1"
   quiver:
     description:
       name: quiver

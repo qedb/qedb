@@ -13,12 +13,26 @@ final createProofPage = new Page(
     template: (s) {
       return createResourceTemplate(s, 'proof', inputs: (data) {
         return [
+          br(),
+          h4('Free conditions'),
+          div('#free-conditions-wrapper'),
+          p(div('.btn-group', rule: 'group', c: [
+            button('#add-free-condition.btn.btn-outline-secondary',
+                'Add free condition',
+                type: 'button'),
+            button('#remove-free-condition.btn.btn-outline-secondary',
+                'Remove last free condition',
+                type: 'button')
+          ])),
+          br(),
+          h4('Proof steps'),
           div('#proof-editor.proof-editor'),
           input('#data', type: 'hidden', name: 'data')
         ];
       }, bodyTags: [
         katexSource(s),
         stylesheet('/snippets/editex.css'),
+        stylesheet('/snippets/subs.css'),
         stylesheet('/snippets/proof_editor.css'),
         script(src: '/src/proof_editor.dart.js')
       ]);

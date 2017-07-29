@@ -164,6 +164,7 @@ abstract class StepBase {
   Future<ProofData> getData() async {
     final data = new ProofData();
     data.steps = new List<ResolveBranch>();
+    data.freeConditions = freeConditions.map(subsToRpcSubs).toList();
     await writeData(data);
     return data;
   }

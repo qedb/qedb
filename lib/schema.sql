@@ -259,7 +259,7 @@ CREATE TABLE step (
   rearrange_format  smallint[],
 
   -- Enforce various constraints.
-  CONSTRAINT valid_parameterset CHECK (
+  CONSTRAINT valid_parameters CHECK (
     (previous_id = NULL AND step_type = 'set') OR
     (previous_id != NULL AND (
       (step_type = 'copy_proof' AND proof_id NOTNULL) OR

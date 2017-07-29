@@ -27,7 +27,7 @@ dev_dependencies:
   browser:      ^0.10.0+2
   editex:       ^0.2.2+4
   collection:   ^1.14.3
-  qedb_client:  ^0.2.0
+  qedb_client:  ^0.2.1
   shelf_static: ^0.2.4
   transform_sass: ^0.1.0
 

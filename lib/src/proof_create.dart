@@ -7,7 +7,12 @@ part of qedb;
 class ProofData {
   int initialStepId;
   int initialRuleId;
+
+  @ApiProperty(required: true)
   List<ResolveBranch> steps;
+
+  @ApiProperty(required: true)
+  List<RpcSubs> freeConditions;
 }
 
 enum StepType {
@@ -103,13 +108,16 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
       ..expression = body.steps.first.subs.leftExpr);
   }
 
+  /// Parse free conditions.
+  final freeConditions = body.freeConditions.map((s) => s.toSubs()).toList();
+
   /// Flatten list of resolve branches into a step list.
   for (final branch in body.steps) {
     if (branch.subs.leftExpr != steps.last.expression) {
       throw new UnprocessableEntityError('steps do not connect');
     } else {
       // Note: reverse flattened list so that position integers are unaffected.
-      steps.addAll(_flattenResolveBranch(branch).reversed);
+      steps.addAll(_flattenResolveBranch(branch, freeConditions).reversed);
 
       // Use the right side of the branch to later validate that proof
       // reconstruction is correct.
@@ -197,8 +205,9 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     }
     if (step.ruleId != null) {
       values['rule_id'] = step.ruleId;
-    }
-    if (step.rearrangeFormat != null) {
+    } else if (step.type == StepType.substituteFree) {
+      values['substitution_id'] = (await _createSubstitution(s, step.subs)).id;
+    } else if (step.rearrangeFormat != null) {
       values['rearrange_format'] = ARRAY(step.rearrangeFormat, 'integer');
     }
 
@@ -224,7 +233,8 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
 }
 
 /// Flatten [branch] into a list of steps.
-List<_StepData> _flattenResolveBranch(ResolveBranch branch) {
+List<_StepData> _flattenResolveBranch(
+    ResolveBranch branch, List<Subs> freeConditions) {
   if (!branch.resolved) {
     throw new UnprocessableEntityError('contains unresolved steps');
   } else if (branch.different) {
@@ -251,6 +261,7 @@ List<_StepData> _flattenResolveBranch(ResolveBranch branch) {
             return new _ConditionProof(
                 p.entry.referenceId, p.reverseItself, p.reverseTarget, false);
           } else {
+            // TODO: support free conditions (adopt condition).
             throw new UnprocessableEntityError(
                 'unimplemented substitution type');
           }
@@ -267,14 +278,22 @@ List<_StepData> _flattenResolveBranch(ResolveBranch branch) {
           ..conditionProofs.addAll(conditionProofs);
 
         steps.add(step);
+      } else if (s.entry.type == SubsType.free) {
+        final step = new _StepData()
+          ..type = StepType.substituteFree
+          ..position = branch.position
+          ..reverseItself = s.reverseItself
+          ..reverseTarget = s.reverseTarget
+          ..subs = freeConditions[s.entry.referenceId];
+
+        steps.add(step);
       } else {
-        // TODO: implement free conditions.
         throw new UnprocessableEntityError('unimplemented substitution type');
       }
     } else {
       // Add steps for each argument.
       for (final argument in branch.arguments) {
-        steps.addAll(_flattenResolveBranch(argument));
+        steps.addAll(_flattenResolveBranch(argument, freeConditions));
       }
     }
 
