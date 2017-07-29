@@ -47,7 +47,7 @@ final listProofsPage = new Page(template: (s) {
               input(type: 'hidden', name: 'proof', value: '${proof.id}')
             ]),
         a('.btn.btn-outline-secondary', 'Extend',
-            href: '/proof/create?initialstep=${proof.lastStep.id}')
+            href: '/proof/create?initialStep=${proof.lastStep.id}')
       ]))
     ];
   }, bodyTags: [

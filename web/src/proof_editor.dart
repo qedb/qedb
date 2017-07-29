@@ -22,6 +22,7 @@ import 'package:qedb/qedb.dart' as qedb show SubsType;
 
 import 'editex_interface.dart';
 
+part 'free_conditions.dart';
 part 'step_base.dart';
 part 'step_editor.dart';
 part 'step_static.dart';
@@ -41,86 +42,20 @@ Future main() async {
     return;
   }
 
-  // First proof step that is the entry to the entire chain of steps.
-  StepBase firstStep;
-
   // Retrieve operators and functions.
   final db = new QedbApi(new BrowserClient());
   final interface = await createQEDbEdiTeXInterface(db);
 
-  // Initialize free condition editor.
-  final freeConditions = new List<Subs>();
-  final fcEditData = new List<List<List>>();
-  final fcWrapper = querySelector('#free-conditions-wrapper');
+  // Declare some variables.
+  StepBase stepRoot;
 
-  // TODO: refactor the shit out of this (combine with create_rule.dart).
-  void setupNewFsubsEditor(List leftData, List rightData) {
-    // Create HTML elements.
-    final left = ht.div('.editex.editex-align-left');
-    final right = ht.div('.editex.editex-align-left');
-    final input = ht.p('.free-condition.subs-input',
-        c: [left, ht.span('.subs-arrow'), right]);
-    fcWrapper.append(input);
-
-    // Set validitiy style.
-    final valid = [true, true];
-    void setValid() {
-      input.classes.toggle('free-condition-invalid', valid.any((v) => !v));
-    }
-
-    // Setup variables.
-    final index = freeConditions.length;
-    freeConditions.add(new Subs(null, null));
-    fcEditData.add([leftData, rightData]);
-
-    // Create editors and bind events.
-    final leftEditor = initializeEditor(left, interface, (expr, data, v) {
-      freeConditions[index] = new Subs(expr, freeConditions[index].right);
-      fcEditData[index][0] = data;
-      firstStep.afterUpdate.add(null);
-      valid[0] = v;
-      setValid();
-    });
-    final rightEditor = initializeEditor(right, interface, (expr, data, v) {
-      freeConditions[index] = new Subs(freeConditions[index].left, expr);
-      fcEditData[index][1] = data;
-      firstStep.afterUpdate.add(null);
-      valid[1] = v;
-      setValid();
-    });
-
-    // Set editor data.
-    leftEditor.loadData(leftData);
-    rightEditor.loadData(rightData);
-
-    // Update expressions.
-    try {
-      final expr = interface.parse(leftEditor.getParsable());
-      freeConditions[index] = new Subs(expr, freeConditions[index].right);
-    } on Exception {
-      valid[0] = false;
-      setValid();
-    }
-
-    try {
-      final expr = interface.parse(rightEditor.getParsable());
-      freeConditions[index] = new Subs(freeConditions[index].left, expr);
-    } on Exception {
-      valid[1] = false;
-      setValid();
-    }
-  }
-
-  querySelector('#add-free-condition').onClick.listen((_) {
-    setupNewFsubsEditor([], []);
-  });
-
-  querySelector('#remove-free-condition').onClick.listen((_) {
-    fcWrapper.children.last.remove();
-    freeConditions.removeLast();
-    fcEditData.removeLast();
-    firstStep.afterUpdate.add(null);
-  });
+  // Setup free conditions editor.
+  final fcEditor = new FreeConditionsEditor(
+      interface,
+      () => stepRoot.afterUpdate.add(null),
+      querySelector('#free-conditions-wrapper'),
+      querySelector('#add-free-condition'),
+      querySelector('#remove-free-condition'));
 
   // Get proof editor root div.
   final proofRoot = querySelector('#proof-editor');
@@ -130,21 +65,22 @@ Future main() async {
   // TODO: refactor into separate functions.
   final q = Uri.base.queryParameters;
   try {
-    if (q.containsKey('initialstep')) {
+    if (q.containsKey('initialStep')) {
       // Retrieve step and add readonly row.
-      final step = await db.readStep(int.parse(q['initialstep']));
+      final step =
+          await db.readStep(int.parse(q['initialStep'], onError: (_) => 0));
       final expr = new Expr.fromBase64(step.expression.data);
       final stepid = step.id.toRadixString(36).padLeft(6, '0');
       final latex = '${step.expression.latex}'
           '\\quad\\left(\\mathtt{step~\\#$stepid}\\right)';
 
-      firstStep = new StepStatic(interface, db, proofRoot, null, freeConditions,
-          expr, latex, step.id, null);
-    } else if (q.containsKey('initialrule')) {
+      stepRoot = new StepStatic(interface, db, proofRoot, null,
+          fcEditor.freeConditions, expr, latex, step.id, null);
+    } else if (q.containsKey('initialRule')) {
       // Retrieve rule and add readonly row.
-      final r = await db.readRule(int.parse(q['initialrule']));
-      final equals =
-          interface.functions.singleWhere((fn) => fn.specialType == 'equals');
+      final r = await db.readRule(int.parse(q['initialRule']));
+      bool isEquals(fn) => fn.specialType == 'equals';
+      final equals = interface.functions.singleWhere(isEquals);
 
       final subs = r.substitution;
       final expr = new FunctionExpr(equals.id, false, [
@@ -155,8 +91,8 @@ Future main() async {
       final latex = '${subs.leftExpression.latex}=${subs.rightExpression.latex}'
           '\\quad\\left(\\mathtt{rule~\\#${r.id}}\\right)';
 
-      firstStep = new StepStatic(interface, db, proofRoot, null, freeConditions,
-          expr, latex, null, r.id);
+      stepRoot = new StepStatic(interface, db, proofRoot, null,
+          fcEditor.freeConditions, expr, latex, null, r.id);
     } else if (window.localStorage.containsKey(localStorageKey)) {
       final json = JSON.decode(window.localStorage[localStorageKey]);
       if (json is Map &&
@@ -164,24 +100,26 @@ Future main() async {
           json.containsKey('steps')) {
         // Restore free conditions.
         for (final freeCondition in json['fcEditData']) {
-          setupNewFsubsEditor(freeCondition[0], freeCondition[1]);
+          fcEditor.addFreeConditionEditor(freeCondition[0], freeCondition[1]);
         }
 
         // Restore steps.
-        firstStep = loadStorageJson(
-            json['steps'], interface, db, proofRoot, null, freeConditions);
+        stepRoot = loadStorageJson(json['steps'], interface, db, proofRoot,
+            null, fcEditor.freeConditions);
       }
     }
 
     // Fallback mechanism, if firstStep is still null, set it to an empty
     // editor.
-    firstStep ??=
-        new StepEditor(interface, db, proofRoot, null, freeConditions);
+    stepRoot ??=
+        new StepEditor(interface, db, proofRoot, null, fcEditor.freeConditions);
   } finally {
     // Listen to window blur for proof localStorage backup.
     window.onBeforeUnload.listen((_) {
-      window.localStorage[localStorageKey] = JSON.encode(
-          {'fcEditData': fcEditData, 'steps': writeStorageJson(firstStep)});
+      window.localStorage[localStorageKey] = JSON.encode({
+        'fcEditData': fcEditor.fcEditData,
+        'steps': writeStorageJson(stepRoot)
+      });
     });
 
     // Build form data on submit.
@@ -190,7 +128,7 @@ Future main() async {
     if (form != null && dataInput != null) {
       form.onSubmit.listen((e) async {
         e.preventDefault();
-        await submitForm(form, dataInput, await firstStep.getData());
+        await submitForm(form, dataInput, await stepRoot.getData());
       });
     }
   }
@@ -206,17 +144,4 @@ Future<bool> submitForm(
     window.alert(e.toString());
     return false;
   }
-}
-
-EdiTeX initializeEditor(Element element, QEDbEdiTeXInterface interface,
-    void onUpdate(Expr expr, List editorData, bool valid)) {
-  final editor = new EdiTeX(element, interface);
-  editor.container.onBlur.listen((_) {
-    try {
-      onUpdate(interface.parse(editor.getParsable()), editor.getData(), true);
-    } on Exception {
-      onUpdate(null, editor.getData(), false);
-    }
-  });
-  return editor;
 }

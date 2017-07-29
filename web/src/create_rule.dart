@@ -30,10 +30,10 @@ Future main() async {
 
   // Initialize conditions editing.
   var conditionCount = 0;
-  final conditionsWrapper = querySelector('#conditions-wrapper');
+  final cWrapper = querySelector('#conditions-wrapper');
   final conditionCountInput = new InputElement(type: 'hidden');
   conditionCountInput.name = 'condition-count';
-  conditionsWrapper.append(conditionCountInput);
+  cWrapper.append(conditionCountInput);
 
   void setConditionCount(count) {
     conditionCount = count;
@@ -43,19 +43,18 @@ Future main() async {
   setConditionCount(0);
 
   querySelector('#add-condition').onClick.listen((_) {
-    final left = ht.div('.editex.editex-align-left.form-control');
-    final right = ht.div('.editex.editex-align-left.form-control');
-    conditionsWrapper
-        .append(ht.p('.subs-input', c: [left, ht.span('.subs-arrow'), right]));
+    final l = ht.div('.editex.editex-align-left.form-control');
+    final r = ht.div('.editex.editex-align-left.form-control');
+    cWrapper.append(ht.p('.subs-input', c: [l, ht.span('.subs-arrow'), r]));
 
-    initializeEditor(left, interface, 'condition$conditionCount-left');
-    initializeEditor(right, interface, 'condition$conditionCount-right');
+    initializeEditor(l, interface, 'condition$conditionCount-left');
+    initializeEditor(r, interface, 'condition$conditionCount-right');
     setConditionCount(conditionCount + 1);
   });
 
   querySelector('#remove-condition').onClick.listen((_) {
     if (conditionCount > 0) {
-      conditionsWrapper.children.last.remove();
+      cWrapper.children.last.remove();
       setConditionCount(conditionCount - 1);
     }
   });
@@ -63,6 +62,7 @@ Future main() async {
 
 void initializeEditor(Element element, QEDbEdiTeXInterface interface,
     [String name]) {
+  // Create editor with hidden form input which value is continuously updated.
   final editor = new EdiTeX(element, interface);
   final input = new InputElement(type: 'hidden');
   input.name = name ?? element.dataset['name'];

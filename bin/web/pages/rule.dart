@@ -150,7 +150,7 @@ final listRulesPage = new Page(template: (s) {
         a('.btn.btn.btn-outline-secondary', 'Delete',
             href: '${rule.id}/delete'),
         a('.btn.btn.btn-outline-secondary', 'Derive rule',
-            href: '/proof/create?initialrule=${rule.id}')
+            href: '/proof/create?initialRule=${rule.id}')
       ]))
     ];
   }, bodyTags: [
