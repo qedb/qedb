@@ -214,13 +214,11 @@ abstract class StepBase {
       // Check if difference resolving is neccesary.
       // It is neccesary when there is a difference with the current state, or
       // if the list of free conditions has changed.
-      // TODO: skip if there is an unconflicting change in free conditions and
-      //       the difference has already been resolved.
       if (current == null ||
           target.left != current.subs.left ||
           target.right != current.subs.right ||
-          !(const ListEquality()
-              .equals(freeConditions, freeConditionsBackup))) {
+          _shouldResolveAgain(
+              freeConditions, freeConditionsBackup, current.resolved)) {
         // Construct difference resolving request data.
         final request = new ResolveRequest()
           ..target = target
@@ -262,6 +260,32 @@ abstract class StepBase {
   }
 }
 
+/// Determine if it is neccessary to run resolver/resolve again given the
+/// updated free condition list and whether the difference was already resolved
+/// previously.
+bool _shouldResolveAgain(List<Subs> freeConditions,
+    List<Subs> freeConditionsBackup, bool alreadyResolved) {
+  if (freeConditions.length < freeConditionsBackup.length) {
+    // Conditions were removed, re-evaluate (optionally we could check
+    // first if this affects the existing solution, but that is too much
+    // hassle for now).
+    return true;
+  } else if (alreadyResolved) {
+    // Check if there is a conflict with the earlier free conditions.
+    for (var i = 0; i < freeConditionsBackup.length; i++) {
+      if (freeConditions[i] != freeConditionsBackup[i]) {
+        // There is a conflict, so try again.
+        return true;
+      }
+    }
+    return false;
+  } else {
+    // If there is any change at all, try again.
+    return !const ListEquality().equals(freeConditions, freeConditionsBackup);
+  }
+}
+
+/// Convert [Subs] to [RpcSubs].
 RpcSubs subsToRpcSubs(Subs subs) => new RpcSubs()
   ..left = subs.left.toBase64()
   ..right = subs.right.toBase64();

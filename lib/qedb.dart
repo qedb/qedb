@@ -32,6 +32,7 @@ part 'src/substitution_table.dart';
 part 'src/rule.dart';
 part 'src/expression_compute.dart';
 part 'src/step.dart';
+part 'src/proof_compute.dart';
 part 'src/proof_create.dart';
 part 'src/proof_read.dart';
 part 'src/resolver.dart';
