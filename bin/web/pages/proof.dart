@@ -71,6 +71,8 @@ final listProofsPage = new Page(template: (s) {
   ]);
 });
 
+// TODO: figure out nicer display.
+// TODO: move towards step filtering.
 final listProofStepsPage = new Page(template: (s) {
   return pageTemplate(s, 'Proof #${s.pathParameters['id']} steps',
       containerTags: ol(
