@@ -9,6 +9,9 @@ import 'dart:io';
 import 'package:rpc/rpc.dart';
 import 'package:yaml/yaml.dart';
 
+/// Make boolean XOR more expressive.
+bool xor(bool a, bool b) => a != b;
+
 /// RPC exception for 422 status.
 class UnprocessableEntityError extends RpcError {
   UnprocessableEntityError(String message)

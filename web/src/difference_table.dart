@@ -5,20 +5,20 @@
 part of qedb.web.proof_editor;
 
 TableElement createDifferenceTable(
-    QEDbEdiTeXInterface interface, DifferenceBranch difference) {
+    QEDbEdiTeXInterface interface, ResolveBranch branch) {
   // Create all cells recursively.
-  final cells = _difftableBranch(interface, difference, new W<int>(0));
+  final cells = _difftableBranch(interface, branch, new W<int>(0));
 
   // Insert cells into table.
   TableRowElement tr(List<TableCellElement> c) => ht.tr(c);
   return ht.table('.proof-step-difference-table', c: cells.map(tr).toList());
 }
 
-List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
-    DifferenceBranch difference, W<int> colspan) {
-  if (difference.arguments != null) {
+List<List<TableCellElement>> _difftableBranch(
+    QEDbEdiTeXInterface interface, ResolveBranch branch, W<int> colspan) {
+  if (branch.arguments != null) {
     // Put all arguments next to each other.
-    final arguments = difference.arguments.map((argument) {
+    final arguments = branch.arguments.map((argument) {
       final argColspan = new W<int>(0);
       final result = _difftableBranch(interface, argument, argColspan);
       colspan.v += argColspan.v;
@@ -34,7 +34,7 @@ List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
     final cells = arguments.single;
 
     // Get function label.
-    final expr = new Expr.fromBase64(difference.leftExpression);
+    final expr = new Expr.fromBase64(branch.subs.left);
     final fnId = expr is FunctionExpr ? expr.id : 0;
 
     String label;
@@ -67,8 +67,8 @@ List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
     String base64ToLaTeX(String base64) =>
         interface.printer.render(new Expr.fromBase64(base64));
 
-    katex.render(base64ToLaTeX(difference.leftExpression), leftExpression);
-    katex.render(base64ToLaTeX(difference.rightExpression), rightExpression);
+    katex.render(base64ToLaTeX(branch.subs.left), leftExpression);
+    katex.render(base64ToLaTeX(branch.subs.right), rightExpression);
 
     TableCellElement state;
 
@@ -79,20 +79,25 @@ List<List<TableCellElement>> _difftableBranch(QEDbEdiTeXInterface interface,
     SpanElement katexSpan(String html) =>
         ht.span('')..setInnerHtml(html, validator: EdiTeX.labelHtmlValidator);
 
-    if (!difference.different) {
+    // Render resolve type.
+    if (!branch.different) {
       state = ht.td(['.difftable-not-different', katexSpan(nodifferenceHtml)]);
-    } else if (!difference.resolved) {
+    } else if (!branch.resolved) {
       state = ht.td(['.difftable-not-resolved', katexSpan(unresolvedHtml)]);
-    } else if (difference.rearrangements.isNotEmpty) {
+    } else if (branch.rearrangements.isNotEmpty) {
       state = ht.td(['.difftable-rearrange', katexSpan(rearrangeHtml)]);
-    } else if (difference.substitution != null &&
-        difference.substitution.entry.type.index == qedb.SubsType.rule.index) {
-      final ruleId = difference.substitution.entry.referenceId;
+    } else if (branch.substitution != null &&
+        branch.substitution.entry.type.index == qedb.SubsType.rule.index) {
+      final ruleId = branch.substitution.entry.referenceId;
       state = ht.td([
         '.difftable-rule',
         ht.a('#$ruleId',
             attrs: {'href': '/rule/$ruleId/read', 'target': '_blank'})
       ]);
+    } else if (branch.substitution != null &&
+        branch.substitution.entry.type.index == qedb.SubsType.free.index) {
+      final freeConditionId = branch.substitution.entry.referenceId;
+      state = ht.td(['.difftable-free', 'F${freeConditionId + 1}.']);
     } else {
       state = ht.td('?');
     }

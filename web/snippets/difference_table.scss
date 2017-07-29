@@ -30,13 +30,18 @@ $difftablebg: #272b30;
     background: mix(#fff, $difftablebg, 10);
   }
 
-  & td.difftable-rearrange, td.difftable-rule {
+  & td.difftable-rearrange, td.difftable-rule, td.difftable-free {
     background: mix(green, $difftablebg, 20) !important;
     border: 1px solid #030;
   }
 
   & td.difftable-rule {
     font-style: italic;
+    font-family: monospace;
+  }
+
+  & td.difftable-free {
+    font-style: normal;
     font-family: monospace;
   }
 

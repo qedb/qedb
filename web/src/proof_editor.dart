@@ -14,6 +14,7 @@ import 'package:eqlib/utils.dart';
 import 'package:editex/editex.dart';
 import 'package:qedb_client/qedb_client.dart';
 import 'package:qedb_client/browser_client.dart';
+import 'package:collection/collection.dart';
 
 import 'package:htgen/dynamic.dart' as ht;
 import 'package:editex/katex.dart' as katex;
@@ -40,17 +41,94 @@ Future main() async {
     return;
   }
 
+  // First proof step that is the entry to the entire chain of steps.
+  StepBase firstStep;
+
   // Retrieve operators and functions.
   final db = new QedbApi(new BrowserClient());
   final interface = await createQEDbEdiTeXInterface(db);
 
-  // Construct editors.
-  final root = querySelector('#proof-editor');
+  // Initialize free condition editor.
+  final freeConditions = new List<Subs>();
+  final fcEditData = new List<List<List>>();
+  final fcWrapper = querySelector('#free-conditions-wrapper');
+
+  // TODO: refactor the shit out of this (combine with create_rule.dart).
+  void setupNewFsubsEditor(List leftData, List rightData) {
+    // Create HTML elements.
+    final left = ht.div('.editex.editex-align-left');
+    final right = ht.div('.editex.editex-align-left');
+    final input = ht.p('.free-condition.subs-input',
+        c: [left, ht.span('.subs-arrow'), right]);
+    fcWrapper.append(input);
+
+    // Set validitiy style.
+    final valid = [true, true];
+    void setValid() {
+      input.classes.toggle('free-condition-invalid', valid.any((v) => !v));
+    }
+
+    // Setup variables.
+    final index = freeConditions.length;
+    freeConditions.add(new Subs(null, null));
+    fcEditData.add([leftData, rightData]);
+
+    // Create editors and bind events.
+    final leftEditor = initializeEditor(left, interface, (expr, data, v) {
+      freeConditions[index] = new Subs(expr, freeConditions[index].right);
+      fcEditData[index][0] = data;
+      firstStep.afterUpdate.add(null);
+      valid[0] = v;
+      setValid();
+    });
+    final rightEditor = initializeEditor(right, interface, (expr, data, v) {
+      freeConditions[index] = new Subs(freeConditions[index].left, expr);
+      fcEditData[index][1] = data;
+      firstStep.afterUpdate.add(null);
+      valid[1] = v;
+      setValid();
+    });
+
+    // Set editor data.
+    leftEditor.loadData(leftData);
+    rightEditor.loadData(rightData);
+
+    // Update expressions.
+    try {
+      final expr = interface.parse(leftEditor.getParsable());
+      freeConditions[index] = new Subs(expr, freeConditions[index].right);
+    } on Exception {
+      valid[0] = false;
+      setValid();
+    }
+
+    try {
+      final expr = interface.parse(rightEditor.getParsable());
+      freeConditions[index] = new Subs(freeConditions[index].left, expr);
+    } on Exception {
+      valid[1] = false;
+      setValid();
+    }
+  }
+
+  querySelector('#add-free-condition').onClick.listen((_) {
+    setupNewFsubsEditor([], []);
+  });
+
+  querySelector('#remove-free-condition').onClick.listen((_) {
+    fcWrapper.children.last.remove();
+    freeConditions.removeLast();
+    fcEditData.removeLast();
+    firstStep.afterUpdate.add(null);
+  });
+
+  // Get proof editor root div.
+  final proofRoot = querySelector('#proof-editor');
 
   // If there are query parameters with an initial step or rule, retrieve them.
   // Use try block to catch parsing errors.
+  // TODO: refactor into separate functions.
   final q = Uri.base.queryParameters;
-  StepBase firstStep;
   try {
     if (q.containsKey('initialstep')) {
       // Retrieve step and add readonly row.
@@ -60,8 +138,8 @@ Future main() async {
       final latex = '${step.expression.latex}'
           '\\quad\\left(\\mathtt{step~\\#$stepid}\\right)';
 
-      firstStep =
-          new StepStatic(interface, db, root, null, expr, latex, step.id, null);
+      firstStep = new StepStatic(interface, db, proofRoot, null, freeConditions,
+          expr, latex, step.id, null);
     } else if (q.containsKey('initialrule')) {
       // Retrieve rule and add readonly row.
       final r = await db.readRule(int.parse(q['initialrule']));
@@ -77,19 +155,33 @@ Future main() async {
       final latex = '${subs.leftExpression.latex}=${subs.rightExpression.latex}'
           '\\quad\\left(\\mathtt{rule~\\#${r.id}}\\right)';
 
-      firstStep =
-          new StepStatic(interface, db, root, null, expr, latex, null, r.id);
+      firstStep = new StepStatic(interface, db, proofRoot, null, freeConditions,
+          expr, latex, null, r.id);
     } else if (window.localStorage.containsKey(localStorageKey)) {
       final json = JSON.decode(window.localStorage[localStorageKey]);
-      firstStep = loadStorageJson(json, interface, db, root, null);
-    } else {
-      firstStep = new StepEditor(interface, db, root, null);
+      if (json is Map &&
+          json.containsKey('fcEditData') &&
+          json.containsKey('steps')) {
+        // Restore free conditions.
+        for (final freeCondition in json['fcEditData']) {
+          setupNewFsubsEditor(freeCondition[0], freeCondition[1]);
+        }
+
+        // Restore steps.
+        firstStep = loadStorageJson(
+            json['steps'], interface, db, proofRoot, null, freeConditions);
+      }
     }
+
+    // Fallback mechanism, if firstStep is still null, set it to an empty
+    // editor.
+    firstStep ??=
+        new StepEditor(interface, db, proofRoot, null, freeConditions);
   } finally {
     // Listen to window blur for proof localStorage backup.
     window.onBeforeUnload.listen((_) {
-      window.localStorage[localStorageKey] =
-          JSON.encode(writeStorageJson(firstStep));
+      window.localStorage[localStorageKey] = JSON.encode(
+          {'fcEditData': fcEditData, 'steps': writeStorageJson(firstStep)});
     });
 
     // Build form data on submit.
@@ -114,4 +206,17 @@ Future<bool> submitForm(
     window.alert(e.toString());
     return false;
   }
+}
+
+EdiTeX initializeEditor(Element element, QEDbEdiTeXInterface interface,
+    void onUpdate(Expr expr, List editorData, bool valid)) {
+  final editor = new EdiTeX(element, interface);
+  editor.container.onBlur.listen((_) {
+    try {
+      onUpdate(interface.parse(editor.getParsable()), editor.getData(), true);
+    } on Exception {
+      onUpdate(null, editor.getData(), false);
+    }
+  });
+  return editor;
 }

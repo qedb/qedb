@@ -4,32 +4,17 @@
 
 part of qedb;
 
-class DifferenceRequest {
+class ResolveRequest {
   @ApiProperty(required: true)
-  String leftExpression;
+  RpcSubs target;
 
   @ApiProperty(required: true)
-  String rightExpression;
-
-  @ApiProperty(required: true)
-  List<int> proofIds;
-
-  @ApiProperty(required: true)
-  List<FreeSubstituion> freeSubstitutions;
+  List<RpcSubs> freeConditions;
 }
 
-class FreeSubstituion {
-  @ApiProperty(required: true)
-  String leftExpression;
-
-  @ApiProperty(required: true)
-  String rightExpression;
-}
-
-class DifferenceBranch {
+class ResolveBranch {
   int position;
-  String leftExpression;
-  String rightExpression;
+  RpcSubs subs;
   bool resolved;
   bool different;
 
@@ -40,24 +25,35 @@ class DifferenceBranch {
   List<Rearrangement> rearrangements;
 
   /// Branch for each argument
-  List<DifferenceBranch> arguments;
-
-  Expr get leftExpr => new Expr.fromBase64(leftExpression);
-  Expr get rightExpr => new Expr.fromBase64(rightExpression);
+  List<ResolveBranch> arguments;
 }
 
-/// Resolves difference between leftExpression and rightExpression.
-Future<DifferenceBranch> resolveExpressionDifference(
-    Session s, DifferenceRequest body) async {
-  final left = new Expr.fromBase64(body.leftExpression);
-  final right = new Expr.fromBase64(body.rightExpression);
-  return _resolveExpressionDifference(s, left, right);
+/// Resolve difference between left and right side of a given substitution.
+Future<ResolveBranch> resolveSubstitution(
+    Session s, ResolveRequest body) async {
+  // Add free conditions to substitution table for this session.
+  // (if the substitution table would be retained across sessions, it would be
+  // neccesary to rollback these additions, currently the table is part of the
+  // session data which is reconstructed for every request).
+  for (var i = 0; i < body.freeConditions.length; i++) {
+    // The free condition left/right side may be empty (to be easily integrated
+    // into the editor).
+    final fc = body.freeConditions[i];
+    if (fc.left.isNotEmpty && fc.right.isNotEmpty) {
+      s.substitutionTable.entries
+          .add(new SubsEntry.from(i, SubsType.free, fc.toSubs(), []));
+    }
+  }
+
+  // Unpack left and right expression and resolve difference.
+  return _resolveSubstitution(s, body.target.toSubs());
 }
 
-/// Resolves difference between [left] and [right].
-Future<DifferenceBranch> _resolveExpressionDifference(
-    Session s, Expr left, Expr right) async {
-  if (s.substitutionTable.entries.isEmpty) {
+/// Resolves difference between [subs] left and right.
+Future<ResolveBranch> _resolveSubstitution(Session s, Subs subs) async {
+  // If the substitution table does not yet contain rules, first load all rules
+  // from the database.
+  if (s.substitutionTable.entries.every((elm) => elm.type != SubsType.rule)) {
     await s.substitutionTable.loadRules(s);
   }
 
@@ -66,13 +62,12 @@ Future<DifferenceBranch> _resolveExpressionDifference(
       await s.selectIds(db.function, WHERE({'rearrangeable': IS(true)}));
 
   // Get difference tree.
-  final result = getExpressionDiff(left, right, rearrangeableIds);
+  final result = getExpressionDiff(subs.left, subs.right, rearrangeableIds);
 
   // Resolve difference tree.
   if (result.numericInequality) {
-    return new DifferenceBranch()
-      ..leftExpression = left.toBase64()
-      ..rightExpression = right.toBase64()
+    return new ResolveBranch()
+      ..subs = new RpcSubs.from(subs)
       ..different = true
       ..resolved = false;
   } else {
@@ -81,12 +76,11 @@ Future<DifferenceBranch> _resolveExpressionDifference(
   }
 }
 
-Future<DifferenceBranch> resolveTreeDiff(
+Future<ResolveBranch> resolveTreeDiff(
     Session s, ExprDiffBranch branch, ExprCompute compute) async {
-  final outputBranch = new DifferenceBranch()
+  final outputBranch = new ResolveBranch()
     ..position = branch.position
-    ..leftExpression = branch.left.toBase64()
-    ..rightExpression = branch.right.toBase64()
+    ..subs = new RpcSubs.from(new Subs(branch.left, branch.right))
     ..different = branch.isDifferent
     ..resolved = false;
 
@@ -115,7 +109,11 @@ Future<DifferenceBranch> resolveTreeDiff(
 
       // Find matching substitution using the substitution table.
       final result = s.substitutionTable.searchSubstitution(
-          s, new Subs(left, right), [SubsType.rule], [SubsType.rule], 1);
+          s,
+          new Subs(left, right),
+          [SubsType.rule, SubsType.free],
+          [SubsType.rule, SubsType.free],
+          1);
 
       if (result != null) {
         outputBranch

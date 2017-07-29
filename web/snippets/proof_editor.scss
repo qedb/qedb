@@ -4,6 +4,27 @@
 
 @import 'difference_table';
 
+#free-conditions-wrapper {
+  counter-reset: free-condition-index;
+}
+
+.free-condition {
+  border-bottom: 1px solid #000;
+  box-shadow: 0 1px 0 #333;
+
+  &:before {
+    counter-increment: free-condition-index;
+    content: counter(free-condition-index, decimal) '.';
+    width: 4em;
+    text-align: center;
+    font-family: KaTeX_Main;
+  }
+
+  &.free-condition-invalid {
+    border-color: #f00;
+  }
+}
+
 .editex-placeholder {
   background: repeating-linear-gradient(45deg,
   transparent 0px, transparent 1px, #666 2px,

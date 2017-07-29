@@ -8,6 +8,7 @@ class SubstitutionTable {
   final entries = new List<SubsEntry>();
 
   /// Load rules from database.
+  /// Note that this function will not check for existing duplicates.
   Future loadRules(Session s) async {
     final rules = await s.select(db.rule);
     final conditions = await s.select(db.ruleCondition);
@@ -38,7 +39,6 @@ class SubstitutionTable {
   SubsSearchResult searchSubstitution(Session s, Subs substitution,
       List<SubsType> use, List<SubsType> useForConditions,
       [int conditionDepthCutoff = 1, bool isCondition = false]) {
-    // Computing closure.
     num compute(int id, List<num> args) => _exprCompute(s, id, args);
 
     // Simply loop through all [entries] and match in 4 ways.
@@ -65,7 +65,16 @@ class SubstitutionTable {
         // Compare substitution with pattern.
         try {
           final mapping = new ExprMapping();
-          if (compareSubstitutions(sub, pat, compute, mapping)) {
+          var isMatch = false;
+
+          // Free substitutions must match exactly (no mapping).
+          if (entry.type == SubsType.free) {
+            isMatch = sub == pat;
+          } else {
+            isMatch = compareSubstitutions(sub, pat, compute, mapping);
+          }
+
+          if (isMatch) {
             // A match was found!
             // Recursively call this function for all conditions.
             final conditionProofs = new List<SubsSearchResult>();
@@ -100,9 +109,9 @@ class SubstitutionTable {
 
 // Note: in order to reduce the number of classes required, the following
 // classes are compatible with the rpc package so they can directly be used in
-// the expression difference API response.
+// the resolver API response.
 
-/// Types of substitutions that can be used to resolve a difference. We avoid
+/// Types of substitutions that can be used to resolve a substitution. We avoid
 /// using an enum because the rpc package cannot handle enums.
 class SubsType {
   @ApiProperty(required: true)

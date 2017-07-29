@@ -174,12 +174,6 @@ class QEDb {
       _runRequestSession<RuleResource>((s) async =>
           new RuleResource()..loadRow(await api.deleteRule(s, id), s.data));
 
-  @ApiMethod(path: 'difference/resolve', method: 'POST')
-  Future<api.DifferenceBranch> resolveExpressionDifference(
-          api.DifferenceRequest body) =>
-      _runRequestSession<api.DifferenceBranch>(
-          (s) => api.resolveExpressionDifference(s, body));
-
   @ApiMethod(path: 'proof/create', method: 'POST')
   Future<ProofResource> createProof(api.ProofData body) =>
       _runRequestSession<ProofResource>((s) async =>
@@ -204,6 +198,11 @@ class QEDb {
   Future<StepResource> readStep(int id) =>
       _runRequestSession<StepResource>((s) async =>
           new StepResource()..loadRow(await api.readStep(s, id), s.data));
+
+  @ApiMethod(path: 'resolver/resolve', method: 'POST')
+  Future<api.ResolveBranch> resolveSubstitution(api.ResolveRequest body) =>
+      _runRequestSession<api.ResolveBranch>(
+          (s) => api.resolveSubstitution(s, body));
 }
 
 /// Utility to reuse method calling boilerplate.

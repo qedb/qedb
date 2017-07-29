@@ -14,9 +14,9 @@ final createRulePage = new Page(template: (s) {
     return [
       h4('From definition'),
       formGroup('Definition', 'definition', [
-        div('.rule-input', [
+        div('.subs-input', [
           div('#left.editex.editex-align-left.form-control', data_name: 'left'),
-          span('.rule-arrow'),
+          span('.subs-arrow'),
           div('#right.editex.editex-align-left.form-control',
               data_name: 'right')
         ])
@@ -52,7 +52,7 @@ final createRulePage = new Page(template: (s) {
     ];
   }, bodyTags: [
     katexSource(s),
-    stylesheet('/snippets/rule.css'),
+    stylesheet('/snippets/subs.css'),
     stylesheet('/snippets/editex.css'),
     script(src: '/src/create_rule.dart.js')
   ]);
@@ -117,14 +117,14 @@ final readRulePage = new Page(template: (s) {
         return tr([
           th(condition.id.toString(), scope: 'row'),
           td(span('.latex', subs.leftExpression.latex)),
-          td(span('.rule-arrow')),
+          td(span('.subs-arrow')),
           td(span('.latex', subs.rightExpression.latex))
         ]);
       }).toList())
     ]),
   ], bodyTags: [
     katexSource(s),
-    stylesheet('/snippets/rule.css'),
+    stylesheet('/snippets/subs.css'),
     stylesheet('/snippets/latex_table.css'),
     script(src: '/snippets/render_latex.js')
   ]);
@@ -142,7 +142,7 @@ final listRulesPage = new Page(template: (s) {
     return [
       td(a(rule.id.toString(), href: '/rule/${rule.id}/read')),
       td(span('.latex', rule.substitution.leftExpression.latex)),
-      td(span('.rule-arrow')),
+      td(span('.subs-arrow')),
       td(span('.latex', rule.substitution.rightExpression.latex)),
       td(unsafe(() => a('proof', href: '/proof/${rule.proof.id}/steps/list'),
           rule.containsKey('step') ? span('step') : span('.none.text-muted'))),
@@ -155,7 +155,7 @@ final listRulesPage = new Page(template: (s) {
     ];
   }, bodyTags: [
     katexSource(s),
-    stylesheet('/snippets/rule.css'),
+    stylesheet('/snippets/subs.css'),
     stylesheet('/snippets/latex_table.css'),
     script(src: '/snippets/render_latex.js')
   ]);

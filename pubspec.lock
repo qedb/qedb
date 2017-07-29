@@ -60,7 +60,7 @@ packages:
       name: collection
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.14.1"
+    version: "1.14.3"
   concepts:
     description:
       name: concepts
@@ -102,7 +102,7 @@ packages:
       name: editex
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.2+3"
+    version: "0.2.2+4"
   either:
     description:
       name: either
@@ -114,7 +114,7 @@ packages:
       name: eqlib
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.15.2"
+    version: "0.16.0"
   front_end:
     description:
       name: front_end
@@ -288,7 +288,7 @@ packages:
       name: qedb_client
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.4"
+    version: "0.2.0"
   quiver:
     description:
       name: quiver

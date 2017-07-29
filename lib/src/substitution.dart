@@ -141,3 +141,23 @@ Sql _matchSubs(Sql exprLeft, Sql exprRight, Sql subsLeft, Sql subsRight,
         Sql computableIdsArray) =>
     FUNCTION('match_subs', exprLeft, exprRight, subsLeft, subsRight,
         computableIdsArray);
+
+/// RPC compatible storage for [Subs]
+/// This class is used by the resolver.
+class RpcSubs {
+  @ApiProperty(required: true)
+  String left;
+
+  @ApiProperty(required: true)
+  String right;
+
+  RpcSubs();
+  RpcSubs.from(Subs subs) {
+    left = subs.left.toBase64();
+    right = subs.right.toBase64();
+  }
+
+  Expr get leftExpr => new Expr.fromBase64(left);
+  Expr get rightExpr => new Expr.fromBase64(right);
+  Subs toSubs() => new Subs(leftExpr, rightExpr);
+}

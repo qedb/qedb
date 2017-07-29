@@ -46,7 +46,7 @@ Future main() async {
     final left = ht.div('.editex.editex-align-left.form-control');
     final right = ht.div('.editex.editex-align-left.form-control');
     conditionsWrapper
-        .append(ht.p('.rule-input', c: [left, ht.span('.rule-arrow'), right]));
+        .append(ht.p('.subs-input', c: [left, ht.span('.subs-arrow'), right]));
 
     initializeEditor(left, interface, 'condition$conditionCount-left');
     initializeEditor(right, interface, 'condition$conditionCount-right');

@@ -2,13 +2,18 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-.rule-arrow:before {
+.subs-arrow:before {
   content: '⇌';
   margin: 0 1em;
   font-family: KaTeX_Main;
 }
 
-.rule-input {
+.subs-input {
   display: flex;
   align-items: center;
+}
+
+.subs-input > .editex {
+  flex: 1;
+  width: 1px;
 }

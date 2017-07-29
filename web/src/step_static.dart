@@ -15,6 +15,7 @@ class StepStatic extends StepBase {
       QedbApi db,
       Element root,
       StepBase prev,
+      List<Subs> freeConditions,
       Expr expression,
       String latex,
       int initialStepId,
@@ -30,7 +31,7 @@ class StepStatic extends StepBase {
     katex.render(latex, target, new katex.RenderingOptions(displayMode: true));
 
     return new StepStatic._(interface, db, root, row, container, status, prev,
-        expression, latex, initialStepId, initialRuleId);
+        freeConditions, expression, latex, initialStepId, initialRuleId);
   }
 
   StepStatic._(
@@ -41,11 +42,12 @@ class StepStatic extends StepBase {
       Element c,
       Element s,
       StepBase prev,
+      List<Subs> freeConditions,
       this.expression,
       this.latex,
       this.initialStepId,
       this.initialRuleId)
-      : super(interface, db, root, r, c, s, prev) {
+      : super(interface, db, root, r, c, s, prev, freeConditions) {
     setStatus('lock');
     ensureNext();
   }

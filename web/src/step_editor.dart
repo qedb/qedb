@@ -9,8 +9,8 @@ class StepEditor extends StepBase {
   /// Editing component
   EdiTeX editor;
 
-  factory StepEditor(
-      EdiTeXInterface interface, QedbApi db, Element root, StepBase prev) {
+  factory StepEditor(EdiTeXInterface interface, QedbApi db, Element root,
+      StepBase prev, List<Subs> freeConditions) {
     final container = ht.div('.proof-row-editor.editex.editex-align-left');
     final status = ht.div('.proof-row-status');
     final row = root.append(ht.div('.proof-row',
@@ -19,13 +19,21 @@ class StepEditor extends StepBase {
     // Create editor.
     final editor = new EdiTeX(container, interface);
 
-    return new StepEditor._(
-        interface, db, root, row, container, status, editor, prev);
+    return new StepEditor._(interface, db, root, row, container, status, editor,
+        prev, freeConditions);
   }
 
-  StepEditor._(EdiTeXInterface interface, QedbApi db, Element root, Element r,
-      Element c, Element s, this.editor, StepBase prev)
-      : super(interface, db, root, r, c, s, prev) {
+  StepEditor._(
+      EdiTeXInterface interface,
+      QedbApi db,
+      Element root,
+      Element r,
+      Element c,
+      Element s,
+      this.editor,
+      StepBase prev,
+      List<Subs> freeConditions)
+      : super(interface, db, root, r, c, s, prev, freeConditions) {
     editor.onIdleKeyDown.listen((e) {
       if (e.keyCode == KeyCode.UP) {
         if (prev != null) {

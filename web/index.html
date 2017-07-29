@@ -4,12 +4,25 @@
     <title>QEDb Proof editor</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="external/katex.min.css">
+    <link rel="stylesheet" href="external/bootstrap.min.css">
     <link rel="stylesheet" href="snippets/proof_editor.css">
     <link rel="stylesheet" href="snippets/editex.css">
+    <link rel="stylesheet" href="snippets/subs.css">
 	  <script src="external/katex.min.js"></script>
   </head>
-  <body style="background: #272b30; color: #aaa;">
-    <h1 style="text-align: center; font-family: KaTeX_Main;">Proof editor</h1>
+  <body style="background: #272b30; color: #aaa; margin: 2em;">
+    <h3>Free conditions</h1>
+    <div id="free-conditions-wrapper"></div>
+    <p>
+      <div class="btn-group" rule="group">
+        <button id="add-free-condition" class="btn btn-outline-secondary"
+          type="button">Add free condition</button>
+        <button id="remove-free-condition" class="btn btn-outline-secondary"
+          type="button">Remove last free condition</button>
+      </div>
+    </p>
+    <br>
+    <h3>Create proof</h1>
     <div id="proof-editor" class="proof-editor"></div>
     <input id="data" type="hidden" name="data" />
 

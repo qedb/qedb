@@ -130,17 +130,12 @@ Future<db.RuleRow> createRuleFromStep(Session s, int stepId) async {
 /// Create unchecked rule.
 Future<db.RuleRow> _createRule(Session s, Subs rule, List<int> conditionIds,
     {int stepId, int proofId, bool isDefinition: false}) async {
-  // Computing closure.
   num compute(int id, List<num> args) => _exprCompute(s, id, args);
+  final evaluatedRule = rule.evaluate(compute);
 
-  // Evaluate expressions.
-  final leftEval = rule.left.evaluate(compute);
-  final rightEval = rule.right.evaluate(compute);
-
-  // Check if a similar rule already exists.
-  // It should not be possible to directly resolve this rule using
-  // [_resolveExpressionDifference].
-  final difference = await _resolveExpressionDifference(s, leftEval, rightEval);
+  // Check if a similar rule already exists, or if the given rule is somehow
+  // self evident using [_resolveSubstitution].
+  final difference = await _resolveSubstitution(s, evaluatedRule);
   if (!difference.different) {
     throw new UnprocessableEntityError('rule sides must be different');
   } else if (difference.resolved) {
@@ -148,8 +143,7 @@ Future<db.RuleRow> _createRule(Session s, Subs rule, List<int> conditionIds,
   }
 
   // Insert substitution.
-  final substitution =
-      await _createSubstitution(s, new Subs(leftEval, rightEval));
+  final substitution = await _createSubstitution(s, evaluatedRule);
 
   // Insert rule.
   final ruleRow = await s.insert(
