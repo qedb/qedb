@@ -667,7 +667,7 @@ CREATE TABLE condition_proof (
     reverse_target boolean DEFAULT false NOT NULL,
     adopt_condition boolean DEFAULT false NOT NULL,
     self_evident boolean DEFAULT false NOT NULL,
-    CONSTRAINT self_evident_or_rule_or_proof CHECK ((((follows_rule_id IS NOT NULL) OR (follows_proof_id IS NOT NULL)) <> self_evident))
+    CONSTRAINT rule_or_proof_or_evident_or_adopt CHECK (((((((follows_rule_id IS NOT NULL))::integer + ((follows_proof_id IS NOT NULL))::integer) + (adopt_condition)::integer) + (self_evident)::integer) = 1))
 );
 
 
@@ -1009,7 +1009,7 @@ CREATE TABLE step (
     substitution_id integer,
     rearrange_format smallint[],
     CONSTRAINT step_position_check CHECK (("position" >= 0)),
-    CONSTRAINT valid_parameterset CHECK ((((previous_id = NULL::integer) AND (step_type = 'set'::step_type)) OR ((previous_id <> NULL::integer) AND (((step_type = 'copy_proof'::step_type) AND (proof_id IS NOT NULL)) OR ((step_type = 'copy_rule'::step_type) AND (rule_id IS NOT NULL)) OR ((step_type = 'rearrange'::step_type) AND (rearrange_format IS NOT NULL)) OR ((step_type = 'substitute_rule'::step_type) AND (rule_id IS NOT NULL)) OR ((step_type = 'substitute_free'::step_type) AND (substitution_id IS NOT NULL))))))
+    CONSTRAINT valid_parameters CHECK ((((previous_id = NULL::integer) AND (step_type = 'set'::step_type)) OR ((previous_id <> NULL::integer) AND (((step_type = 'copy_proof'::step_type) AND (proof_id IS NOT NULL)) OR ((step_type = 'copy_rule'::step_type) AND (rule_id IS NOT NULL)) OR ((step_type = 'rearrange'::step_type) AND (rearrange_format IS NOT NULL)) OR ((step_type = 'substitute_rule'::step_type) AND (rule_id IS NOT NULL)) OR ((step_type = 'substitute_proof'::step_type) AND (proof_id IS NOT NULL)) OR ((step_type = 'substitute_free'::step_type) AND (substitution_id IS NOT NULL))))))
 );
 
 
@@ -1277,7 +1277,6 @@ COPY descriptor (id) FROM stdin;
 22
 23
 24
-26
 \.
 
 
@@ -1285,7 +1284,7 @@ COPY descriptor (id) FROM stdin;
 -- Name: descriptor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('descriptor_id_seq', 27, true);
+SELECT pg_catalog.setval('descriptor_id_seq', 24, true);
 
 
 --
@@ -1321,57 +1320,6 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 26	\\x00000000050002001400000012000000030000000200000015000000010000000200020001000200030104010001	\\x8442fdf7f36365f6326700b510143796bfed4591ba65fe8a62564b09f642a1a3	{}_\\text{?}\\text{f}{\\left({}_\\text{?}x+\\Delta{}_\\text{?}x\\right)}-{}_\\text{?}\\text{f}{\\left({}_\\text{?}x\\right)}	{20,18,3,2,21}	function	3	{25,20}
 27	\\x00000000060002001400000012000000050000000300000002000000150000000100000002000200020001000203000401050100010501	\\x38997f635cb1abde5e22cdb51329cd370d2c21a94282b7b562b64c49f544444a	\\frac{\\,{}_\\text{?}\\text{f}{\\left({}_\\text{?}x+\\Delta{}_\\text{?}x\\right)}-{}_\\text{?}\\text{f}{\\left({}_\\text{?}x\\right)}\\,}{\\,\\Delta{}_\\text{?}x\\,}	{20,18,5,3,2,21}	function	5	{26,22}
 28	\\x000001000700020000000000120000001400000016000000150000000500000003000000020000000000010003000100020002000200020300070405010600030001000300	\\x651eb823a52dc229134d48c1a94f3a2fd54a59c2432ffcbdf865441a7760c9bf	\\lim_{\\Delta{}_\\text{?}x\\to0}\\frac{\\,{}_\\text{?}\\text{f}{\\left({}_\\text{?}x+\\Delta{}_\\text{?}x\\right)}-{}_\\text{?}\\text{f}{\\left({}_\\text{?}x\\right)}\\,}{\\,\\Delta{}_\\text{?}x\\,}	{18,20,22,21,5,3,2}	function	22	{22,23,27}
-29	\\x0000000003000200090000000a0000001d000000000000000200020001	\\x56819f3822f0e5e8d340ecfd5097d044509000e9d374a16c88ebcb8c68fb4d48	\\left(\\begin{matrix}{}_\\text{?}a\\\\{}_\\text{?}b\\end{matrix}\\right)	{9,10,29}	function	29	{1,2}
-30	\\x00000000010000000d000000000000	\\xe3ad3e8c134a597c9a8bc2d01896e698815194eeccdac37c9f3983eb2a368a21	\\hat{e_1}	{13}	function	13	{}
-31	\\x000000000300010009000000040000000d000000000002000000010002	\\x19751da471698239217fecc64922a9d552dc19e683c1caa6e595e4677ba70ff6	{}_\\text{?}a\\hat{e_1}	{9,4,13}	function	4	{1,30}
-32	\\x00000000010000000e000000000000	\\xdb3966066a05fab9fa9f317f9a84d1daf73c5e1fc130ab860d6022ad47947378	\\hat{e_2}	{14}	function	14	{}
-33	\\x00000000030001000a000000040000000e000000000002000000010002	\\x42ec8b03c8af9c3cb6dd47ae22e58c3affd6a54c8af30060d97ca89bff7c2eb5	{}_\\text{?}b\\hat{e_2}	{10,4,14}	function	4	{2,32}
-34	\\x0000000006000200090000000a00000002000000040000000d0000000e00000000000000020002000000000002030004030105	\\x1928457711ef3003e9f929c2f88de8c57ff8aa78322287f3367823c8d93bf754	{}_\\text{?}a\\hat{e_1}+{}_\\text{?}b\\hat{e_2}	{9,10,2,4,13,14}	function	2	{31,33}
-35	\\x0000000002000100090000000400000000000200010000	\\x0ae10431daf1fbea1a3744536130d7e98fa9347dcff9278b3d463aa92a355e99	{}_\\text{?}a{}_\\text{?}a	{9,4}	function	4	{1,1}
-36	\\x0000010003000100010000000900000004000000060000000000020002000100020003	\\x4ec5cfd089fbb50f6e2cac611494fba37d8c929dcdefff42605895513b9e52d3	{}_\\text{?}a{}_\\text{?}a^{1}	{9,4,6}	function	4	{1,14}
-37	\\x00000100030001000100000009000000040000000600000000000200020001020003020003	\\xb4a8ec20c55c1f0bdd7564854c0b84b5400c82a7cc067b2a65dd84f7c3b7bc1c	{}_\\text{?}a^{1}{}_\\text{?}a^{1}	{9,4,6}	function	4	{14,14}
-38	\\x00000100000000000200000000	\\xe62115b1b0a0940392fe419abadbc906d524d2f5e005ce2c982949ac518fc3d2	2	{}	integer	2	{}
-39	\\x000001000200010002000000090000000600000000000200010002	\\x4d211308d49e14146f22cea3417f83f8fca62aa4a86d2aeb420427cfb73a1a76	{}_\\text{?}a^{2}	{9,6}	function	6	{1,38}
-40	\\x0000000005000300090000000a0000000b0000001d000000040000000000000000000200020003040001040002	\\xe3111bcd57079f865a6709ba1b156e247704b48073a6a65f8915f6113e264344	\\left(\\begin{matrix}{}_\\text{?}a{}_\\text{?}b\\\\{}_\\text{?}a{}_\\text{?}c\\end{matrix}\\right)	{9,10,11,29,4}	function	29	{6,8}
-41	\\x0000000004000200090000000a000000040000000d00000000000000020000000202000103	\\x8ed875991d441d684417f8c6cc9c20a443031f29ac7a9ab31db5583dac340e36	{}_\\text{?}a{}_\\text{?}b\\hat{e_1}	{9,10,4,13}	function	4	{6,30}
-42	\\x0000000004000200090000000b000000040000000e00000000000000020000000202000103	\\x24f499b37694a0c357a2c6a728cbab571e894a1c142fe3410a4a9d3254a2fc2a	{}_\\text{?}a{}_\\text{?}c\\hat{e_2}	{9,11,4,14}	function	4	{8,32}
-43	\\x0000000007000300090000000a0000000b00000002000000040000000d0000000e00000000000000000002000200000000000304040001050404000206	\\x05228e414264114cf16d538d581cea9d826c89ff1bdc096a6460e135cb4815c4	{}_\\text{?}a{}_\\text{?}b\\hat{e_1}+{}_\\text{?}a{}_\\text{?}c\\hat{e_2}	{9,10,11,2,4,13,14}	function	2	{41,42}
-44	\\x00000000030001000b000000040000000e000000000002000000010002	\\x1697193b18280e9c70a949cea53955e67e2a69cf81b605e3e03c120650555724	{}_\\text{?}c\\hat{e_2}	{11,4,14}	function	4	{7,32}
-45	\\x0000000004000200090000000b000000040000000e00000000000000020000000200020103	\\x915675aeb06b009ffb789b01888ff6ae04c286e9731f8ea119d5e36f9e5caa32	{}_\\text{?}a\\left({}_\\text{?}c\\hat{e_2}\\right)	{9,11,4,14}	function	4	{1,44}
-46	\\x0000000007000300090000000a0000000b00000002000000040000000d0000000e00000000000000000002000200000000000304040001050400040206	\\xc5ee133a99511504f27b936b3dc5ab5af49bfa70dfcabdbec5ec321932920df9	{}_\\text{?}a{}_\\text{?}b\\hat{e_1}+{}_\\text{?}a\\left({}_\\text{?}c\\hat{e_2}\\right)	{9,10,11,2,4,13,14}	function	2	{41,45}
-47	\\x00000000030001000a000000040000000d000000000002000000010002	\\x9173bff7f1f319b137ff4d06e76b185d7c85f90577d03545659d63f153eb7fca	{}_\\text{?}b\\hat{e_1}	{10,4,13}	function	4	{2,30}
-48	\\x0000000004000200090000000a000000040000000d00000000000000020000000200020103	\\x464474048ba61398451d021ab677821b109f36b42bcb3cc94c926f83c116d0ae	{}_\\text{?}a\\left({}_\\text{?}b\\hat{e_1}\\right)	{9,10,4,13}	function	4	{1,47}
-49	\\x0000000007000300090000000a0000000b00000002000000040000000d0000000e00000000000000000002000200000000000304000401050400040206	\\xa1000008781bcc20f2debe57279a2e61d4d46e0da6b66d46ed60bf21901ef34d	{}_\\text{?}a\\left({}_\\text{?}b\\hat{e_1}\\right)+{}_\\text{?}a\\left({}_\\text{?}c\\hat{e_2}\\right)	{9,10,11,2,4,13,14}	function	2	{48,45}
-50	\\x00000000060002000a0000000b00000002000000040000000d0000000e00000000000000020002000000000002030004030105	\\xc3198650145c5aa0773524388b4613da5203e15008a8f3266a1ecca1712a278a	{}_\\text{?}b\\hat{e_1}+{}_\\text{?}c\\hat{e_2}	{10,11,2,4,13,14}	function	2	{47,44}
-51	\\x0000000007000300090000000a0000000b00000004000000020000000d0000000e0000000000000000000200020000000000030004030105030206	\\xf36878477e942efa4226507a7c6ffbdc1fe53e64426ad592145c3671670b4bb8	{}_\\text{?}a\\left({}_\\text{?}b\\hat{e_1}+{}_\\text{?}c\\hat{e_2}\\right)	{9,10,11,4,2,13,14}	function	4	{1,50}
-52	\\x00000000030002000a0000000b0000001d000000000000000200020001	\\xedb1cd5251055fb773b1bb2968b685e3a1131a8b7eed1f27624b10c7fe337354	\\left(\\begin{matrix}{}_\\text{?}b\\\\{}_\\text{?}c\\end{matrix}\\right)	{10,11,29}	function	29	{2,7}
-53	\\x0000000005000300090000000a0000000b000000040000001d000000000000000000020002000300040102	\\xdcbdea933bcc43eadc6e313cc7c78782f54b1d37fa78efa46dc86cf5a617d945	{}_\\text{?}a\\left(\\begin{matrix}{}_\\text{?}b\\\\{}_\\text{?}c\\end{matrix}\\right)	{9,10,11,4,29}	function	4	{1,52}
-54	\\x00000000030002000b0000000a00000004000000000000000200020001	\\x9f5f46624475e6ca79bc6fff1f7dbb41adf3515a6f92e444100c9b58c2556fac	{}_\\text{?}c{}_\\text{?}b	{11,10,4}	function	4	{7,2}
-55	\\x0000000005000300090000000a0000000b00000002000000040000000000000000000200020003040001040201	\\xa4b4002e44c703bbf19be0032d53361f63902f2b28a68bce5641c1ed75430b6f	{}_\\text{?}a{}_\\text{?}b+{}_\\text{?}c{}_\\text{?}b	{9,10,11,2,4}	function	2	{6,54}
-56	\\x00000000030002000a0000000b00000004000000000000000200020001	\\xc204c52c996f4d4d83cdc932766e8597a4358214c127eb3c473c738c586dd0b6	{}_\\text{?}b{}_\\text{?}c	{10,11,4}	function	4	{2,7}
-57	\\x0000000005000300090000000a0000000b00000002000000040000000000000000000200020003040001040102	\\x19a4aceca344b81c41c39b6975fc3a04acf1974cf3269f438499e4e0befd5074	{}_\\text{?}a{}_\\text{?}b+{}_\\text{?}b{}_\\text{?}c	{9,10,11,2,4}	function	2	{6,56}
-58	\\x00000000030002000a0000000900000004000000000000000200020001	\\x5ab22a4e6f77880af3916b063e9d5e84e4b5506e2743a9998d8d966a3211f487	{}_\\text{?}b{}_\\text{?}a	{10,9,4}	function	4	{2,1}
-59	\\x00000000050003000a000000090000000b00000002000000040000000000000000000200020003040001040002	\\x75039fafe376dd55a4e39773afde9d645ef8c52a2214ee7147c0969d39461a5b	{}_\\text{?}b{}_\\text{?}a+{}_\\text{?}b{}_\\text{?}c	{10,9,11,2,4}	function	2	{58,56}
-60	\\x0000000003000200090000000b00000002000000000000000200020001	\\x3a71ee8052cddc17b51d1a8b9d741e137272cb3ea7cff2d1d5ddae27d081f83c	{}_\\text{?}a+{}_\\text{?}c	{9,11,2}	function	2	{1,7}
-61	\\x00000000050003000a000000090000000b0000000400000002000000000000000000020002000300040102	\\xda25c669cef99f851b7e9fb85aa04cdb564eef6786ce494bcfc0e9524ed2566a	{}_\\text{?}b\\left({}_\\text{?}a+{}_\\text{?}c\\right)	{10,9,11,4,2}	function	4	{2,60}
-62	\\x0000000005000300090000000b0000000a0000000400000002000000000000000000020002000304000102	\\x403525454a69e6f28fdca3402fc2e8fa786cab883be5e16e621ec68e5641d14e	\\left({}_\\text{?}a+{}_\\text{?}c\\right){}_\\text{?}b	{9,11,10,4,2}	function	4	{60,2}
-63	\\x00000000010001001e000000000000	\\x7e4d505b6528cf93527d8f4736a5ba7d2e0b414de0ac6c0eaf2ef828dfe8ae8e	{}_\\text{?}d	{30}	generic	30	{}
-64	\\x00000000030002000b0000001e0000001d000000000000000200020001	\\xcbae79ac336325dd011832997f1da9d400dfceeacbaede7995020e30dccbffaf	\\left(\\begin{matrix}{}_\\text{?}c\\\\{}_\\text{?}d\\end{matrix}\\right)	{11,30,29}	function	29	{7,63}
-65	\\x0000000006000400090000000a0000000b0000001e000000020000001d00000000000000000000000200020004050001050203	\\x65e02684d0e3dcf1fd2c35e21c2dc3f2a87ffa7aa33c14dd9159a5b2d57f3705	\\left(\\begin{matrix}{}_\\text{?}a\\\\{}_\\text{?}b\\end{matrix}\\right)+\\left(\\begin{matrix}{}_\\text{?}c\\\\{}_\\text{?}d\\end{matrix}\\right)	{9,10,11,30,2,29}	function	2	{29,64}
-66	\\x00000000030001000b000000040000000d000000000002000000010002	\\x9dc3b229effb6f56e2dd7461b05b0771b5b2f42eaa6a78311d2d5262b6499d94	{}_\\text{?}c\\hat{e_1}	{11,4,13}	function	4	{7,30}
-67	\\x00000000030001001e000000040000000e000000000002000000010002	\\x88c8f4990b864e5afc0e7bc4d7c81590fc6bc5227d95fd636cad18c9fecdd493	{}_\\text{?}d\\hat{e_2}	{30,4,14}	function	4	{63,32}
-68	\\x00000000060002000b0000001e00000002000000040000000d0000000e00000000000000020002000000000002030004030105	\\x99d7eaab49424a06939345c8724dd69e73aa3fcc5c224726ab35dad5fedce8d2	{}_\\text{?}c\\hat{e_1}+{}_\\text{?}d\\hat{e_2}	{11,30,2,4,13,14}	function	2	{66,67}
-69	\\x0000000009000400090000000a0000000b0000001e000000020000001d000000040000000d0000000e0000000000000000000000020002000200000000000405000104060207060308	\\x72a4e11f59989e0beff74ac0f95ade26bfd8a594098311c2412def61f5ee784b	\\left(\\begin{matrix}{}_\\text{?}a\\\\{}_\\text{?}b\\end{matrix}\\right)+\\left({}_\\text{?}c\\hat{e_1}+{}_\\text{?}d\\hat{e_2}\\right)	{9,10,11,30,2,29,4,13,14}	function	2	{29,68}
-70	\\x0000000008000400090000000a0000000b0000001e00000002000000040000000d0000000e00000000000000000000000200020000000000040405000605010704050206050307	\\xd3c570e70565230e3beb37629f53d80d62e7441218d0670c9a07b99bdbe4c63c	{}_\\text{?}a\\hat{e_1}+{}_\\text{?}b\\hat{e_2}+\\left({}_\\text{?}c\\hat{e_1}+{}_\\text{?}d\\hat{e_2}\\right)	{9,10,11,30,2,4,13,14}	function	2	{34,68}
-71	\\x0000000005000200090000000b00000002000000040000000d0000000000000002000200000002030004030104	\\x4843408af2e1f0889ca12560828eb2675cd0478c90daf0ed4a4251c1d2d19b23	{}_\\text{?}a\\hat{e_1}+{}_\\text{?}c\\hat{e_1}	{9,11,2,4,13}	function	2	{31,66}
-72	\\x00000000050002000a0000001e00000002000000040000000e0000000000000002000200000002030004030104	\\x9571358c0bce0042b4360f7daa82777d0bc917436bbe406fcc4c7e24045f20b3	{}_\\text{?}b\\hat{e_2}+{}_\\text{?}d\\hat{e_2}	{10,30,2,4,14}	function	2	{33,67}
-73	\\x0000000008000400090000000b0000000a0000001e00000002000000040000000d0000000e00000000000000000000000200020000000000040405000605010604050207050307	\\x993b9194b3e6817ee6395049117d0c46cee865641d021c4e570a21be441d1dc1	{}_\\text{?}a\\hat{e_1}+{}_\\text{?}c\\hat{e_1}+\\left({}_\\text{?}b\\hat{e_2}+{}_\\text{?}d\\hat{e_2}\\right)	{9,11,10,30,2,4,13,14}	function	2	{71,72}
-74	\\x00000000030002000a0000001e00000002000000000000000200020001	\\xd4f4da09a74c64d3f215818ad6e21b7890408ff2ae2bcaf0384c4d9dd138d40d	{}_\\text{?}b+{}_\\text{?}d	{10,30,2}	function	2	{2,63}
-75	\\x00000000050002000a0000001e00000004000000020000000e000000000000000200020000000203000104	\\xef2484ee7a9b80188469e5dea416dff5f46871a299c5b1c644489065deb7fcc8	\\left({}_\\text{?}b+{}_\\text{?}d\\right)\\hat{e_2}	{10,30,4,2,14}	function	4	{74,32}
-76	\\x0000000008000400090000000b0000000a0000001e00000002000000040000000d0000000e0000000000000000000000020002000000000004040500060501060504020307	\\x7a16e863e3fb856572598faa1ebb3acafeb1b0639332dc6af010d73352c1b3ee	{}_\\text{?}a\\hat{e_1}+{}_\\text{?}c\\hat{e_1}+\\left({}_\\text{?}b+{}_\\text{?}d\\right)\\hat{e_2}	{9,11,10,30,2,4,13,14}	function	2	{71,75}
-77	\\x0000000005000200090000000b00000004000000020000000d000000000000000200020000000203000104	\\x585cd794075680a499278607f5759d26359841640c8c3e0b0447d0efb8b20e40	\\left({}_\\text{?}a+{}_\\text{?}c\\right)\\hat{e_1}	{9,11,4,2,13}	function	4	{60,30}
-78	\\x0000000008000400090000000b0000000a0000001e00000002000000040000000d0000000e000000000000000000000002000200000000000405040001060504020307	\\x31c24612775f092a4337841eb15a34556927a896e58c0af71a11f5559477717c	\\left({}_\\text{?}a+{}_\\text{?}c\\right)\\hat{e_1}+\\left({}_\\text{?}b+{}_\\text{?}d\\right)\\hat{e_2}	{9,11,10,30,2,4,13,14}	function	2	{77,75}
-79	\\x0000000006000400090000000b0000000a0000001e0000001d0000000200000000000000000000000200020004050001050203	\\x487cd1dba20925f75889502c80bdc1d45d0ac13e17cb685da8cacbbd7d754dd1	\\left(\\begin{matrix}{}_\\text{?}a+{}_\\text{?}c\\\\{}_\\text{?}b+{}_\\text{?}d\\end{matrix}\\right)	{9,11,10,30,29,2}	function	29	{60,74}
 \.
 
 
@@ -1379,7 +1327,7 @@ COPY expression (id, data, hash, latex, functions, node_type, node_value, node_a
 -- Name: expression_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('expression_id_seq', 79, true);
+SELECT pg_catalog.setval('expression_id_seq', 28, true);
 
 
 --
@@ -1414,8 +1362,6 @@ COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_c
 25	6	22	f	f	0	true	word	\\text{True}	\N
 26	6	23	f	f	0	false	word	\\text{False}	\N
 27	7	24	f	f	2	leq	abbreviation	${.0}\\leq${1.}	\N
-29	3	26	f	f	2	vec2	abbreviation	\\left(\\begin{matrix}${0}\\\\${1}\\end{matrix}\\right)	\N
-30	1	\N	t	f	0	d	symbol	\N	\N
 \.
 
 
@@ -1423,7 +1369,7 @@ COPY function (id, subject_id, descriptor_id, generic, rearrangeable, argument_c
 -- Name: function_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('function_id_seq', 30, true);
+SELECT pg_catalog.setval('function_id_seq', 27, true);
 
 
 --
@@ -1471,10 +1417,6 @@ SELECT pg_catalog.setval('operator_id_seq', 8, true);
 --
 
 COPY proof (id, first_step_id, last_step_id) FROM stdin;
-1	1	4
-2	5	10
-3	11	15
-4	16	22
 \.
 
 
@@ -1482,7 +1424,7 @@ COPY proof (id, first_step_id, last_step_id) FROM stdin;
 -- Name: proof_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('proof_id_seq', 4, true);
+SELECT pg_catalog.setval('proof_id_seq', 1, false);
 
 
 --
@@ -1496,10 +1438,6 @@ COPY rule (id, step_id, proof_id, is_definition, substitution_id) FROM stdin;
 4	\N	\N	t	4
 5	\N	\N	t	5
 6	\N	\N	t	6
-7	\N	\N	t	7
-8	\N	1	f	8
-9	\N	3	f	9
-10	\N	4	f	10
 \.
 
 
@@ -1522,7 +1460,7 @@ SELECT pg_catalog.setval('rule_condition_id_seq', 1, false);
 -- Name: rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('rule_id_seq', 10, true);
+SELECT pg_catalog.setval('rule_id_seq', 6, true);
 
 
 --
@@ -1530,28 +1468,6 @@ SELECT pg_catalog.setval('rule_id_seq', 10, true);
 --
 
 COPY step (id, previous_id, expression_id, step_type, "position", reverse_itself, reverse_target, proof_id, rule_id, substitution_id, rearrange_format) FROM stdin;
-1	\N	35	set	0	f	f	\N	\N	\N	\N
-2	1	36	substitute_rule	2	f	f	\N	4	\N	\N
-3	2	37	substitute_rule	1	f	f	\N	4	\N	\N
-4	3	39	substitute_rule	0	f	f	\N	5	\N	\N
-5	\N	40	set	0	f	f	\N	\N	\N	\N
-6	5	43	substitute_rule	0	f	f	\N	7	\N	\N
-7	6	46	rearrange	6	f	f	\N	\N	\N	{0,1,2,-1}
-8	7	49	rearrange	1	f	f	\N	\N	\N	{0,1,2,-1}
-9	8	51	substitute_rule	0	f	f	\N	2	\N	\N
-10	9	53	substitute_rule	2	t	f	\N	7	\N	\N
-11	\N	55	set	0	f	f	\N	\N	\N	\N
-12	11	57	rearrange	4	f	f	\N	\N	\N	{1,0}
-13	12	59	rearrange	1	f	f	\N	\N	\N	{1,0}
-14	13	61	substitute_rule	0	f	f	\N	2	\N	\N
-15	14	62	rearrange	0	f	f	\N	\N	\N	{1,0}
-16	\N	65	set	0	f	f	\N	\N	\N	\N
-17	16	69	substitute_rule	4	f	f	\N	7	\N	\N
-18	17	70	substitute_rule	1	f	f	\N	7	\N	\N
-19	18	73	rearrange	0	f	f	\N	\N	\N	{0,2,-1,1,3,-1}
-20	19	76	substitute_rule	8	f	f	\N	9	\N	\N
-21	20	78	substitute_rule	1	f	f	\N	9	\N	\N
-22	21	79	substitute_rule	0	t	f	\N	7	\N	\N
 \.
 
 
@@ -1559,7 +1475,7 @@ COPY step (id, previous_id, expression_id, step_type, "position", reverse_itself
 -- Name: step_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('step_id_seq', 22, true);
+SELECT pg_catalog.setval('step_id_seq', 1, false);
 
 
 --
@@ -1595,10 +1511,6 @@ COPY substitution (id, left_expression_id, right_expression_id, left_array_data,
 4	1	14	{198119638,3,9}	{510478350,4,6,2,6,198119638,3,9,5,1,1}
 5	17	18	{71005026,4,4,2,22,695795496,4,6,2,6,198119638,3,9,358130610,3,10,622151856,4,6,2,6,198119638,3,9,971369676,3,11}	{491848602,4,6,2,14,198119638,3,9,416255908,4,2,2,6,358130610,3,10,971369676,3,11}
 6	21	28	{909282448,4,23,2,11,910648714,3,18,129606980,5,20,1,3,910648714,3,18}	{298586446,4,22,3,58,662684094,4,21,1,3,910648714,3,18,1,1,0,976197574,4,5,2,42,396128080,4,3,2,29,76780122,5,20,1,16,1022394746,4,2,2,11,910648714,3,18,662684094,4,21,1,3,910648714,3,18,129606980,5,20,1,3,910648714,3,18,662684094,4,21,1,3,910648714,3,18}
-7	29	34	{522968074,4,29,2,6,198119638,3,9,358130610,3,10}	{88350546,4,2,2,22,352139162,4,4,2,6,198119638,3,9,665602766,2,13,1030378374,4,4,2,6,358130610,3,10,168365960,2,14}
-8	35	39	{736185540,4,4,2,6,198119638,3,9,198119638,3,9}	{1068305054,4,6,2,6,198119638,3,9,9,1,2}
-9	55	62	{528757648,4,2,2,22,507440212,4,4,2,6,198119638,3,9,358130610,3,10,224068776,4,4,2,6,971369676,3,11,358130610,3,10}	{776041670,4,4,2,14,777412966,4,2,2,6,198119638,3,9,971369676,3,11,358130610,3,10}
-10	65	79	{169814884,4,2,2,22,522968074,4,29,2,6,198119638,3,9,358130610,3,10,304738114,4,29,2,6,971369676,3,11,231937198,3,30}	{613711856,4,29,2,22,777412966,4,2,2,6,198119638,3,9,971369676,3,11,369675346,4,2,2,6,358130610,3,10,231937198,3,30}
 \.
 
 
@@ -1606,7 +1518,7 @@ COPY substitution (id, left_expression_id, right_expression_id, left_array_data,
 -- Name: substitution_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('substitution_id_seq', 10, true);
+SELECT pg_catalog.setval('substitution_id_seq', 6, true);
 
 
 --
@@ -1656,7 +1568,6 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 40	18	2	Delta
 41	19	2	Limiet
 42	20	2	Afgeleide
-44	26	1	2D Vector
 \.
 
 
@@ -1664,7 +1575,7 @@ COPY translation (id, descriptor_id, language_id, content) FROM stdin;
 -- Name: translation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('translation_id_seq', 45, true);
+SELECT pg_catalog.setval('translation_id_seq', 42, true);
 
 
 --

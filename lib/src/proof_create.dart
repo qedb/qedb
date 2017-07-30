@@ -42,7 +42,7 @@ String _getStepTypeString(StepType type) {
     case StepType.substituteFree:
       return 'substitute_free';
     default:
-      throw new UnimplementedError('unimplemented step type: $type');
+      throw new UnprocessableEntityError('unimplemented step type: $type');
   }
 }
 
@@ -67,22 +67,12 @@ class _StepData {
   int ruleId;
 
   /// Map from condition ID of the substitution to condition proof.
-  Map<int, _ConditionProof> conditionProofs = {};
+  Map<int, SubsSearchResult> conditionProofs = {};
 
   /// Substitution data (used for rules and raw substitutions)
   Subs subs;
 
   List<int> rearrangeFormat;
-}
-
-class _ConditionProof {
-  final int ruleId;
-  final bool reverseItself;
-  final bool reverseTarget;
-  final bool selfEvident;
-
-  _ConditionProof(
-      this.ruleId, this.reverseItself, this.reverseTarget, this.selfEvident);
 }
 
 Future<db.ProofRow> createProof(Session s, ProofData body) async {
@@ -125,17 +115,8 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     }
   }
 
-  // Aggregate all rule IDs (both from substitutions and proofs).
-  final ruleIds = new List<int>();
-  ruleIds.addAll(steps.map((step) => step.ruleId));
-  for (final step in steps) {
-    for (final conditionProof in step.conditionProofs.values) {
-      ruleIds.add(conditionProof.ruleId);
-    }
-  }
-
-  // Retrieve rule data.
-  final rules = await s.selectByIds(db.rule, ruleIds.where((id) => id != null));
+  // Retrieve rule data in one request (optimization).
+  final rules = await s.selectByIds(db.rule, steps.map((step) => step.ruleId));
   final subss = await getSubsMap(s, rules.map((r) => r.substitutionId));
 
   // Store rule substitutions in step data and verify conditions.
@@ -156,9 +137,9 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
   for (final step in steps) {
     // Apply step to [expr].
     // As a convention we evaluate the expression after each step.
-    final nextExpr =
-        (await _computeProofStep(s, expr, step, rearrangeableIds, compute))
-            .evaluate(compute);
+    final nextExpr = (await _computeProofStep(
+            s, expr, step, rearrangeableIds, freeConditions, compute))
+        .evaluate(compute);
 
     // If there is no difference with the previous expression, remove this step.
     if (nextExpr == expr) {
@@ -215,16 +196,21 @@ Future<db.ProofRow> createProof(Session s, ProofData body) async {
     rows.add(stepRow);
 
     for (final conditionId in step.conditionProofs.keys) {
-      final conditionProof = step.conditionProofs[conditionId];
-      await s.insert(
-          db.conditionProof,
-          VALUES({
-            'step_id': stepRow.id,
-            'condition_id': conditionId,
-            'follows_rule_id': conditionProof.ruleId,
-            'reverse_itself': conditionProof.reverseItself,
-            'reverse_target': conditionProof.reverseTarget
-          }));
+      final proof = step.conditionProofs[conditionId];
+      final values = {
+        'step_id': stepRow.id,
+        'condition_id': conditionId,
+        'reverse_itself': proof.reverseItself,
+        'reverse_target': proof.reverseTarget
+      };
+
+      if (proof.entry.type == SubsType.rule) {
+        values['follows_rule_id'] = proof.entry.referenceId;
+      } else if (proof.entry.type == SubsType.free) {
+        values['adopt_condition'] = true;
+      }
+
+      await s.insert(db.conditionProof, VALUES(values));
     }
   }
 
@@ -254,18 +240,8 @@ List<_StepData> _flattenResolveBranch(
       final s = branch.substitution;
       if (s.entry.type == SubsType.rule) {
         // Collect condition proofs into map.
-        final conditionProofs = new Map<int, _ConditionProof>.fromIterables(
-            s.entry.conditions.map((entry) => entry.id),
-            s.conditionProofs.map((p) {
-          if (p.entry.type == SubsType.rule) {
-            return new _ConditionProof(
-                p.entry.referenceId, p.reverseItself, p.reverseTarget, false);
-          } else {
-            // TODO: support free conditions (adopt condition).
-            throw new UnprocessableEntityError(
-                'unimplemented substitution type');
-          }
-        }));
+        final conditionProofs = new Map<int, SubsSearchResult>.fromIterables(
+            s.entry.conditions.map((entry) => entry.id), s.conditionProofs);
 
         // Add to step list, validation will be performed later.
         final step = new _StepData()

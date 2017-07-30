@@ -295,8 +295,11 @@ CREATE TABLE condition_proof (
   adopt_condition   boolean  NOT NULL DEFAULT FALSE,
   self_evident      boolean  NOT NULL DEFAULT FALSE,
 
-  CONSTRAINT self_evident_or_rule_or_proof CHECK -- XOR
-    ((follows_rule_id NOTNULL OR follows_proof_id NOTNULL) != self_evident)
+  CONSTRAINT rule_or_proof_or_evident_or_adopt CHECK -- XOR
+    (((follows_rule_id NOTNULL)::int
+    + (follows_proof_id NOTNULL)::int
+    + adopt_condition::int
+    + self_evident::int) = 1)
 );
 
 --------------------------------------------------------------------------------

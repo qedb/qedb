@@ -135,6 +135,7 @@ Future<db.RuleRow> _createRule(Session s, Subs rule, List<int> conditionIds,
 
   // Check if a similar rule already exists, or if the given rule is somehow
   // self evident using [_resolveSubstitution].
+  // TODO: check if provided conditions are a subset of any matching rule.
   final difference = await _resolveSubstitution(s, evaluatedRule);
   if (!difference.different) {
     throw new UnprocessableEntityError('rule sides must be different');

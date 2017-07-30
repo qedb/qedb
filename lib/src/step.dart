@@ -46,11 +46,16 @@ Future<List<int>> _findConditions(Session s, Iterable<int> stepIds) async {
       }));
 
   // Free substitutions become conditions for applying the proof.
-  final freeSubstitutions =
-      await s.select(db.step, WHERE({'substitution_id': NOTNULL}));
+  final freeSubstitutions = await s.select(
+      db.step, WHERE({'id': IN(stepIds), 'substitution_id': NOTNULL}));
 
   final subsIds = new List<int>();
+
+  // Adopted conditions must be mapped according to the context of the step and
+  // a new substitution record must be created.
+  // TODO: implement context mapping.
   subsIds.addAll(adoptedConditions.map((cond) => cond.substitutionId));
+
   subsIds.addAll(freeSubstitutions.map((step) => step.substitutionId));
 
   return subsIds;
