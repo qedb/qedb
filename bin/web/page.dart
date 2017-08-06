@@ -55,7 +55,7 @@ dynamic jsonify(data) {
 /// Run unsafe function (e.g. function that retrieves value from JsonObject that
 /// might not be there). Returns return value of [fn], or [fallback] if [fn]
 /// errors.
-dynamic unsafe(Function fn, [fallback = null]) {
+dynamic unsafe(Function fn, [fallback]) {
   try {
     return fn();
   } on Exception {
