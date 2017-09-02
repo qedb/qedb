@@ -32,7 +32,7 @@ CREATE TABLE descriptor (
 CREATE TABLE translation (
   id             serial   PRIMARY KEY,
   descriptor_id  integer  NOT NULL REFERENCES descriptor(id),
-  language_id      integer  NOT NULL REFERENCES language(id),
+  language_id    integer  NOT NULL REFERENCES language(id),
   content        text     NOT NULL
     CHECK (content ~ E'^(?:[^\\s]+ )*[^\\s]+$'), -- Check for repeated spaces in the regex.
   
